@@ -14,6 +14,7 @@ namespace LordsContract
         private static readonly string HERO_CREATION_KEY = "\x05";
         private static readonly string ITEM_DROP_KEY = "\x06";
         private static readonly string CITY_PREFIX = "\x07\x00";
+        private static readonly string HERO_PREFIX = "\x08\x00";
         private static readonly byte HERO_CREATION_GIVEN = 0;
         private static readonly byte ITEM_DROP_GIVEN = 1;
 
@@ -24,12 +25,12 @@ namespace LordsContract
          * 1 GAS === 100_000_000
          * 0.1GAS == 10_000_000
          */
-        private static readonly decimal auction8HoursFee = 10_000_000;/*,
+        private static readonly decimal auction8HoursFee = 10_000_000,
                                            auction12HoursFee = 20_000_000,
                                            auction24HoursFee = 30_000_000,
-                                           heroCreationFee   = 30_000_000,
-                                           battleFee         = 30_000_000;*/
-
+                                           heroCreationFee   = 100_000_000,
+                                           battleFee         = 30_000_000;
+                                     
         private static readonly BigInteger duration8Hours = 28800;
         private static readonly BigInteger duration12Hours = 43200;
         private static readonly BigInteger duration24Hours = 86400;
@@ -80,6 +81,19 @@ namespace LordsContract
         {
             public byte[] Owner;
             public BigInteger TaxPercents;
+        }
+
+        [Serializable]
+        public class Hero
+        {
+            public byte[] OWNER;
+            public BigInteger TROOPS_CAP;
+            public BigInteger LEADERSHIP;
+            public BigInteger INTELLIGENCE;
+            public BigInteger STRENGTH;
+            public BigInteger SPEED;
+            public BigInteger DEFENSE;
+            public byte[] TX;
         }
 
         public static byte[] Main(string param, object[] args)
@@ -163,10 +177,28 @@ namespace LordsContract
                 // Method puts item on storage.
                 // Updates Item Given Parameters
                 PutItem((BigInteger)args[1], (byte)args[0], item);
-            } else if (param.Equals("heroCreated"))
+            } else if (param.Equals("putHero"))
             {
+                if (args.Length != 13)
+                {
+                    Runtime.Log("Invalid parameters");
+                    return new BigInteger(0).AsByteArray();
+                }
 
-            } else if (param.Equals("auctionEnd"))
+                Runtime.Log("Hero putting initialized");
+                Hero hero = new Hero();
+                hero.OWNER = (byte[])args[1];
+                hero.TROOPS_CAP = (BigInteger)args[2];
+                hero.INTELLIGENCE = (BigInteger)args[3];
+                hero.SPEED = (BigInteger)args[4];
+                hero.STRENGTH = (BigInteger)args[5];
+                hero.LEADERSHIP = (BigInteger)args[6];
+                hero.DEFENSE = (BigInteger)args[7];
+                hero.TX = ((Transaction)Neo.SmartContract.Framework.Services.System.ExecutionEngine.ScriptContainer).Hash;
+
+                return PutHero((BigInteger)args[0], hero, (BigInteger)args[8], (BigInteger)args[9], (BigInteger)args[10], (BigInteger)args[11], (BigInteger)args[12]);
+            }
+            else if (param.Equals("auctionEnd"))
             {
                 // Check Does item exist
                 Runtime.Log("Calling Auction End");
@@ -357,7 +389,8 @@ namespace LordsContract
 
 
             // Update Giving Items Amount
-            if (givenFor == HERO_CREATION_GIVEN)
+            /* Since, which Items will be given to hero are decided by Server side, we delete Item Giving Manager from SmartContract for Hero Creation
+             * if (givenFor == HERO_CREATION_GIVEN)
             {
                 byte[] currentItem = Storage.Get(Storage.CurrentContext, HERO_CREATION_KEY);
                 
@@ -366,7 +399,7 @@ namespace LordsContract
 
                 Storage.Put(Storage.CurrentContext, HERO_CREATION_KEY, itemId);
             }
-            else
+            else*/ if (givenFor == ITEM_DROP_GIVEN)
             {
                 byte[] currentItem = Storage.Get(Storage.CurrentContext, ITEM_DROP_KEY);
 
@@ -385,12 +418,90 @@ namespace LordsContract
 
         }
 
+        private static byte[] PutHero(BigInteger heroId, Hero hero, BigInteger item1, BigInteger item2, BigInteger item3, BigInteger item4, BigInteger item5)
+        {
+            // Check Transaction Fee
+            bool received = false;
+            Transaction TX = (Transaction)Neo.SmartContract.Framework.Services.System.ExecutionEngine.ScriptContainer;
+            TransactionOutput[] outputs = TX.GetOutputs();
+            foreach (var output in outputs)
+            {
+
+                // Game Developers got their fee?
+                if (output.ScriptHash.AsBigInteger() == GameOwner.AsBigInteger())
+                {
+                    if (output.Value == heroCreationFee)
+                    {
+                        received = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!received)
+            {
+                Runtime.Notify("Hero Creation Fee is not included! Hero was not stored on Blockchain");
+                return new BigInteger(0).AsByteArray();
+            }
+
+            // Put Hero
+            string key = HERO_PREFIX + heroId.AsByteArray();
+
+            byte[] bytes = Neo.SmartContract.Framework.Helper.Serialize(hero);
+
+            Storage.Put(Storage.CurrentContext, key, bytes);
+
+            // Give Item #1 to Created Hero
+            key = ITEM_PREFIX + item1.AsByteArray();
+            Item item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, key));
+
+            item.OWNER = hero.OWNER;
+            bytes = Neo.SmartContract.Framework.Helper.Serialize(item);
+            Storage.Put(Storage.CurrentContext, key, bytes);
+
+            // Give Item #2 to Created Hero
+            key = ITEM_PREFIX + item2.AsByteArray();
+            item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, key));
+
+            item.OWNER = hero.OWNER;
+            bytes = Neo.SmartContract.Framework.Helper.Serialize(item);
+            Storage.Put(Storage.CurrentContext, key, bytes);
+
+            // Give Item #3 to Created Hero
+            key = ITEM_PREFIX + item3.AsByteArray();
+            item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, key));
+
+            item.OWNER = hero.OWNER;
+            bytes = Neo.SmartContract.Framework.Helper.Serialize(item);
+            Storage.Put(Storage.CurrentContext, key, bytes);
+
+            // Give Item #4 to Created Hero
+            key = ITEM_PREFIX + item4.AsByteArray();
+            item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, key));
+
+            item.OWNER = hero.OWNER;
+            bytes = Neo.SmartContract.Framework.Helper.Serialize(item);
+            Storage.Put(Storage.CurrentContext, key, bytes);
+
+            // Give Item #5 to Created Hero
+            key = ITEM_PREFIX + item5.AsByteArray();
+            item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, key));
+
+            item.OWNER = hero.OWNER;
+            bytes = Neo.SmartContract.Framework.Helper.Serialize(item);
+            Storage.Put(Storage.CurrentContext, key, bytes);
+
+            Runtime.Log("Hero was created and Hero got his Items");
+
+            return new BigInteger(1).AsByteArray();
+        }
+
         //------------------------------------------------------------------------------------
         //
         // ITEM DROPS
         //
         //------------------------------------------------------------------------------------
-           
+
         public static void GiveItems()
         {
 
