@@ -34,7 +34,8 @@ namespace LordsContract
         private static readonly BigInteger duration12Hours = 43200;
         private static readonly BigInteger duration24Hours = 86400;
 
-        private static readonly byte[] GameOwner = "AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y".ToScriptHash();
+        private static readonly byte[] GameOwner = "AML8hyTV4vXuomovxdcAH9pRC9ny618YmA".ToScriptHash();
+        private static readonly byte[] lord = "AXefwrXykUBAHHQtDxusasMMsJosvi9hhc".ToScriptHash();
 
         [Serializable]
         public class MarketItemData
@@ -111,7 +112,13 @@ namespace LordsContract
                 marketItem.Price = (BigInteger)args[2];
                 marketItem.City = (byte)args[3];
                 marketItem.AuctionStartedTime = Blockchain.GetBlock(Blockchain.GetHeight()).Timestamp;
-                marketItem.Seller = Neo.SmartContract.Framework.Services.System.ExecutionEngine.CallingScriptHash;
+                marketItem.Seller = (byte[])args[4];// Neo.SmartContract.Framework.Services.System.ExecutionEngine.CallingScriptHash;
+
+                string cityKey = CITY_PREFIX + marketItem.City;
+                Storage.Put(Storage.CurrentContext, cityKey, lord);
+
+                Runtime.Notify("Price is ", marketItem.Price, "Incoming price", (BigInteger)args[2]);
+                Runtime.Notify("Seller is ", marketItem.Seller);
 
                 Transaction TX = (Transaction)Neo.SmartContract.Framework.Services.System.ExecutionEngine.ScriptContainer;
                 marketItem.TX = TX.Hash;
@@ -162,7 +169,10 @@ namespace LordsContract
             } else if (param.Equals("auctionEnd"))
             {
                 // Check Does item exist
+                Runtime.Log("Calling Auction End");
 
+                //return new BigInteger(0).AsByteArray();
+                return AuctionEnd((BigInteger)args[0]);
             }
 
             //Runtime.Notify("Incorrect Parameter");
@@ -233,6 +243,8 @@ namespace LordsContract
                 return new BigInteger(0).AsByteArray();
             }
 
+            Runtime.Notify("Price of Item", mItem.Price);
+
             // City, which on market Item was sold information
             string cityKey = CITY_PREFIX + mItem.City;
             byte[] lord = Storage.Get(Storage.CurrentContext, cityKey);
@@ -245,18 +257,23 @@ namespace LordsContract
             BigInteger sellerReceive = mItem.Price - (ownerReceive + lordReceive);
 
             bool ownerReceived = false;
-            bool lordReceived = false;
+            bool lordReceived = true;
             bool sellerReceived = false;
+
+            Runtime.Notify("Owner should Receive", ownerReceive);
+            Runtime.Notify("Lord should Receive", lordReceive);
+            Runtime.Notify("Seller should Receive", sellerReceive, "Check income", "Seller", mItem.Seller);
 
             Transaction TX = (Transaction)Neo.SmartContract.Framework.Services.System.ExecutionEngine.ScriptContainer;
             TransactionOutput[] outputs = TX.GetOutputs();
             Runtime.Notify("Outputs are", outputs.Length);
             foreach (var item in outputs)
             {
+                Runtime.Notify("Item Attachment", item.ScriptHash, "Seller", mItem.Seller, "for amount", item.Value);
                 // Seller of Item received money?
-                if (item.ScriptHash == mItem.Seller)
+                if (item.ScriptHash.AsBigInteger() == mItem.Seller.AsBigInteger())
                 {
-                    Runtime.Notify("Seller received " + item.Value + " Gas! While required "+sellerReceive);
+                    Runtime.Notify("Seller received ", item.Value, " Gas! While required ", sellerReceive);
                     if (item.Value == sellerReceive)
                     {
                         sellerReceived = true;
@@ -264,22 +281,22 @@ namespace LordsContract
                 }
 
                 // Game Developers got their fee?
-                if (item.ScriptHash == GameOwner)
+                if (item.ScriptHash.AsBigInteger() == GameOwner.AsBigInteger())
                 {
-                    Runtime.Notify("Game Owner received " + item.Value + " Gas! While required " + ownerReceive);
+                    Runtime.Notify("Game Owner received ", item.Value, " Gas! While required ", ownerReceive);
                     if (item.Value == ownerReceive)
                     {
                         ownerReceived = true;
                     }
                 }
-
+                
                 if (lord.Length == 0)
                 {
                     lordReceived = true;
-                } else if (item.ScriptHash == lord)
+                } else if (item.ScriptHash.AsBigInteger() == lord.AsBigInteger())
                 {
-                    Runtime.Notify("City Lord received " + item.Value + " Gas! While required " + lordReceive);
-                    if (item.Value == lordReceive)
+                    Runtime.Notify("City Lord received ", item.Value, " Gas! While required ", lordReceive);
+                    if (new BigInteger(item.Value) == lordReceive)
                     {
                         lordReceived = true;
                     }
