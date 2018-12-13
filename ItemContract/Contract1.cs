@@ -1,4 +1,4 @@
-﻿using Neo.SmartContract.Framework;
+using Neo.SmartContract.Framework;
 using Neo.SmartContract.Framework.Services.Neo;
 using Neo.SmartContract.Framework.Services.System;
 using System;
@@ -732,8 +732,11 @@ namespace LordsContract
             Storage.Put(Storage.CurrentContext, key, bytes);
 
             // Change City Lord
-            key = CITY_PREFIX + log.DefenderObject;
-            Storage.Put(Storage.CurrentContext, key, log.Defender);
+            key = CITY_PREFIX + log.DefenderObject.AsByteArray();
+            if (log.BattleResult == 1)  // Attacker Won?
+                Storage.Put(Storage.CurrentContext, key, log.Attacker);
+            //else
+            //    Storage.Put(Storage.CurrentContext, key, log.Defender);
 
             Runtime.Notify("City Attack was logged on Blockchain");
             return new BigInteger(1).AsByteArray();
