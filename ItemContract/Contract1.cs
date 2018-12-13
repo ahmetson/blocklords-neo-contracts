@@ -12,7 +12,7 @@ namespace LordsContract
         private static readonly string ITEM_PREFIX = "\x02\x00";
         private static readonly string STRONGHOLD_PREFIX = "\x03\x00";
         private static readonly string ITEM_DROP_PREFIX = "\x04\x00";
-        private static readonly string HERO_CREATION_KEY = "\x05";
+        private static readonly string BATTLE_LOG_PREFIX = "\x05\x00";
         private static readonly string ITEM_DROP_KEY = "\x06";
         private static readonly string CITY_PREFIX = "\x07\x00";
         private static readonly string HERO_PREFIX = "\x08\x00";
@@ -32,8 +32,10 @@ namespace LordsContract
         private static readonly decimal auction8HoursFee = 10_000_000,
                                            auction12HoursFee = 20_000_000,
                                            auction24HoursFee = 30_000_000,
-                                           heroCreationFee   = 100_000_000,
-                                           battleFee         = 30_000_000;
+                                           heroCreationFee = 100_000_000,
+                                           cityAttackFee = 50_000_000,
+            strongholdAttackFee = 20_000_000,
+            banditCampAttackFee = 10_000_000;
                                      
         private static readonly BigInteger duration8Hours = 28800;
         private static readonly BigInteger duration12Hours = 43200;
@@ -240,6 +242,10 @@ namespace LordsContract
                 }
 
                 return DropItems();
+            } else if (param.Equals("LogCityAttack"))
+            {
+                Runtime.Log("Initialize city attack");
+                return LogCityAttack(args);
             }
 
             //Runtime.Notify("Incorrect Parameter");
@@ -624,6 +630,114 @@ namespace LordsContract
             Runtime.Notify("Init Item Stat Update");
         }
 
+        //------------------------------------------------------------------------------------
+        //
+        // LOG
+        //
+        //------------------------------------------------------------------------------------
+        [Serializable]
+        public class BattleLog
+        {
+            public BigInteger BattleId;
+            public BigInteger BattleResult; // 0 - Attacker WON, 1 - Attacker Lose
+            public BigInteger BattleType;   // 0 - City, 1 - Stronghold, 2 - Bandit Camp
+            public BigInteger Attacker;
+            public byte[] AttackerOwner;
+            public BigInteger AttackerTroops;
+            public BigInteger AttackerRemained;
+            public BigInteger AttackerItem1;
+            public BigInteger AttackerItem2;
+            public BigInteger AttackerItem3;
+            public BigInteger AttackerItem4;
+            public BigInteger AttackerItem5;
+            public BigInteger DefenderObject;   // City|Stronghold|NPC ID
+
+            public BigInteger Defender;
+            public byte[] DefenderOwner;
+            public BigInteger DefenderTroops;
+            public BigInteger DefenderRemained;
+            public BigInteger DefenderItem1;
+            public BigInteger DefenderItem2;
+            public BigInteger DefenderItem3;
+            public BigInteger DefenderItem4;
+            public BigInteger DefenderItem5;
+
+            public BigInteger Time;
+            public byte[] TX;
+        }
+        public static byte[] LogCityAttack(object[] args)
+        {
+            // Check incoming fee
+            bool received = false;
+            Transaction TX = (Transaction)ExecutionEngine.ScriptContainer;
+            TransactionOutput[] outputs = TX.GetOutputs();
+            Runtime.Notify("Outputs are", outputs.Length);
+            foreach (var output in outputs)
+            {
+                // Game Developers got their fee?
+                if (output.ScriptHash.AsBigInteger() == GameOwner.AsBigInteger())
+                {
+                    Runtime.Notify("Game Owner received ", output.Value);
+                    if (output.Value == cityAttackFee)
+                    {
+                        received = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!received)
+            {
+                Runtime.Notify("The Battle Fee doesn't included.");
+                return new BigInteger(0).AsByteArray();
+            }
+
+            // Prepare log
+            BattleLog log = new BattleLog();
+
+            log.BattleId = (BigInteger)args[0];
+            log.BattleResult = (BigInteger)args[1]; // 0 - Attacker WON, 1 - Attacker Lose
+            log.BattleType = 1;   // 0 - City, 1 - Stronghold, 2 - Bandit Camp
+            log.Attacker = (BigInteger)args[2]; // Hero
+            log.AttackerOwner = (byte[])args[3];    // Player Address
+            log.AttackerTroops = (BigInteger)args[4];
+            log.AttackerRemained = (BigInteger)args[5];
+            log.AttackerItem1 = (BigInteger)args[6];    // Equipped Items that were involved
+            log.AttackerItem2 = (BigInteger)args[7];
+            log.AttackerItem3 = (BigInteger)args[8];
+            log.AttackerItem4 = (BigInteger)args[9];
+            log.AttackerItem5 = (BigInteger)args[10];
+            log.DefenderObject = (BigInteger)args[20];   // City|Stronghold|NPC ID
+
+            log.Defender = (BigInteger)args[11];
+            log.DefenderOwner = (byte[])args[12];
+            log.DefenderTroops = (BigInteger)args[13];
+            log.DefenderRemained = (BigInteger)args[14];
+            log.DefenderItem1 = (BigInteger)args[15];
+            log.DefenderItem2 = (BigInteger)args[16];
+            log.DefenderItem3 = (BigInteger)args[17];
+            log.DefenderItem4 = (BigInteger)args[18];
+            log.DefenderItem5 = (BigInteger)args[19];
+
+            log.Time = Blockchain.GetHeader(Blockchain.GetHeight()).Timestamp;
+            log.TX = ((Transaction)ExecutionEngine.ScriptContainer).Hash;
+
+            // Log 
+            string key = BATTLE_LOG_PREFIX + log.TX;
+
+            //item.Seller = Neo.SmartContract.Framework.Services.System.ExecutionEngine.CallingScriptHash;
+
+            byte[] bytes = Neo.SmartContract.Framework.Helper.Serialize(log);
+
+            Storage.Put(Storage.CurrentContext, key, bytes);
+
+            // Change City Lord
+            key = CITY_PREFIX + log.DefenderObject;
+            Storage.Put(Storage.CurrentContext, key, log.Defender);
+
+            Runtime.Notify("City Attack was logged on Blockchain");
+            return new BigInteger(1).AsByteArray();
+        }
 
         //------------------------------------------------------------------------------------
         private static bool IsAuctionTransactionFeeIncluded ( BigInteger duration )
