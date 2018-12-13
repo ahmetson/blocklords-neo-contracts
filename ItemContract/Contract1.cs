@@ -1,4 +1,4 @@
-using Neo.SmartContract.Framework;
+﻿using Neo.SmartContract.Framework;
 using Neo.SmartContract.Framework.Services.Neo;
 using Neo.SmartContract.Framework.Services.System;
 using System;
@@ -246,6 +246,10 @@ namespace LordsContract
             {
                 Runtime.Log("Initialize city attack");
                 return LogCityAttack(args);
+            } else if (param.Equals("LogStrongholdAttack"))
+            {
+                Runtime.Log("Initialize stronghold attack");
+                return LogStrongholdAttack(args);
             }
 
             //Runtime.Notify("Incorrect Parameter");
@@ -739,6 +743,81 @@ namespace LordsContract
             //    Storage.Put(Storage.CurrentContext, key, log.Defender);
 
             Runtime.Notify("City Attack was logged on Blockchain");
+            return new BigInteger(1).AsByteArray();
+        }
+
+        public static byte[] LogStrongholdAttack(object[] args)
+        {
+            // Check incoming fee
+            bool received = false;
+            Transaction TX = (Transaction)ExecutionEngine.ScriptContainer;
+            TransactionOutput[] outputs = TX.GetOutputs();
+            Runtime.Notify("Outputs are", outputs.Length);
+            foreach (var output in outputs)
+            {
+                // Game Developers got their fee?
+                if (output.ScriptHash.AsBigInteger() == GameOwner.AsBigInteger())
+                {
+                    Runtime.Notify("Game Owner received ", output.Value);
+                    if (output.Value == strongholdAttackFee)
+                    {
+                        received = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!received)
+            {
+                Runtime.Notify("The Battle Fee doesn't included.");
+                return new BigInteger(0).AsByteArray();
+            }
+
+            // Prepare log
+            BattleLog log = new BattleLog();
+
+            log.BattleId = (BigInteger)args[0];
+            log.BattleResult = (BigInteger)args[1]; // 0 - Attacker WON, 1 - Attacker Lose
+            log.BattleType = 2;   // 0 - City, 1 - Stronghold, 2 - Bandit Camp
+            log.Attacker = (BigInteger)args[2]; // Hero
+            log.AttackerOwner = (byte[])args[3];    // Player Address
+            log.AttackerTroops = (BigInteger)args[4];
+            log.AttackerRemained = (BigInteger)args[5];
+            log.AttackerItem1 = (BigInteger)args[6];    // Equipped Items that were involved
+            log.AttackerItem2 = (BigInteger)args[7];
+            log.AttackerItem3 = (BigInteger)args[8];
+            log.AttackerItem4 = (BigInteger)args[9];
+            log.AttackerItem5 = (BigInteger)args[10];
+            log.DefenderObject = (BigInteger)args[20];   // City|Stronghold|NPC ID
+
+            log.Defender = (BigInteger)args[11];
+            log.DefenderOwner = (byte[])args[12];
+            log.DefenderTroops = (BigInteger)args[13];
+            log.DefenderRemained = (BigInteger)args[14];
+            log.DefenderItem1 = (BigInteger)args[15];
+            log.DefenderItem2 = (BigInteger)args[16];
+            log.DefenderItem3 = (BigInteger)args[17];
+            log.DefenderItem4 = (BigInteger)args[18];
+            log.DefenderItem5 = (BigInteger)args[19];
+
+            log.Time = Blockchain.GetHeader(Blockchain.GetHeight()).Timestamp;
+            log.TX = ((Transaction)ExecutionEngine.ScriptContainer).Hash;
+
+            // Log 
+            string key = BATTLE_LOG_PREFIX + log.TX;
+
+            //item.Seller = Neo.SmartContract.Framework.Services.System.ExecutionEngine.CallingScriptHash;
+
+            byte[] bytes = Neo.SmartContract.Framework.Helper.Serialize(log);
+
+            Storage.Put(Storage.CurrentContext, key, bytes);
+
+            // Change City Lord
+            key = STRONGHOLD_PREFIX + log.DefenderObject.AsByteArray();
+            if (log.BattleResult == 1)  // Attacker Won?
+                Storage.Put(Storage.CurrentContext, key, log.Attacker);
+
+            Runtime.Notify("Stronghold Attack was logged on Blockchain");
             return new BigInteger(1).AsByteArray();
         }
 
