@@ -250,6 +250,10 @@ namespace LordsContract
             {
                 Runtime.Log("Initialize stronghold attack");
                 return LogStrongholdAttack(args);
+            } else if (param.Equals("LogBanditCampAttack"))
+            {
+                Runtime.Log("Initialize bandir camp attack");
+                return LogBanditCampAttack(args);
             }
 
             //Runtime.Notify("Incorrect Parameter");
@@ -624,9 +628,11 @@ namespace LordsContract
         //
         //------------------------------------------------------------------------------------
 
-        public static void UpdateItemStats(BigInteger[] ids, BigInteger[] newStats)
+        public static BigInteger[] UpdateItemStats(BigInteger[] ids)
         {
             Runtime.Notify("Init Item Stat Update");
+            BigInteger[] updated = new BigInteger[5] { 0,0,0,0,0 };
+            return updated;
         }
 
         //------------------------------------------------------------------------------------
@@ -813,6 +819,87 @@ namespace LordsContract
                 Storage.Put(Storage.CurrentContext, key, log.Attacker);
 
             Runtime.Notify("Stronghold Attack was logged on Blockchain");
+            return new BigInteger(1).AsByteArray();
+        }
+
+        public static byte[] LogBanditCampAttack(object[] args)
+        {
+            // Check incoming fee
+            bool received = false;
+            Transaction TX = (Transaction)ExecutionEngine.ScriptContainer;
+            TransactionOutput[] outputs = TX.GetOutputs();
+            Runtime.Notify("Outputs are", outputs.Length);
+            foreach (var output in outputs)
+            {
+                // Game Developers got their fee?
+                if (output.ScriptHash.AsBigInteger() == GameOwner.AsBigInteger())
+                {
+                    Runtime.Notify("Game Owner received ", output.Value);
+                    if (output.Value == banditCampAttackFee)
+                    {
+                        received = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!received)
+            {
+                Runtime.Notify("The Battle Fee doesn't included.");
+                return new BigInteger(0).AsByteArray();
+            }
+
+            // Prepare log
+            BattleLog log = new BattleLog();
+
+            log.BattleId = (BigInteger)args[0];
+            log.BattleResult = (BigInteger)args[1]; // 0 - Attacker WON, 1 - Attacker Lose
+            log.BattleType = 3;   // 0 - City, 1 - Stronghold, 2 - Bandit Camp
+            log.Attacker = (BigInteger)args[2]; // Hero
+            log.AttackerOwner = (byte[])args[3];    // Player Address
+            log.AttackerTroops = (BigInteger)args[4];
+            log.AttackerRemained = (BigInteger)args[5];
+            log.AttackerItem1 = (BigInteger)args[6];    // Equipped Items that were involved
+            log.AttackerItem2 = (BigInteger)args[7];
+            log.AttackerItem3 = (BigInteger)args[8];
+            log.AttackerItem4 = (BigInteger)args[9];
+            log.AttackerItem5 = (BigInteger)args[10];
+            log.DefenderObject = (BigInteger)args[11];   // City|Stronghold|NPC ID
+
+            // No need to record NPC data!!!
+
+            log.Time = Blockchain.GetHeader(Blockchain.GetHeight()).Timestamp;
+            log.TX = ((Transaction)ExecutionEngine.ScriptContainer).Hash;
+
+            // Update Involved Items in Battle???
+            if (log.BattleResult == 1) // Attacker Won?
+            {
+                BigInteger[] ids = new BigInteger[5]
+                {
+                    log.AttackerItem1,
+                    log.AttackerItem2,
+                    log.AttackerItem3,
+                    log.AttackerItem4,
+                    log.AttackerItem5
+                };
+                BigInteger[] stats = UpdateItemStats(ids);
+
+                // Instead we use Defender Items List to records Hero's Item Update Values
+                log.DefenderItem1 = stats[0];
+                log.DefenderItem2 = stats[1];
+                log.DefenderItem3 = stats[2];
+                log.DefenderItem4 = stats[3];
+                log.DefenderItem5 = stats[4];
+            }
+            // Log 
+            string key = BATTLE_LOG_PREFIX + log.TX;
+
+            byte[] bytes = Neo.SmartContract.Framework.Helper.Serialize(log);
+
+            Storage.Put(Storage.CurrentContext, key, bytes);
+
+
+            Runtime.Notify("Bandit Camp Attack was logged on Blockchain");
             return new BigInteger(1).AsByteArray();
         }
 
