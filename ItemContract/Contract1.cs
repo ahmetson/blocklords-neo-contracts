@@ -67,6 +67,7 @@ namespace LordsContract
             // EDITABLE DATA
             public BigInteger STAT_VALUE;
             public BigInteger LEVEL;
+            public BigInteger XP;
             public byte[] OWNER;
         }
 
@@ -166,7 +167,8 @@ namespace LordsContract
 
                 //return new BigInteger(0).AsByteArray();
                 return AuctionBegin((BigInteger)args[0], marketItem);
-            } else if (param.Equals("putItem"))
+            }
+            else if (param.Equals("putItem"))
             {
                 Runtime.Log("Put Item on Storage");
 
@@ -198,12 +200,14 @@ namespace LordsContract
 
                 item.STAT_VALUE = (BigInteger)args[5];
                 item.LEVEL = (BigInteger)args[6];
-                item.OWNER = Neo.SmartContract.Framework.Services.System.ExecutionEngine.CallingScriptHash;
+                item.OWNER = ExecutionEngine.CallingScriptHash;
+                item.XP = 0;
 
                 // Method puts item on storage.
                 // Updates Item Given Parameters
                 PutItem((BigInteger)args[1], (byte)args[0], item);
-            } else if (param.Equals("putHero"))
+            }
+            else if (param.Equals("putHero"))
             {
                 if (args.Length != 13)
                 {
@@ -242,15 +246,18 @@ namespace LordsContract
                 }
 
                 return DropItems();
-            } else if (param.Equals("LogCityAttack"))
+            }
+            else if (param.Equals("LogCityAttack"))
             {
                 Runtime.Log("Initialize city attack");
                 return LogCityAttack(args);
-            } else if (param.Equals("LogStrongholdAttack"))
+            }
+            else if (param.Equals("LogStrongholdAttack"))
             {
                 Runtime.Log("Initialize stronghold attack");
                 return LogStrongholdAttack(args);
-            } else if (param.Equals("LogBanditCampAttack"))
+            }
+            else if (param.Equals("LogBanditCampAttack"))
             {
                 Runtime.Log("Initialize bandir camp attack");
                 return LogBanditCampAttack(args);
