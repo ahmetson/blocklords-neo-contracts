@@ -118,7 +118,7 @@ namespace LordsContract
 
             Header header = Blockchain.GetHeader(Blockchain.GetHeight());
             ulong randomNumber = header.ConsensusData;
-            int percentage = (int)(randomNumber % 10);
+            int percentage = (int)(randomNumber % max);
 
             return new BigInteger(percentage);
         }
