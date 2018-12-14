@@ -1,4 +1,4 @@
-﻿using Neo.SmartContract.Framework;
+using Neo.SmartContract.Framework;
 using Neo.SmartContract.Framework.Services.Neo;
 using Neo.SmartContract.Framework.Services.System;
 using System;
@@ -456,11 +456,6 @@ namespace LordsContract
 
             Runtime.Notify("Item was successfully stored on storage");
             return new BigInteger(1).AsByteArray();
-        }
-
-        public static void UpdateItems()
-        {
-
         }
 
         private static byte[] PutHero(BigInteger heroId, Hero hero, BigInteger item1, BigInteger item2, BigInteger item3, BigInteger item4, BigInteger item5)
