@@ -107,7 +107,7 @@ namespace LordsContract
             public BigInteger Hero;
         }
 
-        public static BigInteger GetRandomNumber()
+        public static BigInteger GetRandomNumber(ulong max = 10)
         {
             //Transaction tx = (Transaction)ExecutionEngine.ScriptContainer;
             //Header bl = Blockchain.GetHeader(Blockchain.GetHeight());
