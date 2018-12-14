@@ -105,6 +105,7 @@ namespace LordsContract
         {
             public BigInteger ID;
             public BigInteger Hero;
+            public BigInteger CreatedBlock;
         }
 
         public static BigInteger GetRandomNumber(ulong max = 10)
@@ -566,64 +567,120 @@ namespace LordsContract
                 return new BigInteger(0).AsByteArray();  
             }
 
-            // Get Random Number
-            BigInteger stronghold = GetRandomNumber();
-            Runtime.Notify("Returned Random Stronghold", stronghold);
+            BigInteger totalWeight = 0;
+            BigInteger[] mins = new BigInteger[10];
+            BigInteger[] maxes = new BigInteger[10];
 
-            string key = STRONGHOLD_PREFIX + stronghold.AsByteArray();
-            byte[] inStronghold = Storage.Get(Storage.CurrentContext, key);
+            string key = "";
+            Stronghold inStronghold;
 
-            if (inStronghold.Length == 0)
+            for (int i=0; i<10; i++)
             {
-                Runtime.Notify("Stronghold is owned by NPC");
-                return new BigInteger(0).AsByteArray();
+                key = STRONGHOLD_PREFIX + (i + 1).Serialize();
+
+                byte[] inStrongholdBytes = Storage.Get(Storage.CurrentContext, key);
+
+                if (inStrongholdBytes.Length == 0)
+                {
+                    mins[i] = maxes[i] = 0;
+                } else
+                {
+                    inStronghold = (Stronghold)Neo.SmartContract.Framework.Helper.Deserialize(inStrongholdBytes);
+
+                    if (i == 0)
+                        mins[i] = 0;
+                    else
+                        mins[i] = maxes[i - 1];
+
+                    BigInteger weight = Blockchain.GetHeight() - inStronghold.CreatedBlock;
+
+                    maxes[i] = mins[i] + weight;
+
+                    totalWeight += weight;
+                }
+                
+                
             }
 
-            // Check existence of Drop Item
-            var nextDropItem = Storage.Get(Storage.CurrentContext, ITEM_DROP_KEY);
-            if (nextDropItem.Length == 0)
+            if (totalWeight == 0)
             {
-                Runtime.Notify("Item to drop doesn't exists");
+                Runtime.Notify("There no Stronghold owners");
                 return new BigInteger(0).AsByteArray();
             }
+            else
+            {
+                BigInteger randomWeight = GetRandomNumber((ulong)totalWeight-1) + 1;
+                Runtime.Notify("Returned Random Stronghold Weight", randomWeight, "Define Stronghold ID");
 
-            // If Drop Item exists get item id from it
-            string itemKey = ITEM_PREFIX + nextDropItem;
-            Item item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, itemKey));
+                // Find Stronghold based on Weight
+                for(var i=0; i<10; i++)
+                {
+                    if (randomWeight >= mins[i] && randomWeight <= maxes[i])    //TODOOOOOOOOOOOOOOOOOOOOOOOOOOO if randomWeight is equal to min or max, this logic command will return FALSE?
+                    {
+                        // Is Stronghold has an owner?
+                        key = STRONGHOLD_PREFIX + (i + 1).Serialize();
+                        break;
+                    }
+                }
 
-            string heroKey = HERO_PREFIX + inStronghold;
-            Hero hero = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, heroKey));
+                
+
+                byte[] inStrongholdBytes = Storage.Get(Storage.CurrentContext, key);
+                inStronghold = (Stronghold)Neo.SmartContract.Framework.Helper.Deserialize(inStrongholdBytes);
+
+                if (inStronghold.Hero <= 0)
+                {
+                    Runtime.Notify("Stronghold is owned by NPC");
+                    return new BigInteger(0).AsByteArray();
+                }
+
+                // Check existence of Drop Item
+                var nextDropItem = Storage.Get(Storage.CurrentContext, ITEM_DROP_KEY);
+                if (nextDropItem.Length == 0)
+                {
+                    Runtime.Notify("Item to drop doesn't exists");
+                    return new BigInteger(0).AsByteArray();
+                }
+
+                // If Drop Item exists get item id from it
+                string itemKey = ITEM_PREFIX + nextDropItem;
+                Item item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, itemKey));
+
+                string heroKey = HERO_PREFIX + inStronghold;
+                Hero hero = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, heroKey));
 
 
-           
-            // Change owner of Item.
-            item.OWNER = hero.OWNER;
-            byte[] itemBytes = Neo.SmartContract.Framework.Helper.Serialize(item);
+                // Change owner of Item.
+                item.OWNER = hero.OWNER;
+                byte[] itemBytes = Neo.SmartContract.Framework.Helper.Serialize(item);
 
-            // Change Drop Item.
-            Storage.Put(Storage.CurrentContext, itemKey, itemBytes);
+                // Change Drop Item.
+                Storage.Put(Storage.CurrentContext, itemKey, itemBytes);
 
-            // Delete Stronghold owner. (It means "kicking out from Stronghold")
-            Storage.Delete(Storage.CurrentContext, key);
-            
-            key = ITEM_DROP_PREFIX + nextDropItem;
-            BigInteger previousItem = new BigInteger(Storage.Get(Storage.CurrentContext, key)); // Previous Added item is linked as previous item
+                // Delete Stronghold owner. (It means "kicking out from Stronghold")
+                inStronghold.Hero = 0;
+                inStrongholdBytes = Neo.SmartContract.Framework.Helper.Serialize(inStronghold);
+                Storage.Put(Storage.CurrentContext, key, inStrongholdBytes);
 
-            // Set the drop item
-            Storage.Delete(Storage.CurrentContext, key);
-            Storage.Put(Storage.CurrentContext, ITEM_DROP_KEY, previousItem); // Set Prvious Drop item as next droppable item
+                key = ITEM_DROP_PREFIX + nextDropItem;
+                BigInteger previousItem = new BigInteger(Storage.Get(Storage.CurrentContext, key)); // Previous Added item is linked as previous item
+
+                // Set the drop item
+                Storage.Delete(Storage.CurrentContext, key);
+                Storage.Put(Storage.CurrentContext, ITEM_DROP_KEY, previousItem); // Set Prvious Drop item as next droppable item
 
 
-            // Set Stronghold update time.
-            DropData dropped = new DropData();
-            dropped.Block = Blockchain.GetHeight();
-            dropped.HeroId = inStronghold.AsBigInteger();
-            dropped.ItemId = nextDropItem.AsBigInteger();
-            dropped.StrongholdId = stronghold;
+                // Set Stronghold update time.
+                DropData dropped = new DropData();
+                dropped.Block = Blockchain.GetHeight();
+                dropped.HeroId = inStronghold.Hero;
+                dropped.ItemId = nextDropItem.AsBigInteger();
+                dropped.StrongholdId = inStronghold.ID;
 
-            byte[] bytes = Neo.SmartContract.Framework.Helper.Serialize(dropped);
+                byte[] bytes = Neo.SmartContract.Framework.Helper.Serialize(dropped);
 
-            Storage.Put(Storage.CurrentContext, ITEM_DROP_KEY, bytes);
+                Storage.Put(Storage.CurrentContext, ITEM_DROP_KEY, bytes);
+            }
 
             Runtime.Notify("Item was Dropped successfully");
             return new BigInteger(1).AsByteArray();
@@ -921,8 +978,17 @@ namespace LordsContract
 
             // Change City Lord
             key = STRONGHOLD_PREFIX + log.DefenderObject.AsByteArray();
-            if (log.BattleResult == 1)  // Attacker Won?
-                Storage.Put(Storage.CurrentContext, key, log.Attacker);
+            if (log.BattleResult == 1) // Attacker Won?
+            {
+                Stronghold stronghold = new Stronghold();
+                stronghold.CreatedBlock = Blockchain.GetHeight();
+                stronghold.ID = log.DefenderObject;
+                stronghold.Hero = log.Attacker;
+
+                bytes = Neo.SmartContract.Framework.Helper.Serialize(stronghold);
+
+                Storage.Put(Storage.CurrentContext, key, bytes);
+            }
 
             Runtime.Notify("Stronghold Attack was logged on Blockchain");
             return new BigInteger(1).AsByteArray();
