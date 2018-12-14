@@ -638,8 +638,107 @@ namespace LordsContract
         public static BigInteger[] UpdateItemStats(BigInteger[] ids)
         {
             Runtime.Notify("Init Item Stat Update");
-            BigInteger[] updated = new BigInteger[5] { 0,0,0,0,0 };
-            return updated;
+
+            string key = "";
+
+            BigInteger[] updateValues = new BigInteger[5] { 0,0,0,0,0 };
+
+            for(var i=0; i<5; i++)
+            {
+                // Get Item
+                key = ITEM_PREFIX + ids[i].AsByteArray();
+                Item item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, key));
+
+                // Update XP
+                item.XP = item.XP + 1;
+
+                // Update Level
+                if (item.QUALITY == 1 && item.LEVEL == 3 ||
+                    item.QUALITY == 2 && item.LEVEL == 5 ||
+                    item.QUALITY == 3 && item.LEVEL == 7 ||
+                    item.QUALITY == 4 && item.LEVEL == 9 ||
+                    item.QUALITY == 5 && item.LEVEL == 10)
+                {
+                    Runtime.Notify("The Item had reached max level. So not updated", ids[i]);
+                    updateValues[i] = 0;
+                    continue;
+                }
+
+                if (item.LEVEL == 1 && item.XP >= 4 ||
+                    item.LEVEL == 2 && item.XP >= 14 ||
+                    item.LEVEL == 3 && item.XP >= 34 ||
+                    item.LEVEL == 4 && item.XP >= 74 ||
+                    item.LEVEL == 5 && item.XP >= 144 ||
+                    item.LEVEL == 6 && item.XP >= 254 ||
+                    item.LEVEL == 7 && item.XP >= 404 ||
+                    item.LEVEL == 8 && item.XP >= 604 ||
+                    item.LEVEL == 9 && item.XP >= 904)
+                {
+                    item.LEVEL = item.LEVEL + 1;
+                }
+
+                // Update Stat based on level
+                if (item.QUALITY == 1)
+                {
+                    updateValues[i] = GetRandomNumber(3);
+                    item.STAT_VALUE = item.STAT_VALUE + updateValues[i];
+                } else if (item.QUALITY == 2)
+                {
+                    updateValues[i] = GetRandomNumber(3) + 2;
+                    item.STAT_VALUE = item.STAT_VALUE + updateValues[i];
+                }
+                else if (item.QUALITY == 3)
+                {
+                    updateValues[i] = GetRandomNumber(3) + 4;
+                    item.STAT_VALUE = item.STAT_VALUE + updateValues[i];
+                }
+                else if (item.QUALITY == 4)
+                {
+                    updateValues[i] = GetRandomNumber(3) + 6;
+                    item.STAT_VALUE = item.STAT_VALUE + updateValues[i];
+                }
+                else if(item.QUALITY == 5)
+                {
+                    updateValues[i] = GetRandomNumber(3) + 8;
+                    item.STAT_VALUE = item.STAT_VALUE + updateValues[i];
+                }
+                /*else if (item.LEVEL == 6)
+                {
+                    updateValues[i] = GetRandomNumber(3);
+                    item.STAT_VALUE = item.STAT_VALUE + updateValues[i];
+                }
+                else if(item.LEVEL == 7)
+                {
+                    updateValues[i] = GetRandomNumber(3);
+                    item.STAT_VALUE = item.STAT_VALUE + updateValues[i];
+                }
+                else if (item.LEVEL == 8)
+                {
+                    updateValues[i] = GetRandomNumber(3);
+                    item.STAT_VALUE = item.STAT_VALUE + updateValues[i];
+                }
+                else if(item.LEVEL == 9)
+                {
+                    updateValues[i] = GetRandomNumber(3);
+                    item.STAT_VALUE = item.STAT_VALUE + updateValues[i];
+                }
+                else 
+                {
+                    updateValues[i] = GetRandomNumber(3);
+                    item.STAT_VALUE = item.STAT_VALUE + updateValues[i];
+                }
+                */
+
+
+                // Record generated Stat value on Update Values List
+                byte[] bytes = Neo.SmartContract.Framework.Helper.Serialize(item);
+
+
+                // Put Item Back
+                Storage.Put(Storage.CurrentContext, key, bytes);
+            }
+
+            return updateValues;
         }
 
         //------------------------------------------------------------------------------------
