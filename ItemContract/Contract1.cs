@@ -879,8 +879,8 @@ namespace LordsContract
             log.TX = ((Transaction)ExecutionEngine.ScriptContainer).Hash;
 
             // Update Involved Items in Battle???
-            if (log.BattleResult == 1) // Attacker Won?
-            {
+            //if (log.BattleResult == 1) // Attacker Won?
+            //{
                 BigInteger[] ids = new BigInteger[5]
                 {
                     log.AttackerItem1,
@@ -897,7 +897,7 @@ namespace LordsContract
                 log.DefenderItem3 = stats[2];
                 log.DefenderItem4 = stats[3];
                 log.DefenderItem5 = stats[4];
-            }
+            //}
             // Log 
             string key = BATTLE_LOG_PREFIX + log.TX;
 
