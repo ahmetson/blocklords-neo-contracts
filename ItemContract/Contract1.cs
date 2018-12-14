@@ -263,6 +263,10 @@ namespace LordsContract
                 Runtime.Log("Initialize bandir camp attack");
                 return LogBanditCampAttack(args);
             }
+            else if (param.Equals("LogStrongholdLeave"))
+            {
+                return LogStrongholdLeave(args);
+            }
 
             //Runtime.Notify("Incorrect Parameter");
             return new BigInteger(1).AsByteArray();
@@ -401,7 +405,7 @@ namespace LordsContract
                 key = ITEM_PREFIX + itemId.AsByteArray();
                 Item item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, key));
 
-                item.OWNER = Neo.SmartContract.Framework.Services.System.ExecutionEngine.CallingScriptHash;
+                item.OWNER = ExecutionEngine.CallingScriptHash;
 
                 byte[] itemBytes = Neo.SmartContract.Framework.Helper.Serialize(item);
                 Storage.Put(Storage.CurrentContext, key, itemBytes);
@@ -991,6 +995,26 @@ namespace LordsContract
             }
 
             Runtime.Notify("Stronghold Attack was logged on Blockchain");
+            return new BigInteger(1).AsByteArray();
+        }
+
+        public static byte[] LogStrongholdLeave(object[] args)
+        {
+            Runtime.Notify("Stronghold Leaving Initiated");
+
+            // Change City Lord
+            string key = STRONGHOLD_PREFIX + ((BigInteger)args[0]).AsByteArray();
+
+            Stronghold stronghold = new Stronghold();
+            stronghold.CreatedBlock = Blockchain.GetHeight();
+            stronghold.ID = (BigInteger)args[0];
+            stronghold.Hero = 0;
+
+            byte[] bytes = Neo.SmartContract.Framework.Helper.Serialize(stronghold);
+
+            Storage.Put(Storage.CurrentContext, key, bytes);
+
+            Runtime.Notify("Stronghold Leaving was logged on Blockchain");
             return new BigInteger(1).AsByteArray();
         }
 
