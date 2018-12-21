@@ -535,10 +535,19 @@ namespace LordsContract
 
         public static byte[] AuctionCancel(BigInteger itemId)
         {
+            Runtime.Log("Initialized Auction Cancellation");
             string key = MARKET_PREFIX + itemId.AsByteArray();
+            MarketItemData mItem = (MarketItemData)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, key));
+
+            if (Runtime.CheckWitness(mItem.Seller))
+            {
+                Runtime.Notify("Only Owner of Item can delete it from Market!");
+                return new BigInteger(0).AsByteArray();
+            }
+
             Storage.Delete(Storage.CurrentContext, key);
 
-            Runtime.Notify("Item was successfully deleted from Auction!");
+            Runtime.Notify("Item was successfully cancelled from Auction!");
             return new BigInteger(1).AsByteArray();
         }
 
