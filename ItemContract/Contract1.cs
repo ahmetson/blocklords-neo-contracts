@@ -1058,14 +1058,32 @@ namespace LordsContract
 
         public static byte[] LogStrongholdLeave(object[] args)
         {
+
             Runtime.Notify("Stronghold Leaving Initiated");
 
-            // Change City Lord
+            // Change Stronghold Lord
             string key = STRONGHOLD_PREFIX + ((BigInteger)args[0]).AsByteArray();
 
-            Stronghold stronghold = new Stronghold();
+            Stronghold stronghold = (Stronghold)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, key));
+
+            if (stronghold.Hero == 0)
+            {
+                Runtime.Notify("Stronghold is already owned by NPC.");
+                return new BigInteger(0).AsByteArray();
+            }
+
+            string heroKey = HERO_PREFIX + stronghold.Hero.AsByteArray();
+            Hero hero = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, heroKey));
+
+            Runtime.Log("Check who calls this method!");
+            if (Runtime.CheckWitness(hero.OWNER))
+            {
+                Runtime.Notify("Only Stronghold Owner can initialize this method");
+                return new BigInteger(0).AsByteArray();
+            }
+
+            // Remove Stronghold Owner Information
             stronghold.CreatedBlock = Blockchain.GetHeight();
-            stronghold.ID = (BigInteger)args[0];
             stronghold.Hero = 0;
 
             byte[] bytes = Neo.SmartContract.Framework.Helper.Serialize(stronghold);
