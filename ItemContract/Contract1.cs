@@ -58,6 +58,10 @@ namespace LordsContract
         // The Smartcontract Owner's Wallet Address. Used to receive some Gas as a transaction fee.
         private static readonly byte[] GameOwner = "AML8hyTV4vXuomovxdcAH9pRC9ny618YmA".ToScriptHash();
 
+        private static readonly BigInteger CofferPayoutInterval = 25000;            // In Blocks. Each blocks generated in 20-30 seconds.
+
+        private static readonly BigInteger bigCity = 1, mediumCity = 2, smallCity = 3;
+
         /****************************************************************************
          * 
          * Data Structs for Game Data for Blockchain Storage.
@@ -120,6 +124,16 @@ namespace LordsContract
             public BigInteger ID;                   // Stronghold ID
             public BigInteger Hero;                 // Hero ID, that occupies Stronghold on map
             public BigInteger CreatedBlock;         // The Blockchain Height
+        }
+
+        [Serializable]
+        public class City
+        {
+            public BigInteger ID;                   // Stronghold ID
+            public BigInteger Hero;                 // Hero ID, that occupies City on map
+            public BigInteger CreatedBlock;         // The Blockchain Height
+            public BigInteger Coffer;               // City Coffer
+            public BigInteger Size;                 
         }
 
         [Serializable]
@@ -421,7 +435,19 @@ namespace LordsContract
 
             // On Blockchain Storage, city stores Wallet Address of that city's owner.
             string cityKey = CITY_PREFIX + mItem.City;
-            byte[] lord = Storage.Get(Storage.CurrentContext, cityKey);     // Owner of city, where item was sold
+
+            City city = (City)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, cityKey));
+
+            byte[] lord = new byte[] { };
+            if (city.Hero == 0)
+                lord = GameOwner;
+            else
+            {
+                string heroKey = HERO_PREFIX + city.Hero;
+                Hero hero = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, heroKey));
+
+                lord = hero.OWNER;     // Owner of city, where item was sold
+            }
 
             // Invocation of this functions comes with an attached GAS.
             // The total amount of attached GAS should be equal to the price of Item on Market.
@@ -924,11 +950,18 @@ namespace LordsContract
             Storage.Put(Storage.CurrentContext, key, bytes);
 
             // Change City Lord
-            key = CITY_PREFIX + log.DefenderObject.AsByteArray();
             if (log.BattleResult == 1)  // Attacker Won?
-                Storage.Put(Storage.CurrentContext, key, log.Attacker);
-            //else
-            //    Storage.Put(Storage.CurrentContext, key, log.Defender);
+            {
+                key = CITY_PREFIX + log.DefenderObject.AsByteArray();
+
+                City city = (City)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, key));
+                city.Hero = log.Attacker;
+                byte[] cityBytes = Neo.SmartContract.Framework.Helper.Serialize(city);
+
+                Storage.Put(Storage.CurrentContext, key, cityBytes);
+            }
+
+            // Increase City Coffer
 
             Runtime.Notify("City Attack was logged on Blockchain");
             return new BigInteger(1).AsByteArray();
