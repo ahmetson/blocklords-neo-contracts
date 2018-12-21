@@ -42,7 +42,7 @@ namespace LordsContract
                                            auction12HoursFee = 20_000_000,          // 0.2 GAS
                                            auction24HoursFee = 30_000_000,          // 0.3 GAS
                                            heroCreationFee = 100_000_000,           // 1.0 GAS
-                                           cityAttackFee = 50_000_000,              // 0.5 GAS
+                                           cityAttackFee = 50000000,              // 0.5 GAS
             strongholdAttackFee = 20_000_000,                                       // 0.2 GAS
             banditCampAttackFee = 10_000_000,                                       // 0.1 GAS
             bigCityCoffer       = 100000000,                                      // 1.0 GAS
@@ -949,19 +949,24 @@ namespace LordsContract
             byte[] bytes = Neo.SmartContract.Framework.Helper.Serialize(log); 
             Storage.Put(Storage.CurrentContext, key, bytes);
 
+            key = CITY_PREFIX + log.DefenderObject.AsByteArray();
+            City city = (City)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, key));
+
             // Change City Lord
             if (log.BattleResult == 1)  // Attacker Won?
             {
-                key = CITY_PREFIX + log.DefenderObject.AsByteArray();
-
-                City city = (City)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, key));
+                
                 city.Hero = log.Attacker;
-                byte[] cityBytes = Neo.SmartContract.Framework.Helper.Serialize(city);
-
-                Storage.Put(Storage.CurrentContext, key, cityBytes);
+                
             }
 
             // Increase City Coffer
+            BigInteger attackFee = new BigInteger(cityAttackFee) / 2;
+            city.Coffer = city.Coffer + attackFee;
+
+            // Save City Information
+            byte[] cityBytes = Neo.SmartContract.Framework.Helper.Serialize(city);
+            Storage.Put(Storage.CurrentContext, key, cityBytes);
 
             Runtime.Notify("City Attack was logged on Blockchain");
             return new BigInteger(1).AsByteArray();
