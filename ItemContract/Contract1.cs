@@ -323,6 +323,10 @@ namespace LordsContract
                     //return new BigInteger(0).AsByteArray();
                     return AuctionEnd((BigInteger)args[0], (byte[])args[1]);
                 }
+            else if (param.Equals("auctionCancel"))
+            {
+                return AuctionCancel((BigInteger)args[0]);
+            }
                 /**
                  * Function records item drop
                  * 
