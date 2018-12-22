@@ -1,9 +1,7 @@
 using Neo.SmartContract.Framework;
 using Neo.SmartContract.Framework.Services.Neo;
 using Neo.SmartContract.Framework.Services.System;
-using System;
 using System.Numerics;
-using System.Security.Cryptography;
 
 namespace LordsContract
 {
@@ -202,13 +200,6 @@ namespace LordsContract
             {
                 return Auction.Cancel((BigInteger)args[0]);
             }
-            /**
-             * Function records item drop
-             * 
-             * Function drops item in every 120 blocks. Usually called by Server Side of Blocklords.
-             * 
-             * Has 0 argument
-             */
             else if (param.Equals("dropItems"))
             {
                 return Periodical.DropItems();

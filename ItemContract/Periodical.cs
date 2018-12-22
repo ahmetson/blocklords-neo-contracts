@@ -15,6 +15,13 @@ namespace LordsContract
         //
         //------------------------------------------------------------------------------------
 
+        /**
+         * Function records item drop
+         * 
+         * Function drops item in every 120 blocks. Usually called by Server Side of Blocklords.
+         * 
+         * Has 0 argument
+         */
         public static byte[] DropItems()
         {
             // Between each Item Drop as a reward should be generated atleast 120 Blocks
