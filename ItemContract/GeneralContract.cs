@@ -213,36 +213,7 @@ namespace LordsContract
             {
                 return DropItems();
             }
-            /**
-             * Function records Battle result: Attack on City. 
-             * 
-             * Attacker of City invokes this function.
-             * 
-             * Has 20 arguments
-             * @Battle ID (BigInteger)                  - Unique ID of Battle
-             * @Battle Result (BigInteger)              - 0 means Attacker Won, 1 means Attacker Lose
-             * @Attacker (BigInteger)                   - ID of Hero that initialized battle
-             * @Attacker Owner (byte[])                 - Wallet Address of Hero's Owner
-             * @Attacker Troops (BigInteger)                   - Amount of troops that were involved in the battle
-             * @Attacker Remained Troops (BigInteger)          - Amount of troops that remained after battle
-             * @Attacker Equipped Item #1 (BigInteger)         - Item that was equipped by Hero during Battle
-             * @Attacker Equipped Item #2 (BigInteger)
-             * @Attacker Equipped Item #3 (BigInteger)
-             * @Attacker Equipped Item #4 (BigInteger)
-             * @Attacker Equipped Item #5 (BigInteger)
-             * 
-             * @Defender (BigInteger)                           - City or Stronghold owning Hero's ID or NPC id.
-             * @Defender Owner (byte[])                         - If Battle Initiator attacked City or Stronghold, then the wallet address of City or Stronghold owner
-             * @Defender Troops (BigInteger)                    - Amount of troops that were involved in the battle
-             * @Defender Remained Troops (BigInteger)           - Amount of troops that remained after battle
-             * @Defender Equipped Item #1 (BigInteger)          - Item that was equipped by Hero during Battle
-             * @Defender Equipped Item #2 (BigInteger)
-             * @Defender Equipped Item #3 (BigInteger)
-             * @Defender Equipped Item #4 (BigInteger)
-             * @Defender Equipped Item #5 (BigInteger)
-             * 
-             * @Defender's Object (BigInteger)                  - Is It NPC, CITY or STRONGHOLD that was attacked by Battle Initiator
-             */
+            
             else if (param.Equals("LogCityAttack"))
             {
                 Runtime.Log("Initialize city attack");
