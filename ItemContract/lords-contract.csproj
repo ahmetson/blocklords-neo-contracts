@@ -48,6 +48,7 @@
   <ItemGroup>
     <Compile Include="Log.cs" />
     <Compile Include="Put.cs" />
+    <Compile Include="Periodical.cs" />
     <Compile Include="Template.cs" />
     <Compile Include="GeneralContract.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
