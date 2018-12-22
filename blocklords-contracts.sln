@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.28010.2036
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "lords-contract", "ItemContract\lords-contract.csproj", "{1F51033F-57DA-41E3-8134-E740F912502E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "verifier-contract", "verifier-contract\verifier-contract.csproj", "{CA89609A-3103-4B37-AFAE-0A2FE3280F8F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{1F51033F-57DA-41E3-8134-E740F912502E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1F51033F-57DA-41E3-8134-E740F912502E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1F51033F-57DA-41E3-8134-E740F912502E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CA89609A-3103-4B37-AFAE-0A2FE3280F8F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CA89609A-3103-4B37-AFAE-0A2FE3280F8F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CA89609A-3103-4B37-AFAE-0A2FE3280F8F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CA89609A-3103-4B37-AFAE-0A2FE3280F8F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
