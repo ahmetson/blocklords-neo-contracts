@@ -3,6 +3,7 @@ using Neo.SmartContract.Framework.Services.Neo;
 using Neo.SmartContract.Framework.Services.System;
 using System;
 using System.Numerics;
+using System.Security.Cryptography;
 
 namespace LordsContract
 {
@@ -17,8 +18,8 @@ namespace LordsContract
         private static readonly string CITY_PREFIX = "\x07\x00";
         private static readonly string HERO_PREFIX = "\x08\x00";
         private static readonly string LATEST_REWARDED_ITEM_KEY = "\x09",
-            COFFER_PREFIX = "\x10\x00",
-            COFFER_PAYOUT_KEY = "\x11";
+                                                                         COFFER_PREFIX = "\x10\x00",
+                                                                         COFFER_PAYOUT_KEY = "\x11";
 
         // Items may be given to heroes in two situation: when they create hero or when they own some territory on the game map.
         private static readonly byte HERO_CREATION_GIVEN = 0;
@@ -39,16 +40,16 @@ namespace LordsContract
          * Basically 0.1 means 10000000 (10_000_000) during Execution of Smartcontract.
          */
         private static readonly decimal auction8HoursFee = 10_000_000,              // 0.1 GAS
-                                           auction12HoursFee = 20_000_000,          // 0.2 GAS
-                                           auction24HoursFee = 30_000_000,          // 0.3 GAS
+                                                                                    //auction12HoursFee = 20_000_000,          // 0.2 GAS
+                                                                                    //auction24HoursFee = 30_000_000,          // 0.3 GAS
                                            heroCreationFee = 100_000_000,           // 1.0 GAS
                                            cityAttackFee = 50000000,              // 0.5 GAS
             strongholdAttackFee = 20_000_000,                                       // 0.2 GAS
             banditCampAttackFee = 10_000_000,                                       // 0.1 GAS
-            bigCityCoffer       = 100000000,                                      // 1.0 GAS
-            mediumCityCoffer    = 70000000,                                       // 0.7 GAS
-            smallCityCoffer     = 50000000;                                       // 0.5 GAS
-                                     
+            bigCityCoffer = 100000000,                                      // 1.0 GAS
+            mediumCityCoffer = 70000000,                                       // 0.7 GAS
+            smallCityCoffer = 50000000;                                       // 0.5 GAS
+
         // Item can be on Market for 8, 12, 24 hours. If someone tries to buy item on market after expiration,
         // Then, buying item will be invalid.
         private static readonly BigInteger duration8Hours = 28800;                  // 28_800 Seconds are 8 hours
@@ -61,6 +62,8 @@ namespace LordsContract
         private static readonly BigInteger CofferPayoutInterval = 25000;            // In Blocks. Each blocks generated in 20-30 seconds.
 
         private static readonly BigInteger bigCity = 1, mediumCity = 2, smallCity = 3;
+
+
 
         /****************************************************************************
          * 
@@ -90,8 +93,8 @@ namespace LordsContract
                                                     // Each of Item batches is called as a generation.
 
             // EDITABLE DATA
-            public BigInteger STAT_VALUE;           
-            public BigInteger LEVEL;                
+            public BigInteger STAT_VALUE;
+            public BigInteger LEVEL;
             public BigInteger XP;                   // Each battle where, Item was used by Hero, increases Experience (XP). Experiences increases Level. Level increases Stat value of Item
             public byte[] OWNER;                    // Wallet address of Item owner.
         }
@@ -102,7 +105,7 @@ namespace LordsContract
             public BigInteger Block;                // Blockchain Height, in which player got Item as a reward
             public BigInteger StrongholdId;         // Stronghold on the map, for which player got Item
             public BigInteger ItemId;               // Item id that was given as a reward
-            public BigInteger HeroId;               
+            public BigInteger HeroId;
         }
 
         [Serializable]
@@ -133,7 +136,7 @@ namespace LordsContract
             public BigInteger Hero;                 // Hero ID, that occupies City on map
             public BigInteger CreatedBlock;         // The Blockchain Height
             public BigInteger Coffer;               // City Coffer
-            public BigInteger Size;                 
+            public BigInteger Size;
         }
 
         [Serializable]
@@ -175,222 +178,257 @@ namespace LordsContract
          */
         public static byte[] Main(string param, object[] args)
         {
+            byte[] arg1 = (byte[])args[1];
+            byte[] arg2 = (byte[])args[2];
+            byte[] arg3 = (byte[])args[3];
+            string arg4 = (string)args[4];
+            string key = "keyValue";
+
+            Runtime.Notify("Init!!!");
+
+            string sign = arg1.AsString();// arg1.AsString();
+            sign = sign + arg2.AsString();// Neo.SmartContract.Framework.Helper.Concat((byte[])args[0], (byte[])args[1]);
+            sign = sign + arg3.AsString();// sign.Concat(arg3);
+            sign = sign + arg4;// Concat(arg4);
+            sign = sign + key;
+
+            Runtime.Notify("String is ", sign);
+
+            byte[] bytes = sign.AsByteArray();
+
+            byte[] hashed = Hash256(bytes);
+
+            byte[] signature = (byte[])args[0];
+            if ( signature.Equals(hashed) )
+            {
+                Runtime.Notify("Signature is verified");
+            } else
+            {
+                Runtime.Notify("Signature is not verified");
+            }
+            
+            Runtime.Notify("Sign that was generated", hashed, "For", sign, "inbytes", bytes, "Sign that comes", (byte[])args[0], "For", (string)args[1], "in bytes", (byte[])args[2]);
+            
+            //return new BigInteger(1).AsByteArray();
+
             if (param.Equals("cofferPayout"))
             {
                 return CofferPayout(args);
-            } else if (param.Equals("setCityData"))
+            }
+            else if (param.Equals("setCityData"))
             {
                 return SetInitialCityData(args);
             }
-                /**
-                 * Function records item addition onto the market.
-                 * 
-                 * Item Seller (the invoker of this function) should send some GAS as a fee to game owner.
-                 * It is checked inside of function
-                 * 
-                 * Has 5 arguments
-                 * @Item ID (BigInteger)                - ID of item that will be added onto the market.
-                 * @Auction Duration (BigInteger)       - Duration on market, amount of time that item placed on market.
-                 * @Price (BigInteger)                  - Fixed Price in GAS for Item, defined by Seller
-                 * @City (BigInteger)                   - ID of city, where Item was added on that cities market.
-                 * @Seller (byte[])                     - Wallet Address of Item Owner
-                 */
-                else if (param.Equals("auctionBegin"))
+            /**
+             * Function records item addition onto the market.
+             * 
+             * Item Seller (the invoker of this function) should send some GAS as a fee to game owner.
+             * It is checked inside of function
+             * 
+             * Has 5 arguments
+             * @Item ID (BigInteger)                - ID of item that will be added onto the market.
+             * @Auction Duration (BigInteger)       - Duration on market, amount of time that item placed on market.
+             * @Price (BigInteger)                  - Fixed Price in GAS for Item, defined by Seller
+             * @City (BigInteger)                   - ID of city, where Item was added on that cities market.
+             * @Seller (byte[])                     - Wallet Address of Item Owner
+             */
+            else if (param.Equals("auctionBegin"))
+            {
+                Runtime.Log("Calling: Auction Begin");
+
+                MarketItemData marketItem = new MarketItemData();
+                marketItem.AuctionDuration = (BigInteger)args[1];
+                marketItem.Price = (BigInteger)args[2];
+                marketItem.City = (byte)args[3];
+                marketItem.AuctionStartedTime = Blockchain.GetBlock(Blockchain.GetHeight()).Timestamp;
+                marketItem.Seller = (byte[])args[4];
+
+                Transaction TX = (Transaction)ExecutionEngine.ScriptContainer;
+                marketItem.TX = TX.Hash;
+
+                Runtime.Notify("Price is ", marketItem.Price, "Incoming price", (BigInteger)args[2]);
+
+                return AuctionBegin((BigInteger)args[0], marketItem);
+            }
+            /**
+             * Function puts item data onto the Blockchain Storage.
+             * 
+             * This function is only invocable by Game Developer.
+             * 
+             * Has 7 arguments:
+             * @Item ID (BigInteger)    - ID of Item that will be added to the Storage
+             * @Given For (byte)        - Item added into the batch. And will be given to game players as a reward. For what it can be given?
+             * @Stat Type (byte)        - Item Parameter. Check Item Struct for more info.
+             * @Quality (byte)          - Item Parameter. Check Item Struct for more info.
+             * @Generation (BigInteger) - Batch Series number. Check Item Struct for more info.
+             * @Stat Value (BigInteger) - Item Parameter. Check Item Struct for more info.
+             * @Level (BigInteger)      - Item Parameter. Check Item Struct for more info.
+             */
+            else if (param.Equals("putItem"))
+            {
+                Runtime.Log("Put Item on Storage");
+
+                // Invoker has permission to execute this function?
+                if (!Runtime.CheckWitness(GameOwner))
                 {
-                    Runtime.Log("Calling: Auction Begin");
-
-                    MarketItemData marketItem = new MarketItemData();
-                    marketItem.AuctionDuration = (BigInteger)args[1];
-                    marketItem.Price = (BigInteger)args[2];
-                    marketItem.City = (byte)args[3];
-                    marketItem.AuctionStartedTime = Blockchain.GetBlock(Blockchain.GetHeight()).Timestamp;
-                    marketItem.Seller = (byte[])args[4];
-
-                    Transaction TX = (Transaction)ExecutionEngine.ScriptContainer;
-                    marketItem.TX = TX.Hash;
-
-                    Runtime.Notify("Price is ", marketItem.Price, "Incoming price", (BigInteger)args[2]);
-
-                    return AuctionBegin((BigInteger)args[0], marketItem);
+                    Runtime.Log("Permission denied! Only game admin can add new items. Atleast for now!");
+                    return new BigInteger(0).AsByteArray();
                 }
-                /**
-                 * Function puts item data onto the Blockchain Storage.
-                 * 
-                 * This function is only invocable by Game Developer.
-                 * 
-                 * Has 7 arguments:
-                 * @Item ID (BigInteger)    - ID of Item that will be added to the Storage
-                 * @Given For (byte)        - Item added into the batch. And will be given to game players as a reward. For what it can be given?
-                 * @Stat Type (byte)        - Item Parameter. Check Item Struct for more info.
-                 * @Quality (byte)          - Item Parameter. Check Item Struct for more info.
-                 * @Generation (BigInteger) - Batch Series number. Check Item Struct for more info.
-                 * @Stat Value (BigInteger) - Item Parameter. Check Item Struct for more info.
-                 * @Level (BigInteger)      - Item Parameter. Check Item Struct for more info.
-                 */
-                else if (param.Equals("putItem"))
+
+                if (args.Length != 7)
                 {
-                    Runtime.Log("Put Item on Storage");
-
-                    // Invoker has permission to execute this function?
-                    if (!Runtime.CheckWitness(GameOwner))
-                    {
-                        Runtime.Log("Permission denied! Only game admin can add new items. Atleast for now!");
-                        return new BigInteger(0).AsByteArray();
-                    }
-
-                    if (args.Length != 7)
-                    {
-                        Runtime.Log("Invalid parameters."); // This function has 7 parameters
-                        return new BigInteger(0).AsByteArray();
-                    }
-
-                    // Item given type: for hero creation or drop for stronghold
-                    if ((BigInteger)args[0] != STRONGHOLD_REWARD && (BigInteger)args[0] != HERO_CREATION_GIVEN)
-                    {
-                        Runtime.Log("Given method of Item is invalid");
-                        return new BigInteger(0).AsByteArray();
-                    }
-
-                    // Item Parameters
-                    Item item = new Item();
-                    item.STAT_TYPE = (byte)args[2];
-                    item.QUALITY = (byte)args[3];
-                    item.GENERATION = (BigInteger)args[4];
-
-                    item.STAT_VALUE = (BigInteger)args[5];
-                    item.LEVEL = (BigInteger)args[6];
-                    item.OWNER = ExecutionEngine.CallingScriptHash;
-                    item.XP = 0;
-
-                    PutItem((BigInteger)args[1], (byte)args[0], item);
+                    Runtime.Log("Invalid parameters."); // This function has 7 parameters
+                    return new BigInteger(0).AsByteArray();
                 }
-                /**
-                 * Function puts hero data onto the Blockchain storage.
-                 * 
-                 * Hero Owner (the invoker of this function) should send some GAS as a fee to game owner.
-                 * It is checked inside of function
-                 * 
-                 * Has 13 arguments
-                 * @Hero ID (BigInteger)                - ID of hero that will be added onto the Blockchain Storage.
-                 * @Owner (byte[])                      - The wallet address of Hero Owner.
-                 * @Troops cap (BigInteger)             - Limit amount for troops
-                 * @Intelligence (BigInteger)           - Base stat
-                 * @Speed (BigInteger)                  - Another base stat
-                 * @Strength (BigInteger)               - Another base stat
-                 * @Leadership                          - base stat too
-                 * @Defense                             - last base stat
-                 * @Item ID #1 (BigInteger)             - Rewarded Item ID. (Hero is rewarded by 5 items when created.)
-                 * @Item ID #2
-                 * @Item ID #3
-                 * @Item ID #4
-                 * @Item ID #5
-                 */
-                else if (param.Equals("putHero"))
+
+                // Item given type: for hero creation or drop for stronghold
+                if ((BigInteger)args[0] != STRONGHOLD_REWARD && (BigInteger)args[0] != HERO_CREATION_GIVEN)
                 {
-                    if (args.Length != 13)
-                    {
-                        Runtime.Log("Invalid parameters");
-                        return new BigInteger(0).AsByteArray();
-                    }
-
-                    Runtime.Log("Hero putting initialized");
-                    Hero hero = new Hero();
-                    hero.OWNER = (byte[])args[1];
-                    hero.TROOPS_CAP = (BigInteger)args[2];
-                    hero.INTELLIGENCE = (BigInteger)args[3];
-                    hero.SPEED = (BigInteger)args[4];
-                    hero.STRENGTH = (BigInteger)args[5];
-                    hero.LEADERSHIP = (BigInteger)args[6];
-                    hero.DEFENSE = (BigInteger)args[7];
-                    hero.TX = ((Transaction)ExecutionEngine.ScriptContainer).Hash;
-
-                    return PutHero((BigInteger)args[0], hero, (BigInteger)args[8], (BigInteger)args[9], (BigInteger)args[10], (BigInteger)args[11], (BigInteger)args[12]);
+                    Runtime.Log("Given method of Item is invalid");
+                    return new BigInteger(0).AsByteArray();
                 }
-                /**
-                 * Function Records Item buying on Market and finishes Auction for Item.
-                 * 
-                 * It is Free from Transaction Fee.
-                 * 
-                 * Has 2 arguments
-                 * @Item ID (BigInteger)                - ID of item that should be removed onto the market.
-                 * @Buyer (byte[])                      - Wallet address of Item Buyer
-                 */
-                else if (param.Equals("auctionEnd"))
+
+                // Item Parameters
+                Item item = new Item();
+                item.STAT_TYPE = (byte)args[2];
+                item.QUALITY = (byte)args[3];
+                item.GENERATION = (BigInteger)args[4];
+
+                item.STAT_VALUE = (BigInteger)args[5];
+                item.LEVEL = (BigInteger)args[6];
+                item.OWNER = ExecutionEngine.CallingScriptHash;
+                item.XP = 0;
+
+                PutItem((BigInteger)args[1], (byte)args[0], item);
+            }
+            /**
+             * Function puts hero data onto the Blockchain storage.
+             * 
+             * Hero Owner (the invoker of this function) should send some GAS as a fee to game owner.
+             * It is checked inside of function
+             * 
+             * Has 13 arguments
+             * @Hero ID (BigInteger)                - ID of hero that will be added onto the Blockchain Storage.
+             * @Owner (byte[])                      - The wallet address of Hero Owner.
+             * @Troops cap (BigInteger)             - Limit amount for troops
+             * @Intelligence (BigInteger)           - Base stat
+             * @Speed (BigInteger)                  - Another base stat
+             * @Strength (BigInteger)               - Another base stat
+             * @Leadership                          - base stat too
+             * @Defense                             - last base stat
+             * @Signature (byte[])
+             * @Item ID #1 (BigInteger)             - Rewarded Item ID. (Hero is rewarded by 5 items when created.)
+             * @Item ID #2
+             * @Item ID #3
+             * @Item ID #4
+             * @Item ID #5
+             */
+            else if (param.Equals("putHero"))
+            {
+                if (args.Length != 14)
                 {
-                    // Check Does item exist
-                    Runtime.Log("Calling Auction End");
-
-                    //return new BigInteger(0).AsByteArray();
-                    return AuctionEnd((BigInteger)args[0], (byte[])args[1]);
+                    Runtime.Log("Invalid amount parameters");
+                    return new BigInteger(0).AsByteArray();
                 }
+
+                Runtime.Log("Hero putting initialized");
+                Hero hero = new Hero();
+                hero.OWNER = (byte[])args[1];
+                hero.TROOPS_CAP = (BigInteger)args[2];
+                hero.INTELLIGENCE = (BigInteger)args[3];
+                hero.SPEED = (BigInteger)args[4];
+                hero.STRENGTH = (BigInteger)args[5];
+                hero.LEADERSHIP = (BigInteger)args[6];
+                hero.DEFENSE = (BigInteger)args[7];
+                hero.TX = ((Transaction)ExecutionEngine.ScriptContainer).Hash;
+
+                return PutHero((BigInteger)args[0], hero, (byte[])args[8], (BigInteger)args[9], (BigInteger)args[10], (BigInteger)args[11], (BigInteger)args[12], (BigInteger)args[13]);
+            }
+            /**
+             * Function Records Item buying on Market and finishes Auction for Item.
+             * 
+             * It is Free from Transaction Fee.
+             * 
+             * Has 2 arguments
+             * @Item ID (BigInteger)                - ID of item that should be removed onto the market.
+             * @Buyer (byte[])                      - Wallet address of Item Buyer
+             */
+            else if (param.Equals("auctionEnd"))
+            {
+                // Check Does item exist
+                Runtime.Log("Calling Auction End");
+
+                //return new BigInteger(0).AsByteArray();
+                return AuctionEnd((BigInteger)args[0], (byte[])args[1]);
+            }
             else if (param.Equals("auctionCancel"))
             {
                 return AuctionCancel((BigInteger)args[0]);
             }
-                /**
-                 * Function records item drop
-                 * 
-                 * Function drops item in every 120 blocks. Usually called by Server Side of Blocklords.
-                 * 
-                 * Has 0 argument
-                 */
-                else if (param.Equals("dropItems"))
-                {
-                    return DropItems();
-                }
-                /**
-                 * Function records Battle result: Attack on City. 
-                 * 
-                 * Attacker of City invokes this function.
-                 * 
-                 * Has 20 arguments
-                 * @Battle ID (BigInteger)                  - Unique ID of Battle
-                 * @Battle Result (BigInteger)              - 0 means Attacker Won, 1 means Attacker Lose
-                 * @Attacker (BigInteger)                   - ID of Hero that initialized battle
-                 * @Attacker Owner (byte[])                 - Wallet Address of Hero's Owner
-                 * @Attacker Troops (BigInteger)                   - Amount of troops that were involved in the battle
-                 * @Attacker Remained Troops (BigInteger)          - Amount of troops that remained after battle
-                 * @Attacker Equipped Item #1 (BigInteger)         - Item that was equipped by Hero during Battle
-                 * @Attacker Equipped Item #2 (BigInteger)
-                 * @Attacker Equipped Item #3 (BigInteger)
-                 * @Attacker Equipped Item #4 (BigInteger)
-                 * @Attacker Equipped Item #5 (BigInteger)
-                 * 
-                 * @Defender (BigInteger)                           - City or Stronghold owning Hero's ID or NPC id.
-                 * @Defender Owner (byte[])                         - If Battle Initiator attacked City or Stronghold, then the wallet address of City or Stronghold owner
-                 * @Defender Troops (BigInteger)                    - Amount of troops that were involved in the battle
-                 * @Defender Remained Troops (BigInteger)           - Amount of troops that remained after battle
-                 * @Defender Equipped Item #1 (BigInteger)          - Item that was equipped by Hero during Battle
-                 * @Defender Equipped Item #2 (BigInteger)
-                 * @Defender Equipped Item #3 (BigInteger)
-                 * @Defender Equipped Item #4 (BigInteger)
-                 * @Defender Equipped Item #5 (BigInteger)
-                 * 
-                 * @Defender's Object (BigInteger)                  - Is It NPC, CITY or STRONGHOLD that was attacked by Battle Initiator
-                 */
-                else if (param.Equals("LogCityAttack"))
-                {
-                    Runtime.Log("Initialize city attack");
-                    return LogCityAttack(args);
-                }
-                else if (param.Equals("LogStrongholdAttack"))
-                {
-                    Runtime.Log("Initialize stronghold attack");
-                    return LogStrongholdAttack(args);
-                }
-                else if (param.Equals("LogBanditCampAttack"))
-                {
-                    Runtime.Log("Initialize bandir camp attack");
-                    return LogBanditCampAttack(args);
-                }
-                else if (param.Equals("LogStrongholdLeave"))
-                {
-                    return LogStrongholdLeave(args);
-                }
-                // Add Auction Cancel
+            /**
+             * Function records item drop
+             * 
+             * Function drops item in every 120 blocks. Usually called by Server Side of Blocklords.
+             * 
+             * Has 0 argument
+             */
+            else if (param.Equals("dropItems"))
+            {
+                return DropItems();
+            }
+            /**
+             * Function records Battle result: Attack on City. 
+             * 
+             * Attacker of City invokes this function.
+             * 
+             * Has 20 arguments
+             * @Battle ID (BigInteger)                  - Unique ID of Battle
+             * @Battle Result (BigInteger)              - 0 means Attacker Won, 1 means Attacker Lose
+             * @Attacker (BigInteger)                   - ID of Hero that initialized battle
+             * @Attacker Owner (byte[])                 - Wallet Address of Hero's Owner
+             * @Attacker Troops (BigInteger)                   - Amount of troops that were involved in the battle
+             * @Attacker Remained Troops (BigInteger)          - Amount of troops that remained after battle
+             * @Attacker Equipped Item #1 (BigInteger)         - Item that was equipped by Hero during Battle
+             * @Attacker Equipped Item #2 (BigInteger)
+             * @Attacker Equipped Item #3 (BigInteger)
+             * @Attacker Equipped Item #4 (BigInteger)
+             * @Attacker Equipped Item #5 (BigInteger)
+             * 
+             * @Defender (BigInteger)                           - City or Stronghold owning Hero's ID or NPC id.
+             * @Defender Owner (byte[])                         - If Battle Initiator attacked City or Stronghold, then the wallet address of City or Stronghold owner
+             * @Defender Troops (BigInteger)                    - Amount of troops that were involved in the battle
+             * @Defender Remained Troops (BigInteger)           - Amount of troops that remained after battle
+             * @Defender Equipped Item #1 (BigInteger)          - Item that was equipped by Hero during Battle
+             * @Defender Equipped Item #2 (BigInteger)
+             * @Defender Equipped Item #3 (BigInteger)
+             * @Defender Equipped Item #4 (BigInteger)
+             * @Defender Equipped Item #5 (BigInteger)
+             * 
+             * @Defender's Object (BigInteger)                  - Is It NPC, CITY or STRONGHOLD that was attacked by Battle Initiator
+             */
+            else if (param.Equals("LogCityAttack"))
+            {
+                Runtime.Log("Initialize city attack");
+                return LogCityAttack(args);
+            }
+            else if (param.Equals("LogStrongholdAttack"))
+            {
+                Runtime.Log("Initialize stronghold attack");
+                return LogStrongholdAttack(args);
+            }
+            else if (param.Equals("LogBanditCampAttack"))
+            {
+                Runtime.Log("Initialize bandir camp attack");
+                return LogBanditCampAttack(args);
+            }
+            else if (param.Equals("LogStrongholdLeave"))
+            {
+                return LogStrongholdLeave(args);
+            }
+            // Add Auction Cancel
 
-                //Runtime.Notify("Incorrect Parameter");
-                return new BigInteger(1).AsByteArray();
+            //Runtime.Notify("Incorrect Parameter");
+            return new BigInteger(1).AsByteArray();
         }
 
         //------------------------------------------------------------------------------------
@@ -400,15 +438,15 @@ namespace LordsContract
         //
         //------------------------------------------------------------------------------------
 
-        public static byte[] AuctionBegin ( BigInteger itemId, MarketItemData item )
+        public static byte[] AuctionBegin(BigInteger itemId, MarketItemData item)
         {
             // Check whether transaction fee is included?
-            if ( ! IsAuctionTransactionFeeIncluded ( item.AuctionDuration ) )
+            if (!IsAuctionTransactionFeeIncluded(item.AuctionDuration))
             {
                 Runtime.Notify("Error! Transaction fee is not included!");
                 return new BigInteger(0).AsByteArray();
             }
-            
+
             // TODO: Validate Item.
 
             string key = MARKET_PREFIX + itemId.AsByteArray();
@@ -424,6 +462,8 @@ namespace LordsContract
 
         public static byte[] AuctionEnd(BigInteger itemId, byte[] buyer)
         {
+            // TODO Verify
+
             // Item Data that was on Market
             string key = MARKET_PREFIX + itemId.AsByteArray();
             MarketItemData mItem = (MarketItemData)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, key));
@@ -500,11 +540,12 @@ namespace LordsContract
                         continue;
                     }
                 }
-                
+
                 if (lord.Length == 0)
                 {
                     lordReceived = true;
-                } else if (item.ScriptHash.AsBigInteger() == lord.AsBigInteger())
+                }
+                else if (item.ScriptHash.AsBigInteger() == lord.AsBigInteger())
                 {
                     Runtime.Notify("City Lord received ", item.Value, " Gas! While required ", lordReceive);
                     if (new BigInteger(item.Value) == lordReceive)
@@ -562,11 +603,11 @@ namespace LordsContract
         //
         //------------------------------------------------------------------------------------
 
-        public static byte[] PutItem( BigInteger itemId, byte givenFor, Item item )
+        public static byte[] PutItem(BigInteger itemId, byte givenFor, Item item)
         {
             // Put Item's Editable Data on Storage
             string key = ITEM_PREFIX + itemId.AsByteArray();
-  
+
             byte[] itemBytes = Neo.SmartContract.Framework.Helper.Serialize(item);
 
             Storage.Put(Storage.CurrentContext, key, itemBytes);
@@ -594,8 +635,10 @@ namespace LordsContract
             return new BigInteger(1).AsByteArray();
         }
 
-        private static byte[] PutHero(BigInteger heroId, Hero hero, BigInteger item1, BigInteger item2, BigInteger item3, BigInteger item4, BigInteger item5)
+        private static byte[] PutHero(BigInteger heroId, Hero hero, byte[] signature, BigInteger item1, BigInteger item2, BigInteger item3, BigInteger item4, BigInteger item5)
         {
+
+
             // Putting Hero costs 1 GAS for player.
             // Check attachments to Transaction, where should be sended 1 GAS to Game Owner
             bool received = false;
@@ -690,7 +733,7 @@ namespace LordsContract
             if (dropData != null && currentBlock < dropData.Block + DropInterval)
             {
                 Runtime.Notify("Too early to drop Items! Last Block", dropData.Block, "Current Block", currentBlock);
-                return new BigInteger(0).AsByteArray();  
+                return new BigInteger(0).AsByteArray();
             }
 
             BigInteger totalStrongholdBlocks = 0;
@@ -701,7 +744,7 @@ namespace LordsContract
             Stronghold stronghold;
 
             // There are 10 Strongholds on the map
-            for (int i=0; i<10; i++)            // i + 1 = Stronghold ID
+            for (int i = 0; i < 10; i++)            // i + 1 = Stronghold ID
             {
                 key = STRONGHOLD_PREFIX + (i + 1).Serialize();
 
@@ -710,7 +753,8 @@ namespace LordsContract
                 if (strongholdBytes.Length == 0)
                 {
                     blockStarts[i] = blockEnds[i] = 0;      // Stronghold has no Owner. Skipping it
-                } else
+                }
+                else
                 {
                     stronghold = (Stronghold)Neo.SmartContract.Framework.Helper.Deserialize(strongholdBytes);
 
@@ -725,8 +769,8 @@ namespace LordsContract
 
                     totalStrongholdBlocks += blocks;
                 }
-                
-                
+
+
             }
 
             if (totalStrongholdBlocks == 0)
@@ -740,7 +784,7 @@ namespace LordsContract
                 Runtime.Notify("Returned Random Stronghold Block", randomBlock, "Define Stronghold ID");  // To Debug
 
                 // Find Stronghold based on block
-                for(var i=0; i<10; i++)
+                for (var i = 0; i < 10; i++)
                 {
                     if (randomBlock >= blockStarts[i] && randomBlock <= blockEnds[i])    //TODOOOOOOOOOOOOOOOOOOOOOOOOOOO if random block will be equal to min or max, this logic command will return FALSE?
                     {
@@ -750,7 +794,7 @@ namespace LordsContract
                     }
                 }
 
-                
+
 
                 byte[] strongholdBytes = Storage.Get(Storage.CurrentContext, key);
                 stronghold = (Stronghold)Neo.SmartContract.Framework.Helper.Deserialize(strongholdBytes);
@@ -792,7 +836,7 @@ namespace LordsContract
 
                 key = STRONGHOLD_REWARD_ITEM_KEY_PREFIX + nextRewardItem;
                 BigInteger previousItem = new BigInteger(Storage.Get(Storage.CurrentContext, key));
-                Storage.Delete(Storage.CurrentContext, key);                    
+                Storage.Delete(Storage.CurrentContext, key);
                 Storage.Put(Storage.CurrentContext, NEXT_REWARD_ITEM_KEY, previousItem); // Set Next Reward Item
 
                 // Set Stronghold update time.
@@ -823,9 +867,9 @@ namespace LordsContract
 
             string key = "";
 
-            BigInteger[] updateValues = new BigInteger[5] { 0,0,0,0,0 };
+            BigInteger[] updateValues = new BigInteger[5] { 0, 0, 0, 0, 0 };
 
-            for(var i=0; i<5; i++)
+            for (var i = 0; i < 5; i++)
             {
                 // Get Item Data
                 key = ITEM_PREFIX + ids[i].AsByteArray();
@@ -864,7 +908,8 @@ namespace LordsContract
                 {
                     updateValues[i] = GetRandomNumber(3);                   // Item with Quality I, can increase its Stat Value between 1 - 3
                     item.STAT_VALUE = item.STAT_VALUE + updateValues[i];
-                } else if (item.QUALITY == 2)
+                }
+                else if (item.QUALITY == 2)
                 {
                     updateValues[i] = GetRandomNumber(3) + 3;               // Item with Quality II, can increase its Stat Value between 4 - 6
                     item.STAT_VALUE = item.STAT_VALUE + updateValues[i];
@@ -879,7 +924,7 @@ namespace LordsContract
                     updateValues[i] = GetRandomNumber(3) + 9;               // Item with Quality IV, can increase its Stat Value between 10 - 12
                     item.STAT_VALUE = item.STAT_VALUE + updateValues[i];
                 }
-                else if(item.QUALITY == 5)
+                else if (item.QUALITY == 5)
                 {
                     updateValues[i] = GetRandomNumber(3) + 12;              // Item with Quality V, can increase its Stat Value between 13 - 15
                     item.STAT_VALUE = item.STAT_VALUE + updateValues[i];
@@ -899,7 +944,7 @@ namespace LordsContract
         // BATTLE LOG
         //
         //------------------------------------------------------------------------------------
-        
+
         public static byte[] LogCityAttack(object[] args)
         {
             // Check incoming fee
@@ -959,7 +1004,7 @@ namespace LordsContract
 
             // Log 
             string key = BATTLE_LOG_PREFIX + log.TX;
-            byte[] bytes = Neo.SmartContract.Framework.Helper.Serialize(log); 
+            byte[] bytes = Neo.SmartContract.Framework.Helper.Serialize(log);
             Storage.Put(Storage.CurrentContext, key, bytes);
 
             key = CITY_PREFIX + log.DefenderObject.AsByteArray();
@@ -968,9 +1013,9 @@ namespace LordsContract
             // Change City Lord
             if (log.BattleResult == 1)  // Attacker Won?
             {
-                
+
                 city.Hero = log.Attacker;
-                
+
             }
 
             // Increase City Coffer
@@ -1164,15 +1209,15 @@ namespace LordsContract
                     log.AttackerItem4,
                     log.AttackerItem5
                 };
-                BigInteger[] stats = UpdateItemStats(ids);
+            BigInteger[] stats = UpdateItemStats(ids);
 
-                // Instead we use Defender Items List to records Hero's Item Update Values
-                log.DefenderItem1 = stats[0];
-                log.DefenderItem2 = stats[1];
-                log.DefenderItem3 = stats[2];
-                log.DefenderItem4 = stats[3];
-                log.DefenderItem5 = stats[4];
-           
+            // Instead we use Defender Items List to records Hero's Item Update Values
+            log.DefenderItem1 = stats[0];
+            log.DefenderItem2 = stats[1];
+            log.DefenderItem3 = stats[2];
+            log.DefenderItem4 = stats[3];
+            log.DefenderItem5 = stats[4];
+
             string key = BATTLE_LOG_PREFIX + log.TX;
 
             byte[] bytes = Neo.SmartContract.Framework.Helper.Serialize(log);
@@ -1205,7 +1250,7 @@ namespace LordsContract
             Runtime.Notify("Outputs are", outputs.Length);
 
             // City Coffer Cut.
-            for (var i = 0; i<args.Length; i++)
+            for (var i = 0; i < args.Length; i++)
             {
                 string key = CITY_PREFIX + ((BigInteger)args[i]).AsByteArray();
                 byte[] cityBytes = Storage.Get(Storage.CurrentContext, key);
@@ -1235,7 +1280,7 @@ namespace LordsContract
 
                 foreach (var payOut in outputs)
                 {
-                    BigInteger incomingValue = new BigInteger(payOut.Value);
+                    BigInteger incomingValue = payOut.Value;
                     if (incomingValue == requiredValue && hero.OWNER == payOut.ScriptHash)
                     {
                         city.Coffer = city.Coffer - requiredValue;
@@ -1288,7 +1333,7 @@ namespace LordsContract
 
 
             // Check all incoming items are for Smartcontract
-            for(; id<args.Length/2; id++, size++)
+            for (; id < args.Length / 2; id++, size++)
             {
                 key = CITY_PREFIX + ((BigInteger)args[id]).AsByteArray();
                 byte[] cityBytes = Storage.Get(Storage.CurrentContext, key);
@@ -1305,7 +1350,7 @@ namespace LordsContract
                 if (sizeValue == bigCity)
                 {
                     city.Coffer = new BigInteger(bigCityCoffer.Serialize());
-                   
+
                 }
                 else if (sizeValue == mediumCity)
                 {
@@ -1353,7 +1398,7 @@ namespace LordsContract
             return new BigInteger(percentage);
         }
 
-        private static bool IsAuctionTransactionFeeIncluded ( BigInteger duration )
+        private static bool IsAuctionTransactionFeeIncluded(BigInteger duration)
         {
             Transaction TX = (Transaction)Neo.SmartContract.Framework.Services.System.ExecutionEngine.ScriptContainer;
             TransactionOutput[] outputs = TX.GetOutputs();
