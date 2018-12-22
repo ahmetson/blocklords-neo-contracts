@@ -29,11 +29,11 @@ namespace LordsContract
         public static byte[] Begin(BigInteger itemId, MarketItemData item)
         {
             // Check whether transaction fee is included?
-            //if (!IsAuctionTransactionFeeIncluded(item.AuctionDuration))
-            //{
-            //    Runtime.Notify("Error! Transaction fee is not included!");
-            //    return new BigInteger(0).AsByteArray();
-            //}
+            if (!IsAuctionTransactionFeeIncluded(item.AuctionDuration))
+            {
+                Runtime.Notify("Error! Transaction fee is not included!");
+                return new BigInteger(0).AsByteArray();
+            }
 
             // TODO: Validate Item.
 
@@ -191,6 +191,44 @@ namespace LordsContract
 
             Runtime.Notify("Item was successfully cancelled from Auction!");
             return new BigInteger(1).AsByteArray();
+        }
+
+
+        private static bool IsAuctionTransactionFeeIncluded(BigInteger duration)
+        {
+            Transaction TX = (Transaction)Neo.SmartContract.Framework.Services.System.ExecutionEngine.ScriptContainer;
+            TransactionOutput[] outputs = TX.GetOutputs();
+            Runtime.Notify("Outputs are", outputs.Length);
+            foreach (var item in outputs)
+            {
+                //if (item.Value == auction8HoursFee)
+                //{
+                //    Runtime.Notify("There are 0.1m Fee");
+                //}
+                if (item.Value == 10_000_000)
+                {
+                    Runtime.Notify("There are 10 Millions of Gas", item.ScriptHash.AsString(), GeneralContract.auction8HoursFee);
+                }
+                Runtime.Notify("Output is", item.Value);
+            }
+            if (duration == 8)
+            {
+                Runtime.Notify("Valid 8 hours!");
+                return true;
+            }
+            if (duration == 12)
+            {
+                Runtime.Notify("Valid 12 hours!");
+                return true;
+            }
+            if (duration == 24)
+            {
+                Runtime.Notify("Valid 24 hours!");
+                return true;
+            }
+
+            Runtime.Notify("Invalid Duration time, all included fee will be counted as invalid!");
+            return true;
         }
     }
 
