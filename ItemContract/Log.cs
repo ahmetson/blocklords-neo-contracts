@@ -1,7 +1,6 @@
 ﻿using Neo.SmartContract.Framework;
 using Neo.SmartContract.Framework.Services.Neo;
 using Neo.SmartContract.Framework.Services.System;
-using System;
 using System.Numerics;
 
 namespace LordsContract
@@ -19,6 +18,11 @@ namespace LordsContract
          * Function records Battle result: Attack on City. 
          * 
          * Attacker of City invokes this function.
+         * 
+         * Has
+         * Battle ID
+         * Attacker ID
+         * Defender ID
          * 
          * Has 20 arguments
          * @Battle ID (BigInteger)                  - Unique ID of Battle
@@ -101,6 +105,32 @@ namespace LordsContract
 
             log.Time = Blockchain.GetHeader(Blockchain.GetHeight()).Timestamp;
             log.TX = ((Transaction)ExecutionEngine.ScriptContainer).Hash;
+
+            // Verify Signature
+            BigInteger[] integerArgs = new BigInteger[20];
+            integerArgs[0] = log.BattleId;
+            integerArgs[1] = log.BattleResult; // 0 - Attacker WON, 1 - Attacker Lose
+            integerArgs[2] = log.BattleType;   // 0 - City, 1 - Stronghold, 2 - Bandit Camp
+            integerArgs[3] = log.Attacker; // Hero
+            integerArgs[4] = log.AttackerTroops;
+            integerArgs[5] = log.AttackerRemained;
+            integerArgs[6] = log.AttackerItem1;    // Equipped Items that were involved
+            integerArgs[7] = log.AttackerItem2;
+            integerArgs[8] = log.AttackerItem3;
+            integerArgs[9] = log.AttackerItem4;
+            integerArgs[10] = log.AttackerItem5;
+
+            integerArgs[11] = log.Defender;
+            integerArgs[12] = log.DefenderTroops;
+            integerArgs[13] = log.DefenderRemained;
+            integerArgs[14] = log.DefenderItem1;
+            integerArgs[15] = log.DefenderItem2;
+            integerArgs[16] = log.DefenderItem3;
+            integerArgs[17] = log.DefenderItem4;
+            integerArgs[18] = log.DefenderItem5;
+
+            integerArgs[19] = log.DefenderObject;   // City|Stronghold|NPC ID
+
 
             // Log 
             string key = GeneralContract.BATTLE_LOG_PREFIX + log.TX;
@@ -186,6 +216,32 @@ namespace LordsContract
 
             log.Time = Blockchain.GetHeader(Blockchain.GetHeight()).Timestamp;
             log.TX = ((Transaction)ExecutionEngine.ScriptContainer).Hash;
+
+            // Verify Signature
+            BigInteger[] integerArgs = new BigInteger[20];
+            integerArgs[0] = log.BattleId;
+            integerArgs[1] = log.BattleResult; // 0 - Attacker WON, 1 - Attacker Lose
+            integerArgs[2] = log.BattleType;   // 0 - City, 1 - Stronghold, 2 - Bandit Camp
+            integerArgs[3] = log.Attacker; // Hero
+            integerArgs[4] = log.AttackerTroops;
+            integerArgs[5] = log.AttackerRemained;
+            integerArgs[6] = log.AttackerItem1;    // Equipped Items that were involved
+            integerArgs[7] = log.AttackerItem2;
+            integerArgs[8] = log.AttackerItem3;
+            integerArgs[9] = log.AttackerItem4;
+            integerArgs[10] = log.AttackerItem5;
+
+            integerArgs[11] = log.Defender;
+            integerArgs[12] = log.DefenderTroops;
+            integerArgs[13] = log.DefenderRemained;
+            integerArgs[14] = log.DefenderItem1;
+            integerArgs[15] = log.DefenderItem2;
+            integerArgs[16] = log.DefenderItem3;
+            integerArgs[17] = log.DefenderItem4;
+            integerArgs[18] = log.DefenderItem5;
+
+            integerArgs[19] = log.DefenderObject;   // City|Stronghold|NPC ID
+
 
             // Log 
             string key = GeneralContract.BATTLE_LOG_PREFIX + log.TX;
@@ -295,6 +351,31 @@ namespace LordsContract
             log.AttackerItem4 = (BigInteger)args[9];
             log.AttackerItem5 = (BigInteger)args[10];
             log.DefenderObject = (BigInteger)args[11];   // City|Stronghold|NPC ID
+
+            // Verify Signature
+            BigInteger[] integerArgs = new BigInteger[20];
+            integerArgs[0] = log.BattleId;
+            integerArgs[1] = log.BattleResult; // 0 - Attacker WON, 1 - Attacker Lose
+            integerArgs[2] = log.BattleType;   // 0 - City, 1 - Stronghold, 2 - Bandit Camp
+            integerArgs[3] = log.Attacker; // Hero
+            integerArgs[4] = log.AttackerTroops;
+            integerArgs[5] = log.AttackerRemained;
+            integerArgs[6] = log.AttackerItem1;    // Equipped Items that were involved
+            integerArgs[7] = log.AttackerItem2;
+            integerArgs[8] = log.AttackerItem3;
+            integerArgs[9] = log.AttackerItem4;
+            integerArgs[10] = log.AttackerItem5;
+
+            integerArgs[11] = 0;
+            integerArgs[12] = log.DefenderTroops;
+            integerArgs[13] = log.DefenderRemained;
+            integerArgs[14] = 0;
+            integerArgs[15] = 0;
+            integerArgs[16] = 0;
+            integerArgs[17] = 0;
+            integerArgs[18] = 0;
+
+            integerArgs[19] = log.DefenderObject;   // City|Stronghold|NPC ID
 
             // No need to record NPC data!!!
 

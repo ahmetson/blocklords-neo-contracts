@@ -69,38 +69,6 @@ namespace LordsContract
          */
         public static byte[] Main(string param, object[] args)
         {
-            byte[] arg1 = (byte[])args[1];
-            byte[] arg2 = (byte[])args[2];
-            byte[] arg3 = (byte[])args[3];
-            string arg4 = (string)args[4];
-            string key = "keyValue";
-
-            Runtime.Notify("Init!!!");
-
-            string sign = arg1.AsString();// arg1.AsString();
-            sign = sign + arg2.AsString();// Neo.SmartContract.Framework.Helper.Concat((byte[])args[0], (byte[])args[1]);
-            sign = sign + arg3.AsString();// sign.Concat(arg3);
-            sign = sign + arg4;// Concat(arg4);
-            sign = sign + key;
-
-            Runtime.Notify("String is ", sign);
-
-            byte[] bytes = sign.AsByteArray();
-
-            byte[] hashed = Hash256(bytes);
-
-            byte[] signature = (byte[])args[0];
-            if ( signature.Equals(hashed) )
-            {
-                Runtime.Notify("Signature is verified");
-            } else
-            {
-                Runtime.Notify("Signature is not verified");
-            }
-            
-            Runtime.Notify("Sign that was generated", hashed, "For", sign, "inbytes", bytes, "Sign that comes", (byte[])args[0], "For", (string)args[1], "in bytes", (byte[])args[2]);
-            
-            //return new BigInteger(1).AsByteArray();
 
             if (param.Equals("cofferPayout"))
             {
