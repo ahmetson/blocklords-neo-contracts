@@ -38,7 +38,6 @@ namespace LordsContract
 
             Storage.Put(Storage.CurrentContext, key, itemBytes);
 
-
             if (givenFor == GeneralContract.STRONGHOLD_REWARD)
             {
                 // We have an items batch to reward for stronghold owning.
@@ -82,16 +81,56 @@ namespace LordsContract
              * @Item ID #3
              * @Item ID #4
              * @Item ID #5
+             * @Transaction                         - where fee was recorded
              */
         public static byte[] Hero(BigInteger heroId, Hero hero, byte[] signature, BigInteger item1, BigInteger item2, BigInteger item3, BigInteger item4, BigInteger item5)
         {
+            string key = GeneralContract.ITEM_PREFIX + item1.AsByteArray();
+            // If Item's are not exist, exit
+            byte[] itemBytes1 = Storage.Get(Storage.CurrentContext, key);
+            if (itemBytes1.Length == 0)
+            {
+                Runtime.Notify("Item is not exists", item1);
+                return new BigInteger(0).AsByteArray();
+            }
+            // TODO item should not be owned by anyone.
+            key = GeneralContract.ITEM_PREFIX + item2.AsByteArray();
+            byte[] itemBytes2 = Storage.Get(Storage.CurrentContext, key);
+            if (itemBytes2.Length == 0)
+            {
+                Runtime.Notify("Item is not exists", item2);
+                return new BigInteger(0).AsByteArray();
+            }
+            key = GeneralContract.ITEM_PREFIX + item3.AsByteArray();
+            byte[] itemBytes3 = Storage.Get(Storage.CurrentContext, key);
+            if (itemBytes3.Length == 0)
+            {
+                Runtime.Notify("Item is not exists", item3);
+                return new BigInteger(0).AsByteArray();
+            }
+            key = GeneralContract.ITEM_PREFIX + item4.AsByteArray();
+            byte[] itemBytes4 = Storage.Get(Storage.CurrentContext, key);
+            if (itemBytes4.Length == 0)
+            {
+                Runtime.Notify("Item is not exists", item4);
+                return new BigInteger(0).AsByteArray();
+            }
+            key = GeneralContract.ITEM_PREFIX + item5.AsByteArray();
+            byte[] itemBytes5 = Storage.Get(Storage.CurrentContext, key);
+            if (itemBytes5.Length == 0)
+            {
+                Runtime.Notify("Item is not exist", item5);
+                return new BigInteger(0).AsByteArray();
+            }
 
+            // Give Item #1 to Created Hero, which means Change owner of Item to the Owner of Hero
+            key = GeneralContract.ITEM_PREFIX + item1.AsByteArray();
 
             // Putting Hero costs 1 GAS for player.
             // Check attachments to Transaction, where should be sended 1 GAS to Game Owner
             bool received = false;
-            Transaction TX = (Transaction)ExecutionEngine.ScriptContainer;
-            TransactionOutput[] outputs = TX.GetOutputs();
+            Transaction tx = Blockchain.GetTransaction(hero.Fee_TX);
+            TransactionOutput[] outputs = tx.GetOutputs();
             foreach (var output in outputs)
             {
 
@@ -113,39 +152,35 @@ namespace LordsContract
             }
 
             // Put Hero
-            string key = GeneralContract.HERO_PREFIX + heroId.AsByteArray();
+            key = GeneralContract.HERO_PREFIX + heroId.AsByteArray();
 
             byte[] bytes = Neo.SmartContract.Framework.Helper.Serialize(hero);
 
             Storage.Put(Storage.CurrentContext, key, bytes);
 
             // Give Item #1 to Created Hero, which means Change owner of Item to the Owner of Hero
-            key = GeneralContract.ITEM_PREFIX + item1.AsByteArray();
-            Item item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, key));
+            Item item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(itemBytes1);
 
             item.OWNER = hero.OWNER;
             bytes = Neo.SmartContract.Framework.Helper.Serialize(item);
             Storage.Put(Storage.CurrentContext, key, bytes);
 
             // Give Item #2 to Created Hero
-            key = GeneralContract.ITEM_PREFIX + item2.AsByteArray();
-            item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, key));
+            item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(itemBytes2);
 
             item.OWNER = hero.OWNER;
             bytes = Neo.SmartContract.Framework.Helper.Serialize(item);
             Storage.Put(Storage.CurrentContext, key, bytes);
 
             // Give Item #3 to Created Hero
-            key = GeneralContract.ITEM_PREFIX + item3.AsByteArray();
-            item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, key));
+            item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(itemBytes3);
 
             item.OWNER = hero.OWNER;
             bytes = Neo.SmartContract.Framework.Helper.Serialize(item);
             Storage.Put(Storage.CurrentContext, key, bytes);
 
             // Give Item #4 to Created Hero
-            key = GeneralContract.ITEM_PREFIX + item4.AsByteArray();
-            item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, key));
+            item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(itemBytes4);
 
             item.OWNER = hero.OWNER;
             bytes = Neo.SmartContract.Framework.Helper.Serialize(item);
@@ -153,7 +188,7 @@ namespace LordsContract
 
             // Give Item #5 to Created Hero
             key = GeneralContract.ITEM_PREFIX + item5.AsByteArray();
-            item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, key));
+            item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(itemBytes5);
 
             item.OWNER = hero.OWNER;
             bytes = Neo.SmartContract.Framework.Helper.Serialize(item);
@@ -175,7 +210,7 @@ namespace LordsContract
         public static byte[] Cities(object[] args)
         {
             // First comes city ids, then sizes
-            if (args.Length % 2 != 0)
+            if (args.Length % 3 != 0)
             {
                 Runtime.Notify("Invalid Parameters");
                 return new BigInteger(0).AsByteArray();

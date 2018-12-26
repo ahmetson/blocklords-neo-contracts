@@ -35,6 +35,7 @@ namespace LordsContract
         public BigInteger STAT_VALUE;
         public BigInteger LEVEL;
         public BigInteger XP;                   // Each battle where, Item was used by Hero, increases Experience (XP). Experiences increases Level. Level increases Stat value of Item
+        public bool INITIAL;                    // Initial equipment?
         public byte[] OWNER;                    // Wallet address of Item owner.
     }
 
@@ -58,6 +59,7 @@ namespace LordsContract
         public BigInteger SPEED;                // Speed Stat value
         public BigInteger DEFENSE;              // Defense Stat value
         public byte[] TX;                       // Transaction ID where Hero creation was recorded
+        public byte[] Fee_TX;                   // Transaction ID where creator paid for hero creation
     }
 
     [Serializable]
@@ -76,6 +78,8 @@ namespace LordsContract
         public BigInteger CreatedBlock;         // The Blockchain Height
         public BigInteger Coffer;               // City Coffer
         public BigInteger Size;
+        public BigInteger Troops;               // Current amount of troops in a city
+        public BigInteger ItemsOnMarket;        // Current amount of items on city market
     }
 
     [Serializable]
