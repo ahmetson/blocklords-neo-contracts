@@ -262,6 +262,126 @@ namespace LordsContract
             return new BigInteger(1).AsByteArray();
         }
 
+        public static byte[] ChangeEquipments(BigInteger heroId, BigInteger[] equipments)
+        {
+            // Does Hero belong to Smartcontract owner
+            string heroKey = HERO_PREFIX + heroId.AsByteArray();
+            byte[] heroBytes = Storage.Get(Storage.CurrentContext, heroKey);
+
+            if (heroBytes.Length == 0)
+            {
+                Runtime.Notify("Invalid Hero ID");
+                return new BigInteger(0).AsByteArray();
+            }
+
+            Hero hero = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(heroBytes);
+            if (!Runtime.CheckWitness(hero.OWNER))
+            {
+                Runtime.Notify("Only Hero owner may change equipment set");
+                return new BigInteger(0).AsByteArray();
+            }
+
+            // Is Equipments amount in limit range
+            if (equipments.Length > 5)
+            {
+                Runtime.Notify("Hero has maximum 5 equipments at once");
+                return new BigInteger(0).AsByteArray();
+            }
+
+            bool type1 = false, type2 = false, type3 = false, type4 = false, type5 = false;
+            for (var i = 0; i < equipments.Length; i++)
+            {
+                string itemKey = ITEM_PREFIX + equipments[i].AsByteArray();
+                byte[] itemBytes = Storage.Get(Storage.CurrentContext, itemKey);
+
+                if (itemBytes.Length == 0)
+                {
+                    Runtime.Notify("Invalid Item ID");
+                    return new BigInteger(0).AsByteArray();
+                }
+
+                Item item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(itemBytes);
+
+                // Do equipments belong to Hero Owner
+                if (!item.OWNER.Equals(hero.OWNER))
+                {
+                    Runtime.Notify("Only Item owner may do operation with an item");
+                    return new BigInteger(0).AsByteArray();
+                }
+
+                // Do they are for different types
+                if (item.STAT_TYPE == 1)
+                {
+                    if (type1)
+                    {
+                        Runtime.Notify("Each stat type must have one equipment on hero");
+                        return new BigInteger(0).AsByteArray();
+                    }
+                    else
+                    {
+                        type1 = true;
+                    }
+                }
+                else if (item.STAT_TYPE == 3)
+                {
+                    if (type3)
+                    {
+                        Runtime.Notify("Each stat type must have one equipment on hero");
+                        return new BigInteger(0).AsByteArray();
+                    }
+                    else
+                    {
+                        type3 = true;
+                    }
+                }
+                else if (item.STAT_TYPE == 2)
+                {
+                    if (type2)
+                    {
+                        Runtime.Notify("Each stat type must have one equipment on hero");
+                        return new BigInteger(0).AsByteArray();
+                    }
+                    else
+                    {
+                        type2 = true;
+                    }
+                }
+                else if (item.STAT_TYPE == 4)
+                {
+                    if (type4)
+                    {
+                        Runtime.Notify("Each stat type must have one equipment on hero");
+                        return new BigInteger(0).AsByteArray();
+                    }
+                    else
+                    {
+                        type4 = true;
+                    }
+                }
+                else if (item.STAT_TYPE == 5)
+                {
+                    if (type5)
+                    {
+                        Runtime.Notify("Each stat type must have one equipment on hero");
+                        return new BigInteger(0).AsByteArray();
+                    }
+                    else
+                    {
+                        type5 = true;
+                    }
+                }
+            }
+
+            // Update Current Equipments
+            hero.Equipments = equipments;
+            hero.EquipmentsAmount = equipments.Length;
+
+            heroBytes = Neo.SmartContract.Framework.Helper.Serialize(hero);
+            Storage.Put(Storage.CurrentContext, heroKey, heroBytes);
+
+            return new BigInteger(1).AsByteArray();
+        }
+
         //------------------------------------------------------------------------------------
         //
         // Helpers used in Smartcontract
