@@ -181,28 +181,32 @@ namespace LordsContract
                 return Periodical.DropItems();
             }
             
-            else if (param.Equals("LogCityAttack"))
+            else if (param.Equals("logCityAttack"))
             {
                 Runtime.Log("Initialize city attack");
                 return Log.CityAttack(args);
             }
-            else if (param.Equals("LogStrongholdAttack"))
+            else if (param.Equals("logStrongholdAttack"))
             {
                 Runtime.Log("Initialize stronghold attack");
                 return Log.StrongholdAttack(args);
             }
-            else if (param.Equals("LogBanditCampAttack"))
+            else if (param.Equals("logBanditCampAttack"))
             {
                 Runtime.Log("Initialize bandir camp attack");
                 return Log.BanditCampAttack(args);
             }
-            else if (param.Equals("LogStrongholdLeave"))
+            else if (param.Equals("logStrongholdLeave"))
             {
                 return Log.StrongholdLeave(args);
             }
-            else if (param.Equals("ChangeTroopsAmount"))
+            else if (param.Equals("lhangeTroopsAmount"))
             {
-                return ChangeTroopsAmount((BigInteger)args[1], (BigInteger)args[2]);
+                return ChangeTroopsAmount((BigInteger)args[0], (BigInteger)args[1]);
+            }
+            else if (param.Equals("changeEquipments"))
+            {
+                return ChangeEquipments((BigInteger)args[0], (BigInteger[])args[1]);
             }
 
             //Runtime.Notify("Incorrect Parameter");
