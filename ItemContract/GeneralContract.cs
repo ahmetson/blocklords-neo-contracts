@@ -61,6 +61,10 @@ namespace LordsContract
 
         public static readonly BigInteger bigCity = 1, mediumCity = 2, smallCity = 3;
 
+        public static readonly BigInteger bigMarketCap = 20, mediumMarketCap = 15, smallMarketCap = 10;
+        public static readonly BigInteger bigTroopsCap = 500, mediumTroopsCap = 400, smallTroopsCap = 300;
+        public static readonly BigInteger bigDefense = 50_000_000, mediumDefense = 55_000_000, smallDefense = 60_000_000;
+                
         /**
          * Entry Point of Smartcontract on Neo Blockchain + C#
          * 
@@ -129,8 +133,9 @@ namespace LordsContract
 
                 item.STAT_VALUE = (BigInteger)args[5];
                 item.LEVEL = (BigInteger)args[6];
-                item.OWNER = ExecutionEngine.CallingScriptHash;
+                item.OWNER = new byte[] { };
                 item.XP = 0;
+                item.INITIAL = (bool)args[7];
 
                 Put.Item((BigInteger)args[1], (byte)args[0], item);
             }
@@ -192,12 +197,63 @@ namespace LordsContract
             {
                 return Log.StrongholdLeave(args);
             }
-            // Add Auction Cancel
+            else if (param.Equals("ChangeTroopsAmount"))
+            {
+                return ChangeTroopsAmount((BigInteger)args[1], (BigInteger)args[2]);
+            }
 
             //Runtime.Notify("Incorrect Parameter");
             return new BigInteger(1).AsByteArray();
         }
 
+        public static byte[] ChangeTroopsAmount(BigInteger cityId, BigInteger additionalTroops)
+        {
+            // Get City information
+            // is owner of city called this method
+            // is amount of troops are not going over limit
+            // then, save information
+            string cityKey = GeneralContract.CITY_PREFIX + cityId;
+
+            // Check existence of City on Blockchain
+            byte[] cityBytes = Storage.Get(Storage.CurrentContext, cityKey);
+            if (cityBytes.Length == 0)
+            {
+                Runtime.Notify("City doesn't exist on Blockchain!");
+                return new BigInteger(0).AsByteArray();
+            }
+
+            // Check, that method invoker is lord of city
+            City city = (City)Neo.SmartContract.Framework.Helper.Deserialize(cityBytes);
+            if (city.Hero == 0)
+            {
+                Runtime.Notify("City has no owner");
+                return new BigInteger(0).AsByteArray();
+            }
+
+            // City holds ID of Owner, so get the Hero data by ID, and see the Wallet address of player
+            string heroKey = GeneralContract.HERO_PREFIX + city.Hero;
+            Hero hero = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, heroKey));
+
+            if (!Runtime.CheckWitness(hero.OWNER))
+            {
+                Runtime.Notify("Only Lord of city able to change amount of troops in a city!");
+                return new BigInteger(0).AsByteArray();
+            }
+
+            // Check that troops cap is not reached
+            city.Troops = city.Troops + additionalTroops;
+
+            if (city.Troops > GetTroopsCap(city.Size))
+            {
+                Runtime.Notify("Too many troops for defend.");
+                return new BigInteger(0).AsByteArray();
+            }
+
+            cityBytes = Neo.SmartContract.Framework.Helper.Serialize(city);
+            Storage.Put(Storage.CurrentContext, cityKey, cityBytes);
+
+            return new BigInteger(1).AsByteArray();
+        }
 
         //------------------------------------------------------------------------------------
         //
@@ -213,6 +269,17 @@ namespace LordsContract
             return new BigInteger(percentage);
         }
 
-
+        public static BigInteger GetTroopsCap(BigInteger citySize)
+        {
+            if (citySize == bigCity)
+            {
+                return bigTroopsCap;
+            }
+            else if (citySize == mediumCity)
+            {
+                return mediumTroopsCap;
+            }
+            return smallTroopsCap;
+        }
     }
 }
