@@ -19,6 +19,10 @@ namespace LordsContract
          * Item Seller (the invoker of this function) should send some GAS as a fee to game owner.
          * It is checked inside of function
          * 
+         * Validation:
+         * 1. Item should exist
+         * 2. Only item owner can put item
+         * 
          * Has 5 arguments
          * @Item ID (BigInteger)                - ID of item that will be added onto the market.
          * @Auction Duration (BigInteger)       - Duration on market, amount of time that item placed on market.
@@ -28,6 +32,23 @@ namespace LordsContract
          */
         public static byte[] Begin(BigInteger itemId, MarketItemData item)
         {
+            // Item should exist
+            string key = GeneralContract.ITEM_PREFIX + itemId.AsByteArray();
+            byte[] itemBytes1 = Storage.Get(Storage.CurrentContext, key);
+            if (itemBytes1.Length == 0)
+            {
+                Runtime.Notify("Item is not exists", itemId);
+                return new BigInteger(0).AsByteArray();
+            }
+
+            // Item should belong to Auction Beginner
+            Item itemData = (Item)Neo.SmartContract.Framework.Helper.Deserialize(itemBytes1);
+            if (!itemData.OWNER.Equals(item.Seller))
+            {
+                Runtime.Notify("Only owner can do operation on item", itemId);
+                return new BigInteger(0).AsByteArray();
+            }
+
             // Check whether transaction fee is included?
             if (!IsAuctionTransactionFeeIncluded(item.AuctionDuration))
             {
@@ -35,9 +56,7 @@ namespace LordsContract
                 return new BigInteger(0).AsByteArray();
             }
 
-            // TODO: Validate Item.
-
-            string key = GeneralContract.MARKET_PREFIX + itemId.AsByteArray();
+            key = GeneralContract.MARKET_PREFIX + itemId.AsByteArray();
 
             // Serialize Custom Object `Item` into bytes, since Neo Storage doesn't support custom classes.
             byte[] itemBytes = Neo.SmartContract.Framework.Helper.Serialize(item);
@@ -51,7 +70,9 @@ namespace LordsContract
         /**
          * Function Records Item buying on Market and finishes Auction for Item.
          * 
-         * It is Free from Transaction Fee.
+         * Validation
+         * Item should exist on the market
+         * 
          * 
          * Has 2 arguments
          * @Item ID (BigInteger)                - ID of item that should be removed onto the market.
@@ -63,9 +84,17 @@ namespace LordsContract
 
             // Item Data that was on Market
             string key = GeneralContract.MARKET_PREFIX + itemId.AsByteArray();
-            MarketItemData mItem = (MarketItemData)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, key));
+            byte[] mBytes = Storage.Get(Storage.CurrentContext, key);
 
-            // Calculate the Valid Data
+            if (mBytes.Length == 0)
+            {
+                Runtime.Notify("Item is not exist on market!");
+                return new BigInteger(0).AsByteArray();
+            }
+
+            MarketItemData mItem = (MarketItemData)Neo.SmartContract.Framework.Helper.Deserialize(mBytes);
+
+            // Calculate the Validness of date
             BigInteger validStartedTime = Blockchain.GetBlock(Blockchain.GetHeight()).Timestamp - (mItem.AuctionDuration * 3600);   // Current Time - Auction Duration
             if (mItem.AuctionStartedTime < validStartedTime)
             {
@@ -175,13 +204,27 @@ namespace LordsContract
             return new BigInteger(0).AsByteArray();
         }
 
+        /// <summary>
+        /// Item should exist on market
+        /// 
+        /// Owner of Item should Cancel it
+        /// </summary>
+        /// <param name="itemId"></param>
+        /// <returns></returns>
         public static byte[] Cancel(BigInteger itemId)
         {
             Runtime.Log("Initialized Auction Cancellation");
             string key = GeneralContract.MARKET_PREFIX + itemId.AsByteArray();
-            MarketItemData mItem = (MarketItemData)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, key));
+            byte[] mBytes = Storage.Get(Storage.CurrentContext, key);
+            if (mBytes.Length == 0)
+            {
+                Runtime.Notify("Item is not exist on market");
+                return new BigInteger(0).AsByteArray();
+            }
 
-            if (Runtime.CheckWitness(mItem.Seller))
+            MarketItemData mItem = (MarketItemData)Neo.SmartContract.Framework.Helper.Deserialize(mBytes);
+
+            if (!Runtime.CheckWitness(mItem.Seller))
             {
                 Runtime.Notify("Only Owner of Item can delete it from Market!");
                 return new BigInteger(0).AsByteArray();
