@@ -159,7 +159,10 @@ namespace LordsContract
                 hero.DEFENSE = (BigInteger)args[7];
                 hero.TX = ((Transaction)ExecutionEngine.ScriptContainer).Hash;
 
-                return Put.Hero((BigInteger)args[0], hero, (byte[])args[8], (BigInteger)args[9], (BigInteger)args[10], (BigInteger)args[11], (BigInteger)args[12], (BigInteger)args[13]);
+                hero.Equipments = new BigInteger[5] { (BigInteger)args[9], (BigInteger)args[10], (BigInteger)args[11], (BigInteger)args[12], (BigInteger)args[13] };
+                hero.EquipmentsAmount = 5;
+
+                return Put.Hero((BigInteger)args[0], hero, (byte[])args[8]);
             }
             else if (param.Equals("auctionEnd"))
             {

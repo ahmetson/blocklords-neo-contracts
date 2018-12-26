@@ -83,48 +83,47 @@ namespace LordsContract
              * @Item ID #5
              * @Transaction                         - where fee was recorded
              */
-        public static byte[] Hero(BigInteger heroId, Hero hero, byte[] signature, BigInteger item1, BigInteger item2, BigInteger item3, BigInteger item4, BigInteger item5)
+        public static byte[] Hero(BigInteger heroId, Hero hero, byte[] signature)
         {
-            string key = GeneralContract.ITEM_PREFIX + item1.AsByteArray();
+            string key = GeneralContract.ITEM_PREFIX + hero.Equipments[0].AsByteArray();
             // If Item's are not exist, exit
             byte[] itemBytes1 = Storage.Get(Storage.CurrentContext, key);
             if (itemBytes1.Length == 0)
             {
-                Runtime.Notify("Item is not exists", item1);
+                Runtime.Notify("Item is not exists", hero.Equipments[0]);
                 return new BigInteger(0).AsByteArray();
             }
             // TODO item should not be owned by anyone.
-            key = GeneralContract.ITEM_PREFIX + item2.AsByteArray();
+            key = GeneralContract.ITEM_PREFIX + hero.Equipments[1].AsByteArray();
             byte[] itemBytes2 = Storage.Get(Storage.CurrentContext, key);
             if (itemBytes2.Length == 0)
             {
-                Runtime.Notify("Item is not exists", item2);
+                Runtime.Notify("Item is not exists", hero.Equipments[1]);
                 return new BigInteger(0).AsByteArray();
             }
-            key = GeneralContract.ITEM_PREFIX + item3.AsByteArray();
+            key = GeneralContract.ITEM_PREFIX + hero.Equipments[2].AsByteArray();
             byte[] itemBytes3 = Storage.Get(Storage.CurrentContext, key);
             if (itemBytes3.Length == 0)
             {
-                Runtime.Notify("Item is not exists", item3);
+                Runtime.Notify("Item is not exists", hero.Equipments[2]);
                 return new BigInteger(0).AsByteArray();
             }
-            key = GeneralContract.ITEM_PREFIX + item4.AsByteArray();
+            key = GeneralContract.ITEM_PREFIX + hero.Equipments[3].AsByteArray();
             byte[] itemBytes4 = Storage.Get(Storage.CurrentContext, key);
             if (itemBytes4.Length == 0)
             {
-                Runtime.Notify("Item is not exists", item4);
+                Runtime.Notify("Item is not exists", hero.Equipments[3]);
                 return new BigInteger(0).AsByteArray();
             }
-            key = GeneralContract.ITEM_PREFIX + item5.AsByteArray();
+            key = GeneralContract.ITEM_PREFIX + hero.Equipments[4].AsByteArray();
             byte[] itemBytes5 = Storage.Get(Storage.CurrentContext, key);
             if (itemBytes5.Length == 0)
             {
-                Runtime.Notify("Item is not exist", item5);
+                Runtime.Notify("Item is not exist", hero.Equipments[4]);
                 return new BigInteger(0).AsByteArray();
             }
 
             // Give Item #1 to Created Hero, which means Change owner of Item to the Owner of Hero
-            key = GeneralContract.ITEM_PREFIX + item1.AsByteArray();
 
             // Putting Hero costs 1 GAS for player.
             // Check attachments to Transaction, where should be sended 1 GAS to Game Owner
@@ -187,7 +186,6 @@ namespace LordsContract
             Storage.Put(Storage.CurrentContext, key, bytes);
 
             // Give Item #5 to Created Hero
-            key = GeneralContract.ITEM_PREFIX + item5.AsByteArray();
             item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(itemBytes5);
 
             item.OWNER = hero.OWNER;

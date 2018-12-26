@@ -60,6 +60,8 @@ namespace LordsContract
         public BigInteger DEFENSE;              // Defense Stat value
         public byte[] TX;                       // Transaction ID where Hero creation was recorded
         public byte[] Fee_TX;                   // Transaction ID where creator paid for hero creation
+        public BigInteger[] Equipments;         // Items that are equipped on hero
+        public BigInteger EquipmentsAmount;     // Amount of items that are equipped on hero
     }
 
     [Serializable]
