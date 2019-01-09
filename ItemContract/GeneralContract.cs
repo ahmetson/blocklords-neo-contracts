@@ -137,6 +137,7 @@ namespace LordsContract
                 item.OWNER = new byte[] { };
                 item.XP = 0;
                 item.INITIAL = (bool)args[7];
+                item.OWNER = GameOwner;
 
                 Put.Item((BigInteger)args[1], (byte)args[0], item);
             }
