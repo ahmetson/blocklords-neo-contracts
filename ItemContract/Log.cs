@@ -234,7 +234,7 @@ namespace LordsContract
                     log.AttackerItem4,
                     log.AttackerItem5
                 };
-                BigInteger[] stats = UpdateItemStats(ids);
+                UpdateItemStats(ids);
             }
 
             Runtime.Notify("Battle was logged on Blockchain");
@@ -279,18 +279,23 @@ namespace LordsContract
             return new BigInteger(1).AsByteArray();
         }
 
-        private static BigInteger[] UpdateItemStats(BigInteger[] ids)
+        private static BigInteger UpdateItemStats(BigInteger[] ids)
         {
-            Runtime.Notify("Init Item Stat Update");
-
-            string key = "";
-
-            BigInteger[] updateValues = new BigInteger[5] { 0, 0, 0, 0, 0 };
-
-            for (var i = 0; i < 5; i++)
+            UpdatedItem update = new UpdatedItem();
+            update.ItemId = 0;
+            update.IncreaseValue = 0;
+            string key;
+            // Pick Random Number
+            // If Random Equipment for that doesnt exist, then update nothing
+            //      But, log 0
+            // Else increase amount
+            //      Log it
+            update.ItemId = GeneralContract.GetRandomNumber(5);
+            if (ids[(int)(update.ItemId-1)] != 0)
             {
-                // Get Item Data
-                key = GeneralContract.ITEM_PREFIX + ids[i].AsByteArray();
+                
+
+                key = GeneralContract.ITEM_PREFIX + update.ItemId.AsByteArray();
                 Item item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, key));
 
                 // Increase XP that represents on how many items the Item was involved
@@ -303,9 +308,7 @@ namespace LordsContract
                     item.QUALITY == 4 && item.LEVEL == 9 ||
                     item.QUALITY == 5 && item.LEVEL == 10)
                 {
-                    Runtime.Notify("The Item reached max possible level. So do not update it", ids[i]);
-                    updateValues[i] = 0;
-                    continue;
+                    Runtime.Notify("The Item reached max possible level. So do not update it", update.ItemId);
                 }
 
                 if (item.LEVEL == 1 && item.XP >= 4 ||
@@ -324,28 +327,28 @@ namespace LordsContract
                 // Increase Stat based Quality
                 if (item.QUALITY == 1)
                 {
-                    updateValues[i] = GeneralContract.GetRandomNumber(3);                   // Item with Quality I, can increase its Stat Value between 1 - 3
-                    item.STAT_VALUE = item.STAT_VALUE + updateValues[i];
+                    update.IncreaseValue = GeneralContract.GetRandomNumber(3);                   // Item with Quality I, can increase its Stat Value between 1 - 3
+                    item.STAT_VALUE = item.STAT_VALUE + update.IncreaseValue;
                 }
                 else if (item.QUALITY == 2)
                 {
-                    updateValues[i] = GeneralContract.GetRandomNumber(3) + 3;               // Item with Quality II, can increase its Stat Value between 4 - 6
-                    item.STAT_VALUE = item.STAT_VALUE + updateValues[i];
+                    update.IncreaseValue = GeneralContract.GetRandomNumber(3) + 3;               // Item with Quality II, can increase its Stat Value between 4 - 6
+                    item.STAT_VALUE = item.STAT_VALUE + update.IncreaseValue;
                 }
                 else if (item.QUALITY == 3)
                 {
-                    updateValues[i] = GeneralContract.GetRandomNumber(3) + 6;               // Item with Quality III, can increase its Stat Value between 7 - 9
-                    item.STAT_VALUE = item.STAT_VALUE + updateValues[i];
+                    update.IncreaseValue = GeneralContract.GetRandomNumber(3) + 6;               // Item with Quality III, can increase its Stat Value between 7 - 9
+                    item.STAT_VALUE = item.STAT_VALUE + update.IncreaseValue;
                 }
                 else if (item.QUALITY == 4)
                 {
-                    updateValues[i] = GeneralContract.GetRandomNumber(3) + 9;               // Item with Quality IV, can increase its Stat Value between 10 - 12
-                    item.STAT_VALUE = item.STAT_VALUE + updateValues[i];
+                    update.IncreaseValue = GeneralContract.GetRandomNumber(3) + 9;               // Item with Quality IV, can increase its Stat Value between 10 - 12
+                    item.STAT_VALUE = item.STAT_VALUE + update.IncreaseValue;
                 }
                 else if (item.QUALITY == 5)
                 {
-                    updateValues[i] = GeneralContract.GetRandomNumber(3) + 12;              // Item with Quality V, can increase its Stat Value between 13 - 15
-                    item.STAT_VALUE = item.STAT_VALUE + updateValues[i];
+                    update.IncreaseValue = GeneralContract.GetRandomNumber(3) + 12;              // Item with Quality V, can increase its Stat Value between 13 - 15
+                    item.STAT_VALUE = item.STAT_VALUE + update.IncreaseValue;
                 }
 
                 // Put back On Storage the Item with increased values
@@ -353,7 +356,14 @@ namespace LordsContract
                 Storage.Put(Storage.CurrentContext, key, bytes);
             }
 
-            return updateValues;
+            byte[] bytesUpdate = Neo.SmartContract.Framework.Helper.Serialize(update);
+
+            Transaction TX = (Transaction)ExecutionEngine.ScriptContainer;
+            string keyUpdate = GeneralContract.UPDATED_STAT_PREFIX + TX.Hash;
+
+            Storage.Put(Storage.CurrentContext, keyUpdate, bytesUpdate);
+
+            return update.IncreaseValue;
         }
     }
 

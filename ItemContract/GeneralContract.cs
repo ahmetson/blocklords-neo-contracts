@@ -17,7 +17,8 @@ namespace LordsContract
         public static readonly string HERO_PREFIX = "\x08\x00";
         public static readonly string LATEST_REWARDED_ITEM_KEY = "\x09",
                                                                          COFFER_PREFIX = "\x10\x00",
-                                                                         COFFER_PAYOUT_KEY = "\x11";
+                                                                         COFFER_PAYOUT_KEY = "\x11",
+                                        UPDATED_STAT_PREFIX = "\x12\x00";
 
         public static readonly BigInteger CityType = 0, StrongholdType = 1, BanditCampType = 2;
 

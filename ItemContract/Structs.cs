@@ -115,6 +115,12 @@ namespace LordsContract
         public byte[] TX;                   // Transaction where Battle Log was recorded.
     }
 
+    [Serializable]
+    public class UpdatedItem
+    {
+        public BigInteger ItemId;                   // Item ID
+        public BigInteger IncreaseValue;
+    }
 }
 
 
