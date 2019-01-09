@@ -199,7 +199,10 @@ namespace LordsContract
             {
                 return ChangeEquipments((BigInteger)args[0], (BigInteger[])args[1]);
             }
-
+            else if (param.Equals("setForTestStatus"))
+            {
+                return SetForTestStatus((bool)args[0]);
+            }
 
 
             //Runtime.Notify("Incorrect Parameter");
