@@ -180,20 +180,9 @@ namespace LordsContract
             {
                 return Periodical.DropItems();
             }
-            else if (param.Equals("logCityAttack"))
+            else if (param.Equals("logBattle"))
             {
-                Runtime.Log("Initialize city attack");
-                return Log.Attack(args);
-            }
-            else if (param.Equals("logStrongholdAttack"))
-            {
-                Runtime.Log("Initialize stronghold attack");
-                return Log.Attack(args);
-            }
-            else if (param.Equals("logBanditCampAttack"))
-            {
-                Runtime.Log("Initialize bandir camp attack");
-                return Log.Attack(args);
+                return Log.Battle(args);
             }
             else if (param.Equals("logStrongholdLeave"))
             {

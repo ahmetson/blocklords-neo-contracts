@@ -14,7 +14,7 @@ namespace LordsContract
         //
         //------------------------------------------------------------------------------------
 
-        public static byte[] Attack(object[] args)
+        public static byte[] Battle(object[] args)
         {
             // Prepare log
             BattleLog log = new BattleLog();
