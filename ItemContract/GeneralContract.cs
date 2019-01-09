@@ -19,6 +19,8 @@ namespace LordsContract
                                                                          COFFER_PREFIX = "\x10\x00",
                                                                          COFFER_PAYOUT_KEY = "\x11";
 
+        public static readonly BigInteger CityType = 0, StrongholdType = 1, BanditCampType = 2;
+
         // Items may be given to heroes in two situation: when they create hero or when they own some territory on the game map.
         public static readonly byte HERO_CREATION_GIVEN = 0;
         public static readonly byte STRONGHOLD_REWARD = 1;
@@ -100,7 +102,6 @@ namespace LordsContract
 
                 return Auction.Begin((BigInteger)args[0], marketItem);
             }
-            
             else if (param.Equals("putItem"))
             {
                 Runtime.Log("Put Item on Storage");
@@ -139,7 +140,6 @@ namespace LordsContract
 
                 Put.Item((BigInteger)args[1], (byte)args[0], item);
             }
-            
             else if (param.Equals("putHero"))
             {
                 if (args.Length != 14)
@@ -180,21 +180,20 @@ namespace LordsContract
             {
                 return Periodical.DropItems();
             }
-            
             else if (param.Equals("logCityAttack"))
             {
                 Runtime.Log("Initialize city attack");
-                return Log.CityAttack(args);
+                return Log.Attack(args);
             }
             else if (param.Equals("logStrongholdAttack"))
             {
                 Runtime.Log("Initialize stronghold attack");
-                return Log.StrongholdAttack(args);
+                return Log.Attack(args);
             }
             else if (param.Equals("logBanditCampAttack"))
             {
                 Runtime.Log("Initialize bandir camp attack");
-                return Log.BanditCampAttack(args);
+                return Log.Attack(args);
             }
             else if (param.Equals("logStrongholdLeave"))
             {
@@ -233,7 +232,7 @@ namespace LordsContract
             City city = (City)Neo.SmartContract.Framework.Helper.Deserialize(cityBytes);
             if (city.Hero == 0)
             {
-                Runtime.Notify("City has no owner");
+                Runtime.Notify("City has no owner"); 
                 return new BigInteger(0).AsByteArray();
             }
 
