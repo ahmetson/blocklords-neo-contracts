@@ -1,4 +1,4 @@
-﻿using Neo.SmartContract.Framework;
+using Neo.SmartContract.Framework;
 using Neo.SmartContract.Framework.Services.Neo;
 using Neo.SmartContract.Framework.Services.System;
 using System.Numerics;
@@ -79,37 +79,9 @@ namespace LordsContract
                 return new BigInteger(0).AsByteArray();
             }
 
-            
-
-            // Verify Signature
-            BigInteger[] integerArgs = new BigInteger[20];
-            integerArgs[0] = log.BattleId;
-            integerArgs[1] = log.BattleResult; // 0 - Attacker WON, 1 - Attacker Lose
-            integerArgs[2] = log.BattleType;   // 0 - City, 1 - Stronghold, 2 - Bandit Camp
-            integerArgs[3] = log.Attacker; // Hero
-            integerArgs[4] = log.AttackerTroops;
-            integerArgs[5] = log.AttackerRemained;
-            integerArgs[6] = log.AttackerItem1;    // Equipped Items that were involved
-            integerArgs[7] = log.AttackerItem2;
-            integerArgs[8] = log.AttackerItem3;
-            integerArgs[9] = log.AttackerItem4;
-            integerArgs[10] = log.AttackerItem5;
-
-            integerArgs[11] = log.Defender;
-            integerArgs[12] = log.DefenderTroops;
-            integerArgs[13] = log.DefenderRemained;
-            integerArgs[14] = log.DefenderItem1;
-            integerArgs[15] = log.DefenderItem2;
-            integerArgs[16] = log.DefenderItem3;
-            integerArgs[17] = log.DefenderItem4;
-            integerArgs[18] = log.DefenderItem5;
-
-            integerArgs[19] = log.DefenderObject;   // City|Stronghold|NPC ID
-
-
             // Log 
-            string key = GeneralContract.BATTLE_LOG_PREFIX + log.TX;
-            byte[] bytes = Neo.SmartContract.Framework.Helper.Serialize(log);
+            key = GeneralContract.BATTLE_LOG_PREFIX + log.TX;
+            bytes = Neo.SmartContract.Framework.Helper.Serialize(log);
             Storage.Put(Storage.CurrentContext, key, bytes);
 
             // Apply Battle Result
