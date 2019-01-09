@@ -252,6 +252,7 @@ namespace LordsContract
             return new BigInteger(1).AsByteArray();
         }
 
+        // Equipments order matter. Index at argument is for item type of equipment
         public static byte[] ChangeEquipments(BigInteger heroId, BigInteger[] equipments)
         {
             // Does Hero belong to Smartcontract owner
@@ -272,15 +273,20 @@ namespace LordsContract
             }
 
             // Is Equipments amount in limit range
-            if (equipments.Length > 5)
+            if (equipments.Length != 5)
             {
-                Runtime.Notify("Hero has maximum 5 equipments at once");
+                Runtime.Notify("Hero may have 5 equipments at once");
                 return new BigInteger(0).AsByteArray();
             }
 
-            bool type1 = false, type2 = false, type3 = false, type4 = false, type5 = false;
-            for (var i = 0; i < equipments.Length; i++)
+            BigInteger statType = 1;
+            for (var i = 0; i < 5; i++)
             {
+                if (equipments[i] == 0)
+                {
+                    statType = statType + 1;
+                    continue;
+                }
                 string itemKey = ITEM_PREFIX + equipments[i].AsByteArray();
                 byte[] itemBytes = Storage.Get(Storage.CurrentContext, itemKey);
 
@@ -292,74 +298,21 @@ namespace LordsContract
 
                 Item item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(itemBytes);
 
-                // Do equipments belong to Hero Owner
+                // Does item belong to Hero Owner
                 if (!item.OWNER.Equals(hero.OWNER))
                 {
                     Runtime.Notify("Only Item owner may do operation with an item");
                     return new BigInteger(0).AsByteArray();
                 }
 
-                // Do they are for different types
-                if (item.STAT_TYPE == 1)
+                // Does Equipment have a right stat type
+                if (item.STAT_TYPE != statType)
                 {
-                    if (type1)
-                    {
-                        Runtime.Notify("Each stat type must have one equipment on hero");
-                        return new BigInteger(0).AsByteArray();
-                    }
-                    else
-                    {
-                        type1 = true;
-                    }
+                    Runtime.Notify("Invalid Stat type", statType);
+                    return new BigInteger(0).AsByteArray();
+
                 }
-                else if (item.STAT_TYPE == 3)
-                {
-                    if (type3)
-                    {
-                        Runtime.Notify("Each stat type must have one equipment on hero");
-                        return new BigInteger(0).AsByteArray();
-                    }
-                    else
-                    {
-                        type3 = true;
-                    }
-                }
-                else if (item.STAT_TYPE == 2)
-                {
-                    if (type2)
-                    {
-                        Runtime.Notify("Each stat type must have one equipment on hero");
-                        return new BigInteger(0).AsByteArray();
-                    }
-                    else
-                    {
-                        type2 = true;
-                    }
-                }
-                else if (item.STAT_TYPE == 4)
-                {
-                    if (type4)
-                    {
-                        Runtime.Notify("Each stat type must have one equipment on hero");
-                        return new BigInteger(0).AsByteArray();
-                    }
-                    else
-                    {
-                        type4 = true;
-                    }
-                }
-                else if (item.STAT_TYPE == 5)
-                {
-                    if (type5)
-                    {
-                        Runtime.Notify("Each stat type must have one equipment on hero");
-                        return new BigInteger(0).AsByteArray();
-                    }
-                    else
-                    {
-                        type5 = true;
-                    }
-                }
+                statType = statType + 1;
             }
 
             // Update Current Equipments
