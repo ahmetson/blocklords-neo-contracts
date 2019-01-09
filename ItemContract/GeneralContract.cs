@@ -188,7 +188,7 @@ namespace LordsContract
             {
                 return Log.StrongholdLeave(args);
             }
-            else if (param.Equals("lhangeTroopsAmount"))
+            else if (param.Equals("changeTroopsAmount"))
             {
                 return ChangeTroopsAmount((BigInteger)args[0], (BigInteger)args[1]);
             }
