@@ -147,37 +147,20 @@ namespace LordsContract
             log.TX = ((Transaction)ExecutionEngine.ScriptContainer).Hash;
 
             // Check incoming fee
-            bool received = false;
-            Transaction TX = (Transaction)ExecutionEngine.ScriptContainer;
-            TransactionOutput[] outputs = TX.GetOutputs();
-            Runtime.Notify("Outputs are", outputs.Length);
-            foreach (var output in outputs)
-            {
-                // Game Developers got their fee?
-                if (output.ScriptHash.AsBigInteger() == GeneralContract.GameOwner.AsBigInteger())
-                {
-                    Runtime.Notify("Game Owner received ", output.Value);
-                    if (log.BattleType == GeneralContract.CityType && output.Value == GeneralContract.cityAttackFee)
+            if (log.BattleType == GeneralContract.CityType && ! GeneralContract.IsTransactionOutputExist(GeneralContract.cityAttackFee))
                     {
-                        received = true;
-                        break;
-                    } else if (log.BattleType == GeneralContract.StrongholdType && output.Value == GeneralContract.strongholdAttackFee)
+                        Runtime.Notify("The Battle Fee doesn't included.");
+                        return new BigInteger(0).AsByteArray();
+                    } else if (log.BattleType == GeneralContract.StrongholdType && ! GeneralContract.IsTransactionOutputExist(GeneralContract.strongholdAttackFee))
                     {
-                        received = true;
-                        break;
-                    } else if (log.BattleType == GeneralContract.BanditCampType && output.Value == GeneralContract.banditCampAttackFee)
+                        Runtime.Notify("The Battle Fee doesn't included.");
+                        return new BigInteger(0).AsByteArray();
+                    } else if (log.BattleType == GeneralContract.BanditCampType && ! GeneralContract.IsTransactionOutputExist(GeneralContract.banditCampAttackFee))
                     {
-                        received = true;
-                        break;
+                        Runtime.Notify("The Battle Fee doesn't included.");
+                        return new BigInteger(0).AsByteArray();
                     }
-                }
-            }
 
-            if (!received)
-            {
-                Runtime.Notify("The Battle Fee doesn't included.");
-                return new BigInteger(0).AsByteArray();
-            }
 
             // Log 
             key = GeneralContract.BATTLE_LOG_PREFIX + log.TX;

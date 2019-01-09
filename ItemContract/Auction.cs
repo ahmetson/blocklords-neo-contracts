@@ -140,44 +140,53 @@ namespace LordsContract
             Runtime.Notify("Seller should Receive", sellerReceive, "Check income", "Seller", mItem.Seller);
 
             // Check Attachments that were included with current Transaction
-            Transaction TX = (Transaction)ExecutionEngine.ScriptContainer;
-            TransactionOutput[] outputs = TX.GetOutputs();
-            Runtime.Notify("Outputs are", outputs.Length);
-            foreach (var item in outputs)
+            if (GeneralContract.IsForTest())
             {
-                // Seller of Item received money?
-                if (item.ScriptHash.AsBigInteger() == mItem.Seller.AsBigInteger())
+                ownerReceived = true;
+                lordReceived = true;
+                sellerReceived = true;
+            }
+            else
+            {
+                Transaction TX = (Transaction)ExecutionEngine.ScriptContainer;
+                TransactionOutput[] outputs = TX.GetOutputs();
+                Runtime.Notify("Outputs are", outputs.Length);
+                foreach (var item in outputs)
                 {
-                    Runtime.Notify("Seller received ", item.Value, " Gas! While required ", sellerReceive);
-                    if (item.Value == sellerReceive)
+                    // Seller of Item received money?
+                    if (item.ScriptHash.AsBigInteger() == mItem.Seller.AsBigInteger())
                     {
-                        sellerReceived = true;
-                        continue;
+                        Runtime.Notify("Seller received ", item.Value, " Gas! While required ", sellerReceive);
+                        if (item.Value == sellerReceive)
+                        {
+                            sellerReceived = true;
+                            continue;
+                        }
                     }
-                }
 
-                // Game Developers got their fee?
-                if (item.ScriptHash.AsBigInteger() == GeneralContract.GameOwner.AsBigInteger())
-                {
-                    Runtime.Notify("Game Owner received ", item.Value, " Gas! While required ", ownerReceive);
-                    if (item.Value == ownerReceive)
+                    // Game Developers got their fee?
+                    if (item.ScriptHash.AsBigInteger() == GeneralContract.GameOwner.AsBigInteger())
                     {
-                        ownerReceived = true;
-                        continue;
+                        Runtime.Notify("Game Owner received ", item.Value, " Gas! While required ", ownerReceive);
+                        if (item.Value == ownerReceive)
+                        {
+                            ownerReceived = true;
+                            continue;
+                        }
                     }
-                }
 
-                if (lord.Length == 0)
-                {
-                    lordReceived = true;
-                }
-                else if (item.ScriptHash.AsBigInteger() == lord.AsBigInteger())
-                {
-                    Runtime.Notify("City Lord received ", item.Value, " Gas! While required ", lordReceive);
-                    if (new BigInteger(item.Value) == lordReceive)
+                    if (lord.Length == 0)
                     {
                         lordReceived = true;
-                        continue;
+                    }
+                    else if (item.ScriptHash.AsBigInteger() == lord.AsBigInteger())
+                    {
+                        Runtime.Notify("City Lord received ", item.Value, " Gas! While required ", lordReceive);
+                        if (new BigInteger(item.Value) == lordReceive)
+                        {
+                            lordReceived = true;
+                            continue;
+                        }
                     }
                 }
             }
@@ -239,39 +248,22 @@ namespace LordsContract
 
         private static bool IsAuctionTransactionFeeIncluded(BigInteger duration)
         {
-            Transaction TX = (Transaction)Neo.SmartContract.Framework.Services.System.ExecutionEngine.ScriptContainer;
-            TransactionOutput[] outputs = TX.GetOutputs();
-            Runtime.Notify("Outputs are", outputs.Length);
-            foreach (var item in outputs)
-            {
-                //if (item.Value == auction8HoursFee)
-                //{
-                //    Runtime.Notify("There are 0.1m Fee");
-                //}
-                if (item.Value == 10_000_000)
-                {
-                    Runtime.Notify("There are 10 Millions of Gas", item.ScriptHash.AsString(), GeneralContract.auction8HoursFee);
-                }
-                Runtime.Notify("Output is", item.Value);
-            }
             if (duration == 8)
             {
-                Runtime.Notify("Valid 8 hours!");
-                return true;
+                return GeneralContract.IsTransactionOutputExist(GeneralContract.auction8HoursFee);
+                
             }
             if (duration == 12)
             {
-                Runtime.Notify("Valid 12 hours!");
-                return true;
+                return GeneralContract.IsTransactionOutputExist(GeneralContract.auction12HoursFee);
             }
             if (duration == 24)
             {
-                Runtime.Notify("Valid 24 hours!");
-                return true;
+                return GeneralContract.IsTransactionOutputExist(GeneralContract.auction24HoursFee);
             }
 
             Runtime.Notify("Invalid Duration time, all included fee will be counted as invalid!");
-            return true;
+            return false;
         }
     }
 

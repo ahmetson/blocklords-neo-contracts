@@ -18,7 +18,8 @@ namespace LordsContract
         public static readonly string LATEST_REWARDED_ITEM_KEY = "\x09",
                                                                          COFFER_PREFIX = "\x10\x00",
                                                                          COFFER_PAYOUT_KEY = "\x11",
-                                        UPDATED_STAT_PREFIX = "\x12\x00";
+                                        UPDATED_STAT_PREFIX = "\x12\x00",
+                                        TEST_KEY = "\x13";
 
         public static readonly BigInteger CityType = 0, StrongholdType = 1, BanditCampType = 2;
 
@@ -41,8 +42,8 @@ namespace LordsContract
          * Basically 0.1 means 10000000 (10_000_000) during Execution of Smartcontract.
          */
         public static readonly decimal auction8HoursFee = 10_000_000,              // 0.1 GAS
-                                                                                    //auction12HoursFee = 20_000_000,          // 0.2 GAS
-                                                                                    //auction24HoursFee = 30_000_000,          // 0.3 GAS
+                                                                                    auction12HoursFee = 20_000_000,          // 0.2 GAS
+                                                                                    auction24HoursFee = 30_000_000,          // 0.3 GAS
                                            heroCreationFee = 100_000_000,           // 1.0 GAS
                                            cityAttackFee = 50000000,              // 0.5 GAS
             strongholdAttackFee = 20_000_000,                                       // 0.2 GAS
@@ -199,6 +200,8 @@ namespace LordsContract
                 return ChangeEquipments((BigInteger)args[0], (BigInteger[])args[1]);
             }
 
+
+
             //Runtime.Notify("Incorrect Parameter");
             return new BigInteger(1).AsByteArray();
         }
@@ -325,6 +328,38 @@ namespace LordsContract
             return new BigInteger(1).AsByteArray();
         }
 
+        public static bool IsForTest()
+        {
+            byte[] res = Storage.Get(Storage.CurrentContext, TEST_KEY);
+            // By Default, Test Purpose is True
+            if (res.Length == 0 )
+            {
+                return true;
+            }
+            BigInteger big = res.AsBigInteger();
+            if (big.IsZero)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public static byte[] SetForTestStatus(bool status)
+        {
+            if (!Runtime.CheckWitness(GameOwner))
+            {
+                Runtime.Notify("Only Game Owner may set the flag of Testing");
+                return new BigInteger(0).AsByteArray();
+            }
+
+            byte[] value = new BigInteger(0).AsByteArray();
+            if (status)
+                value = new BigInteger(1).AsByteArray();
+            Storage.Put(Storage.CurrentContext, TEST_KEY, value);
+
+            return new BigInteger(1).AsByteArray();
+        }
+
         //------------------------------------------------------------------------------------
         //
         // Helpers used in Smartcontract
@@ -350,6 +385,32 @@ namespace LordsContract
                 return mediumTroopsCap;
             }
             return smallTroopsCap;
+        }
+
+        public static bool IsTransactionOutputExist(decimal value)
+        {
+            if (!IsForTest())
+            {
+                return true;
+            }
+
+            Transaction TX = (Transaction)ExecutionEngine.ScriptContainer;
+            TransactionOutput[] outputs = TX.GetOutputs();
+            Runtime.Notify("Outputs are", outputs.Length);
+            foreach (var output in outputs)
+            {
+                // Game Developers got their fee?
+                if (output.ScriptHash.AsBigInteger() == GeneralContract.GameOwner.AsBigInteger())
+                {
+                    Runtime.Notify("Game Owner received ", output.Value);
+                    if (output.Value == value)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
     }
 }

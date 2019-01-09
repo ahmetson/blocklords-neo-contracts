@@ -125,24 +125,7 @@ namespace LordsContract
 
             // Putting Hero costs 1 GAS for player.
             // Check attachments to Transaction, where should be sended 1 GAS to Game Owner
-            bool received = false;
-            Transaction tx = Blockchain.GetTransaction(hero.Fee_TX);
-            TransactionOutput[] outputs = tx.GetOutputs();
-            foreach (var output in outputs)
-            {
-
-                // Game Developers got their fee?
-                if (output.ScriptHash.AsBigInteger() == GeneralContract.GameOwner.AsBigInteger())
-                {
-                    if (output.Value == GeneralContract.heroCreationFee)
-                    {
-                        received = true;
-                        break;
-                    }
-                }
-            }
-
-            if (!received)
+            if (!GeneralContract.IsTransactionOutputExist(GeneralContract.heroCreationFee))
             {
                 Runtime.Notify("Hero Creation Fee is not included! Hero wasn't putted on Blockchain");
                 return new BigInteger(0).AsByteArray();
