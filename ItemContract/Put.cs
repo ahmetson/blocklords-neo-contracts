@@ -123,8 +123,6 @@ namespace LordsContract
                 return new BigInteger(0).AsByteArray();
             }
 
-            // Give Item #1 to Created Hero, which means Change owner of Item to the Owner of Hero
-
             // Putting Hero costs 1 GAS for player.
             // Check attachments to Transaction, where should be sended 1 GAS to Game Owner
             bool received = false;
