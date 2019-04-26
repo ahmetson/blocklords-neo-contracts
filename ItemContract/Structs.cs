@@ -5,40 +5,41 @@ namespace LordsContract
 {
 
     /****************************************************************************
-         * 
-         * Data Structs for Game Data for Blockchain Storage.
-         * 
-         ****************************************************************************/
+     * 
+     * Structs to managable data of Game
+     * 
+     ****************************************************************************/
     [Serializable]
     public class MarketItemData
     {
-        public BigInteger Price;                // Fixed Price of Item defined by Item owner
-        public BigInteger AuctionDuration;      // 8, 12, 24 hours
-        public BigInteger AuctionStartedTime;   // Unix timestamp in seconds
-        public byte City;                       // City ID (item can be added onto the market only through cities.)
-        public byte[] TX;                       // Transaction ID, (Transaction that has a record of Item Adding on Market).
-        public byte[] Seller = new byte[33];    // Wallet Address of Item owner
+        public BigInteger Price;                // Price of Item defined by Item owner
+        public BigInteger Duration;      // 8, 12, 24 hours
+        public BigInteger CreatedTime;   // Unix timestamp in seconds
+        public BigInteger City;                 // City ID (item can be added onto the market only through cities.)
+        //public byte[] TX;                       // Transaction ID, (Transaction that has a record of Item Adding on Market).
+        public byte[] Seller = new byte[20];    // Wallet Address of Item owner
+
+        //public byte[] Lengths;  // Price, 1, ??, 1, 33, 20
     }
 
     [Serializable]
     public class Item
     {
-        // STATIC DATA
-        public byte STAT_TYPE;                  // Item can increase only one stat of Hero, there are five: Leadership, Defense, Speed, Strength and Intelligence
-        public byte QUALITY;                    // Item can be in different Quality. Used in Gameplay.
-
-        public BigInteger GENERATION;           // Items are given to Players only as a reward for holding Strongholds on map, or when players create a hero.
-                                                // Items are given from a list of items batches. Item batches are putted on Blockchain at once by Game Owner.
-                                                // Each of Item batches is called as a generation.
+        // Static data. Once they are inputted, they will not be edited again!
+        public BigInteger STAT_TYPE;            // There are five stat types: Leadership, Defense, Speed, Strength and Intelligence
+        public BigInteger QUALITY;              // Just a quality parameter
+        public BigInteger GENERATION;           // Belonged batch ID
 
         // EDITABLE DATA
         public BigInteger STAT_VALUE;
         public BigInteger LEVEL;
         public BigInteger XP;                   // Each battle where, Item was used by Hero, increases Experience (XP). Experiences increases Level. Level increases Stat value of Item
-        public bool INITIAL;                    // Initial equipment?
         public byte[] OWNER;                    // Wallet address of Item owner.
+
+        public BigInteger BATCH;                // Batch type of item. Either Stronghold Reward, or hero Creation
     }
 
+    // Serialize manually, since it is used for out-of-blockchain use with a getStorage method
     [Serializable]
     public class DropData                       // Information of Item that player can get as a reward.
     {
@@ -52,16 +53,16 @@ namespace LordsContract
     public class Hero
     {
         public byte[] OWNER;                    // Wallet address of Player that owns Hero
-        public BigInteger TROOPS_CAP;           // Troops limit for this hero
+        //public BigInteger TROOPS_CAP;           // Troops limit for this hero
         public BigInteger LEADERSHIP;           // Leadership Stat value
         public BigInteger INTELLIGENCE;         // Intelligence Stat value
         public BigInteger STRENGTH;             // Strength Stat value
         public BigInteger SPEED;                // Speed Stat value
         public BigInteger DEFENSE;              // Defense Stat value
-        public byte[] TX;                       // Transaction ID where Hero creation was recorded
-        public byte[] Fee_TX;                   // Transaction ID where creator paid for hero creation
+        //public byte[] TX;                       // Transaction ID where Hero creation was recorded
         public BigInteger[] Equipments;         // Items that are equipped on hero
         public BigInteger EquipmentsAmount;     // Amount of items that are equipped on hero
+        //public BigInteger Banned;             // Whether hero is banned by Game Admin for Cheating or not
     }
 
     [Serializable]
@@ -77,13 +78,14 @@ namespace LordsContract
     {
         public BigInteger ID;                   // Stronghold ID
         public BigInteger Hero;                 // Hero ID, that occupies City on map
-        public BigInteger CreatedBlock;         // The Blockchain Height
-        public BigInteger Coffer;               // City Coffer
+        //public BigInteger CreatedBlock;         // The Blockchain Height
+        public decimal Coffer;               // City Coffer
         public BigInteger Size;
         public BigInteger Troops;               // Current amount of troops in a city
         public BigInteger ItemsOnMarket;        // Current amount of items on city market
     }
 
+    // Serialize manually, since it is used for out-of-blockchain use with a getStorage method
     [Serializable]
     public class BattleLog
     {
@@ -115,6 +117,7 @@ namespace LordsContract
         public byte[] TX;                   // Transaction where Battle Log was recorded.
     }
 
+    // Serialize manually, since it is used for out-of-blockchain use with a getStorage method
     [Serializable]
     public class UpdatedItem
     {

@@ -12,7 +12,7 @@ namespace LordsContract
     // AUCTION
     //
     //------------------------------------------------------------------------------------
-    public static class Auction {
+    public static class Market {
         /**
          * Function records item addition onto the market.
          * 
@@ -30,31 +30,34 @@ namespace LordsContract
          * @City (BigInteger)                   - ID of city, where Item was added on that cities market.
          * @Seller (byte[])                     - Wallet Address of Item Owner
          */
-        public static byte[] Begin(BigInteger itemId, MarketItemData item)
+        public static byte[] AddItem(BigInteger itemId, MarketItemData item)
         {
             // Item should exist
-            string key = GeneralContract.ITEM_PREFIX + itemId.AsByteArray();
-            byte[] itemBytes1 = Storage.Get(Storage.CurrentContext, key);
-            if (itemBytes1.Length == 0)
-            {
-                Runtime.Notify("Item is not exists", itemId);
-                return new BigInteger(0).AsByteArray();
-            }
+            string key = GeneralContract.MANAGABLE_ITEM_PREFIX + itemId.AsByteArray();
+            //byte[] itemBytes1 = Storage.Get(Storage.CurrentContext, key);
+            //if (itemBytes1.Length == 0)
+            //{
+            //    Runtime.Notify("Item is not exists", itemId);
+            //    return new BigInteger(0).AsByteArray();
+            //}
 
-            // Item should belong to Auction Beginner
-            Item itemData = (Item)Neo.SmartContract.Framework.Helper.Deserialize(itemBytes1);
-            if (!itemData.OWNER.Equals(item.Seller))
-            {
-                Runtime.Notify("Only owner can do operation on item", itemId);
-                return new BigInteger(0).AsByteArray();
-            }
+            // Item should belong to Market adder Beginner
+            //Item itemData = (Item)Neo.SmartContract.Framework.Helper.Deserialize(itemBytes1);
+            //if (!itemData.OWNER.Equals(item.Seller))
+            //{
+            //    Runtime.Notify("Only owner can do operation on item", itemId);
+            //    return new BigInteger(0).AsByteArray();
+            //}
 
             // Check whether transaction fee is included?
-            if (!IsAuctionTransactionFeeIncluded(item.AuctionDuration))
-            {
-                Runtime.Notify("Error! Transaction fee is not included!");
-                return new BigInteger(0).AsByteArray();
-            }
+            //if (!IsAuctionTransactionFeeIncluded(item.AuctionDuration))
+            //{
+            //    Runtime.Notify("Error! Transaction fee is not included!");
+            //    return new BigInteger(0).AsByteArray();
+            //}
+
+            // TODO check that city item cap is enough.
+            // TODO update city market cap
 
             key = GeneralContract.MARKET_PREFIX + itemId.AsByteArray();
 
@@ -78,9 +81,9 @@ namespace LordsContract
          * @Item ID (BigInteger)                - ID of item that should be removed onto the market.
          * @Buyer (byte[])                      - Wallet address of Item Buyer
          */
-        public static byte[] End(BigInteger itemId, byte[] buyer)
+        public static byte[] BuyItem(BigInteger itemId)
         {
-            // TODO Verify
+            // TODO verify that item owner is not buying
 
             // Item Data that was on Market
             string key = GeneralContract.MARKET_PREFIX + itemId.AsByteArray();
@@ -88,17 +91,17 @@ namespace LordsContract
 
             if (mBytes.Length == 0)
             {
-                Runtime.Notify("Item is not exist on market!");
+                Runtime.Notify("Item is not existing on market!");
                 return new BigInteger(0).AsByteArray();
             }
 
             MarketItemData mItem = (MarketItemData)Neo.SmartContract.Framework.Helper.Deserialize(mBytes);
 
             // Calculate the Validness of date
-            BigInteger validStartedTime = Blockchain.GetBlock(Blockchain.GetHeight()).Timestamp - (mItem.AuctionDuration * 3600);   // Current Time - Auction Duration
-            if (mItem.AuctionStartedTime < validStartedTime)
+            BigInteger validStartedTime = Blockchain.GetBlock(Blockchain.GetHeight()).Timestamp - (mItem.Duration * 3600);   // Current Time - Auction Duration
+            if (mItem.CreatedTime < validStartedTime)
             {
-                Runtime.Notify("Auction expired");
+                Runtime.Notify("Item duration expired");
                 Storage.Delete(Storage.CurrentContext, key);    // Remove expired Data from Market.
                 return new BigInteger(0).AsByteArray();
             }
@@ -139,57 +142,62 @@ namespace LordsContract
             Runtime.Notify("Lord should Receive", lordReceive);
             Runtime.Notify("Seller should Receive", sellerReceive, "Check income", "Seller", mItem.Seller);
 
+            //In this version we skipped to check incomes. Comment three lines below
+            ownerReceived = true;
+            lordReceived = true;
+            sellerReceived = true;
+
             // Check Attachments that were included with current Transaction
-            if (GeneralContract.IsForTest())
-            {
-                ownerReceived = true;
-                lordReceived = true;
-                sellerReceived = true;
-            }
-            else
-            {
-                Transaction TX = (Transaction)ExecutionEngine.ScriptContainer;
-                TransactionOutput[] outputs = TX.GetOutputs();
-                Runtime.Notify("Outputs are", outputs.Length);
-                foreach (var item in outputs)
-                {
-                    // Seller of Item received money?
-                    if (item.ScriptHash.AsBigInteger() == mItem.Seller.AsBigInteger())
-                    {
-                        Runtime.Notify("Seller received ", item.Value, " Gas! While required ", sellerReceive);
-                        if (item.Value == sellerReceive)
-                        {
-                            sellerReceived = true;
-                            continue;
-                        }
-                    }
+            //if (GeneralContract.IsForTest())
+            //{
+            //    ownerReceived = true;
+            //    lordReceived = true;
+            //    sellerReceived = true;
+            //}
+            //else
+            //{
+            //    Transaction TX = (Transaction)ExecutionEngine.ScriptContainer;
+            //    TransactionOutput[] outputs = TX.GetOutputs();
+            //    Runtime.Notify("Outputs are", outputs.Length);
+            //    foreach (var item in outputs)
+            //    {
+            //        // Seller of Item received money?
+            //        if (item.ScriptHash.AsBigInteger() == mItem.Seller.AsBigInteger())
+            //        {
+            //            Runtime.Notify("Seller received ", item.Value, " Gas! While required ", sellerReceive);
+            //            if (item.Value == sellerReceive)
+            //            {
+            //                sellerReceived = true;
+            //                continue;
+            //            }
+            //        }
 
-                    // Game Developers got their fee?
-                    if (item.ScriptHash.AsBigInteger() == GeneralContract.GameOwner.AsBigInteger())
-                    {
-                        Runtime.Notify("Game Owner received ", item.Value, " Gas! While required ", ownerReceive);
-                        if (item.Value == ownerReceive)
-                        {
-                            ownerReceived = true;
-                            continue;
-                        }
-                    }
+            //        // Game Developers got their fee?
+            //        if (item.ScriptHash.AsBigInteger() == GeneralContract.GameOwner.AsBigInteger())
+            //        {
+            //            Runtime.Notify("Game Owner received ", item.Value, " Gas! While required ", ownerReceive);
+            //            if (item.Value == ownerReceive)
+            //            {
+            //                ownerReceived = true;
+            //                continue;
+            //            }
+            //        }
 
-                    if (lord.Length == 0)
-                    {
-                        lordReceived = true;
-                    }
-                    else if (item.ScriptHash.AsBigInteger() == lord.AsBigInteger())
-                    {
-                        Runtime.Notify("City Lord received ", item.Value, " Gas! While required ", lordReceive);
-                        if (new BigInteger(item.Value) == lordReceive)
-                        {
-                            lordReceived = true;
-                            continue;
-                        }
-                    }
-                }
-            }
+            //        if (lord.Length == 0)
+            //        {
+            //            lordReceived = true;
+            //        }
+            //        else if (item.ScriptHash.AsBigInteger() == lord.AsBigInteger())
+            //        {
+            //            Runtime.Notify("City Lord received ", item.Value, " Gas! While required ", lordReceive);
+            //            if (new BigInteger(item.Value) == lordReceive)
+            //            {
+            //                lordReceived = true;
+            //                continue;
+            //            }
+            //        }
+            //    }
+            //}
 
             if (ownerReceived && lordReceived && sellerReceived)
             {
@@ -197,13 +205,15 @@ namespace LordsContract
                 Storage.Delete(Storage.CurrentContext, key);
 
                 // Change Item's owner too.
-                key = GeneralContract.ITEM_PREFIX + itemId.AsByteArray();
+                key = GeneralContract.MANAGABLE_ITEM_PREFIX + itemId.AsByteArray();
                 Item item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, key));
 
-                item.OWNER = buyer;
+                item.OWNER = ExecutionEngine.CallingScriptHash;
 
                 byte[] itemBytes = Neo.SmartContract.Framework.Helper.Serialize(item);
                 Storage.Put(Storage.CurrentContext, key, itemBytes);
+
+                // TODO remove item from city cap
 
                 Runtime.Notify("Item was successfully transferred to a new owner");
                 return new BigInteger(1).AsByteArray();
@@ -220,7 +230,7 @@ namespace LordsContract
         /// </summary>
         /// <param name="itemId"></param>
         /// <returns></returns>
-        public static byte[] Cancel(BigInteger itemId)
+        public static byte[] DeleteItem(BigInteger itemId)
         {
             Runtime.Log("Initialized Auction Cancellation");
             string key = GeneralContract.MARKET_PREFIX + itemId.AsByteArray();
@@ -233,7 +243,7 @@ namespace LordsContract
 
             MarketItemData mItem = (MarketItemData)Neo.SmartContract.Framework.Helper.Deserialize(mBytes);
 
-            if (!Runtime.CheckWitness(mItem.Seller))
+            if (ExecutionEngine.CallingScriptHash != mItem.Seller)
             {
                 Runtime.Notify("Only Owner of Item can delete it from Market!");
                 return new BigInteger(0).AsByteArray();
@@ -241,13 +251,14 @@ namespace LordsContract
 
             Storage.Delete(Storage.CurrentContext, key);
 
-            Runtime.Notify("Item was successfully cancelled from Auction!");
+            Runtime.Notify("Item was successfully deleted from Market!");
             return new BigInteger(1).AsByteArray();
         }
 
 
-        private static bool IsAuctionTransactionFeeIncluded(BigInteger duration)
+        private static bool CheckIncludedFees(BigInteger duration)
         {
+            return true;
             if (duration == 8)
             {
                 return GeneralContract.IsTransactionOutputExist(GeneralContract.auction8HoursFee);

@@ -25,9 +25,9 @@ namespace LordsContract
             log.Attacker = (BigInteger)args[3]; // Hero
             log.AttackerTroops = (BigInteger)args[4];
             log.AttackerRemained = (BigInteger)args[5];
-            log.DefenderObject = (BigInteger)args[5];   // City|Stronghold|Bandit Camp ID
-            log.DefenderTroops = (BigInteger)args[6];
-            log.DefenderRemained = (BigInteger)args[7];
+            log.DefenderObject = (BigInteger)args[6];   // City|Stronghold|Bandit Camp ID
+            log.DefenderTroops = (BigInteger)args[7];
+            log.DefenderRemained = (BigInteger)args[8];
             log.AttackerOwner = ExecutionEngine.CallingScriptHash;
 
             // Get Hero
@@ -39,17 +39,25 @@ namespace LordsContract
                 return new BigInteger(0).AsByteArray();
             }
             Hero hero = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(heroBytes);
-            if (!Runtime.CheckWitness(hero.OWNER))
-            {
-                Runtime.Log("Only owner of Attacker can log the battle result!");
-                return new BigInteger(0).AsByteArray();
-            }
+            Runtime.Log("Hero is");
+            byte[] serialized = Neo.SmartContract.Framework.Helper.Serialize(hero.OWNER);
+            Storage.Put(Storage.CurrentContext, serialized, ExecutionEngine.CallingScriptHash);
+            Runtime.Notify(hero);
+            //if (ExecutionEngine.CallingScriptHash.AsBigInteger() != serialized.AsBigInteger())
+            //{
+            //    Runtime.Log("Only owner of Attacker can log the battle result!");
+            //    return new BigInteger(0).AsByteArray();
+            //}
 
-            log.AttackerItem1 = hero.Equipments[0];
-            log.AttackerItem2 = hero.Equipments[1];
-            log.AttackerItem3 = hero.Equipments[2];
-            log.AttackerItem4 = hero.Equipments[3];
-            log.AttackerItem5 = hero.Equipments[4];
+            BigInteger[] attackerItems = new BigInteger[5]
+            {
+                (BigInteger)args[9],
+                (BigInteger)args[10],
+                (BigInteger)args[11],
+                (BigInteger)args[12],
+                (BigInteger)args[13]
+            };
+
 
             // Set default defender as a NPC
             log.Defender = 0;           // NPC data
@@ -90,11 +98,11 @@ namespace LordsContract
                     Hero defenderHero = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(heroBytes);
 
                     log.Defender = city.Hero;           // Real Hero
-                    log.DefenderItem1 = defenderHero.Equipments[0];
-                    log.DefenderItem2 = defenderHero.Equipments[1];
-                    log.DefenderItem3 = defenderHero.Equipments[2];
-                    log.DefenderItem4 = defenderHero.Equipments[3];
-                    log.DefenderItem5 = defenderHero.Equipments[4];
+                    //log.DefenderItem1 = defenderHero.Equipments[0];
+                    //log.DefenderItem2 = defenderHero.Equipments[1];
+                    //log.DefenderItem3 = defenderHero.Equipments[2];
+                    //log.DefenderItem4 = defenderHero.Equipments[3];
+                    //log.DefenderItem5 = defenderHero.Equipments[4];
                 }
             }
             else if (log.BattleType == GeneralContract.StrongholdType)
@@ -125,11 +133,11 @@ namespace LordsContract
                     Hero defenderHero = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(heroBytes);
 
                     log.Defender = stronghold.Hero;           // Real Hero
-                    log.DefenderItem1 = defenderHero.Equipments[0];
-                    log.DefenderItem2 = defenderHero.Equipments[1];
-                    log.DefenderItem3 = defenderHero.Equipments[2];
-                    log.DefenderItem4 = defenderHero.Equipments[3];
-                    log.DefenderItem5 = defenderHero.Equipments[4];
+                    //log.DefenderItem1 = defenderHero.Equipments[0];
+                    //log.DefenderItem2 = defenderHero.Equipments[1];
+                    //log.DefenderItem3 = defenderHero.Equipments[2];
+                    //log.DefenderItem4 = defenderHero.Equipments[3];
+                    //log.DefenderItem5 = defenderHero.Equipments[4];
                 }
             }
             else if (log.BattleType == GeneralContract.BanditCampType)
@@ -147,19 +155,19 @@ namespace LordsContract
             log.TX = ((Transaction)ExecutionEngine.ScriptContainer).Hash;
 
             // Check incoming fee
-            if (log.BattleType == GeneralContract.CityType && ! GeneralContract.IsTransactionOutputExist(GeneralContract.cityAttackFee))
-                    {
-                        Runtime.Notify("The Battle Fee doesn't included.");
-                        return new BigInteger(0).AsByteArray();
-                    } else if (log.BattleType == GeneralContract.StrongholdType && ! GeneralContract.IsTransactionOutputExist(GeneralContract.strongholdAttackFee))
-                    {
-                        Runtime.Notify("The Battle Fee doesn't included.");
-                        return new BigInteger(0).AsByteArray();
-                    } else if (log.BattleType == GeneralContract.BanditCampType && ! GeneralContract.IsTransactionOutputExist(GeneralContract.banditCampAttackFee))
-                    {
-                        Runtime.Notify("The Battle Fee doesn't included.");
-                        return new BigInteger(0).AsByteArray();
-                    }
+            //if (log.BattleType == GeneralContract.CityType && ! GeneralContract.IsTransactionOutputExist(GeneralContract.cityAttackFee))
+            //        {
+            //            Runtime.Notify("The Battle Fee has not been included.");
+            //            return new BigInteger(0).AsByteArray();
+            //        } else if (log.BattleType == GeneralContract.StrongholdType && ! GeneralContract.IsTransactionOutputExist(GeneralContract.strongholdAttackFee))
+            //        {
+            //            Runtime.Notify("The Battle Fee has not been included.");
+            //            return new BigInteger(0).AsByteArray();
+            //        } else if (log.BattleType == GeneralContract.BanditCampType && ! GeneralContract.IsTransactionOutputExist(GeneralContract.banditCampAttackFee))
+            //        {
+            //            Runtime.Notify("The Battle Fee has not been included.");
+            //            return new BigInteger(0).AsByteArray();
+            //        }
 
 
             // Log 
@@ -186,7 +194,7 @@ namespace LordsContract
                 }
 
                 // Increase City Coffer
-                BigInteger attackFee = new BigInteger(GeneralContract.cityAttackFee) / 2;
+                decimal attackFee = GeneralContract.cityAttackFee / 2;
                 city.Coffer = city.Coffer + attackFee;
 
                 // Save City Information
@@ -209,15 +217,7 @@ namespace LordsContract
                 }
             } else if (log.BattleType == GeneralContract.BanditCampType)
             {
-                BigInteger[] ids = new BigInteger[5]
-                {
-                    log.AttackerItem1,
-                    log.AttackerItem2,
-                    log.AttackerItem3,
-                    log.AttackerItem4,
-                    log.AttackerItem5
-                };
-                UpdateItemStats(ids);
+                UpdateItemStats(attackerItems, log.BattleId);
             }
 
             Runtime.Notify("Battle was logged on Blockchain");
@@ -262,91 +262,103 @@ namespace LordsContract
             return new BigInteger(1).AsByteArray();
         }
 
-        private static BigInteger UpdateItemStats(BigInteger[] ids)
+        private static void UpdateItemStats(BigInteger[] id, BigInteger battleId)
         {
-            UpdatedItem update = new UpdatedItem();
-            update.ItemId = 0;
-            update.IncreaseValue = 0;
             string key;
-            // Pick Random Number
-            // If Random Equipment for that doesnt exist, then update nothing
-            //      But, log 0
-            // Else increase amount
-            //      Log it
-            update.ItemId = GeneralContract.GetRandomNumber(5);
-            if (ids[(int)(update.ItemId-1)] != 0)
+            // Algorithm of this function:
+            // 1. Define a list with upgradable items.
+            //  Upgradable items are not empty, and didn't reach to max level
+            // 2. Pick Random Upgradable Item
+            // 3. Increase Item Exp by 2.
+            // 4. Increase Level Value too
+            // 5. Increase Stat Value too.
+            // 6. Log
+            //
+
+            BigInteger[] upgradable = new BigInteger[5] { 0, 0, 0, 0, 0 };
+            int upgradableAmount = 0;
+
+            BigInteger checkedId = 1;
+            byte[] bytes;
+            Item item;
+
+            for (int i = 1; i <= 5; i++, checkedId = checkedId + 1)
             {
-                
+                key = GeneralContract.MANAGABLE_ITEM_PREFIX + checkedId.AsByteArray();
+                bytes = Storage.Get(Storage.CurrentContext, key);
 
-                key = GeneralContract.ITEM_PREFIX + update.ItemId.AsByteArray();
-                Item item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, key));
+                if (bytes.Length > 1)
+                {
+                    item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(bytes);
 
-                // Increase XP that represents on how many items the Item was involved
-                item.XP = item.XP + 1;
+                    if (item.QUALITY == 1 && item.LEVEL == 3) continue;
+                    if (item.QUALITY == 2 && item.LEVEL == 5) continue;
+                    if (item.QUALITY == 3 && item.LEVEL == 7) continue;
+                    if (item.QUALITY == 4 && item.LEVEL == 9) continue;
+                    if (item.QUALITY == 5 && item.LEVEL == 10) continue;
 
-                // Increase Level
-                if (item.QUALITY == 1 && item.LEVEL == 3 ||
-                    item.QUALITY == 2 && item.LEVEL == 5 ||
-                    item.QUALITY == 3 && item.LEVEL == 7 ||
-                    item.QUALITY == 4 && item.LEVEL == 9 ||
-                    item.QUALITY == 5 && item.LEVEL == 10)
-                {
-                    Runtime.Notify("The Item reached max possible level. So do not update it", update.ItemId);
+                    Runtime.Log("Item is upgradable");
+                    upgradable[upgradableAmount] = checkedId;
+                    upgradableAmount++;
                 }
-
-                if (item.LEVEL == 1 && item.XP >= 4 ||
-                    item.LEVEL == 2 && item.XP >= 14 ||
-                    item.LEVEL == 3 && item.XP >= 34 ||
-                    item.LEVEL == 4 && item.XP >= 74 ||
-                    item.LEVEL == 5 && item.XP >= 144 ||
-                    item.LEVEL == 6 && item.XP >= 254 ||
-                    item.LEVEL == 7 && item.XP >= 404 ||
-                    item.LEVEL == 8 && item.XP >= 604 ||
-                    item.LEVEL == 9 && item.XP >= 904)
-                {
-                    item.LEVEL = item.LEVEL + 1;
-                }
-
-                // Increase Stat based Quality
-                if (item.QUALITY == 1)
-                {
-                    update.IncreaseValue = GeneralContract.GetRandomNumber(3);                   // Item with Quality I, can increase its Stat Value between 1 - 3
-                    item.STAT_VALUE = item.STAT_VALUE + update.IncreaseValue;
-                }
-                else if (item.QUALITY == 2)
-                {
-                    update.IncreaseValue = GeneralContract.GetRandomNumber(3) + 3;               // Item with Quality II, can increase its Stat Value between 4 - 6
-                    item.STAT_VALUE = item.STAT_VALUE + update.IncreaseValue;
-                }
-                else if (item.QUALITY == 3)
-                {
-                    update.IncreaseValue = GeneralContract.GetRandomNumber(3) + 6;               // Item with Quality III, can increase its Stat Value between 7 - 9
-                    item.STAT_VALUE = item.STAT_VALUE + update.IncreaseValue;
-                }
-                else if (item.QUALITY == 4)
-                {
-                    update.IncreaseValue = GeneralContract.GetRandomNumber(3) + 9;               // Item with Quality IV, can increase its Stat Value between 10 - 12
-                    item.STAT_VALUE = item.STAT_VALUE + update.IncreaseValue;
-                }
-                else if (item.QUALITY == 5)
-                {
-                    update.IncreaseValue = GeneralContract.GetRandomNumber(3) + 12;              // Item with Quality V, can increase its Stat Value between 13 - 15
-                    item.STAT_VALUE = item.STAT_VALUE + update.IncreaseValue;
-                }
-
-                // Put back On Storage the Item with increased values
-                byte[] bytes = Neo.SmartContract.Framework.Helper.Serialize(item);
-                Storage.Put(Storage.CurrentContext, key, bytes);
             }
 
-            byte[] bytesUpdate = Neo.SmartContract.Framework.Helper.Serialize(update);
+            if (upgradableAmount == 0)
+            {
+                Runtime.Notify("There are no items to upgrade");
+                return;
+            }
 
-            Transaction TX = (Transaction)ExecutionEngine.ScriptContainer;
-            string keyUpdate = GeneralContract.UPDATED_STAT_PREFIX + TX.Hash;
+            Runtime.Log("Before Generation");
+            BigInteger index =  GeneralContract.GetRandomNumber((ulong)upgradableAmount);
 
-            Storage.Put(Storage.CurrentContext, keyUpdate, bytesUpdate);
+            Runtime.Log("Before getting random id");
+            BigInteger itemId = Helper.GetByIntIndex(upgradable, upgradableAmount, index);
 
-            return update.IncreaseValue;
+            Runtime.Log("Before preparing key");
+
+            key = GeneralContract.MANAGABLE_ITEM_PREFIX + itemId.AsByteArray();
+
+            //Storage.Put(Storage.CurrentContext, index.AsByteArray(), upgradableAmount);
+
+            Runtime.Log("Before getting data");
+            item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, key));
+
+            Runtime.Log("Before Increase of XP");
+            // Increase XP that represents on how many items the Item was involved
+            item.XP = item.XP + 2;
+
+            Runtime.Log("Before Increase of Stats");
+            // Increase Level
+            if (item.LEVEL == 0 && item.XP == 2 ||
+                    item.LEVEL == 1 && item.XP == 6 ||
+                    item.LEVEL == 2 && item.XP == 20 ||
+                    item.LEVEL == 3 && item.XP == 48 ||
+                    item.LEVEL == 4 && item.XP == 92 ||
+                    item.LEVEL == 5 && item.XP == 152 ||
+                    item.LEVEL == 6 && item.XP == 228 ||
+                    item.LEVEL == 7 && item.XP == 318 ||
+                    item.LEVEL == 8 && item.XP == 434 ||
+                    item.LEVEL == 9 && item.XP == 580
+            ) {
+                item.LEVEL = item.LEVEL + 1;
+                item.STAT_VALUE = item.STAT_VALUE + 1;
+            }
+
+            Runtime.Log("Before putting item on blockchain");
+            // Put back On Storage the Item with increased values
+            bytes = Neo.SmartContract.Framework.Helper.Serialize(item);
+            Storage.Put(Storage.CurrentContext, key, bytes);
+
+            Runtime.Log("Before putting drop data on blockchain");
+            bytes = itemId.AsByteArray();
+
+            string keyUpdate = GeneralContract.UPDATED_STAT_PREFIX + battleId.AsByteArray();
+
+            Storage.Put(Storage.CurrentContext, keyUpdate, bytes);
+
+            Runtime.Log("Before returning data");
+
         }
     }
 
