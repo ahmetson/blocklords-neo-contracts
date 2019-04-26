@@ -5,36 +5,116 @@ using System.Numerics;
 
 namespace LordsContract
 {
+    /// <summary>
+    /// GeneralContract inherited from Neo.SmartContract!
+    /// 
+    /// This class is holding <paramref name="Main" /> method, the entry point of Smartcontract.
+    /// As well as definitions of helper Methods and Properties that are accessable throughout all project parts.
+    /// </summary>
     public class GeneralContract : SmartContract
     {
-        public static readonly string
-            MARKET_PREFIX = "\x01\x00",
-            MANAGABLE_ITEM_PREFIX = "\x02\x00",
-            STRONGHOLD_PREFIX = "\x03\x00",
-            STRONGHOLD_REWARD_PREFIX = "\x04\x00",
-            BATTLE_LOG_PREFIX = "\x05\x00",
-            NEXT_REWARD_ITEM_KEY = "\x06",
-            CITY_PREFIX = "\x07\x00",
-            HERO_PREFIX = "\x08\x00",
-            LATEST_REWARDED_ITEM_KEY = "\x09",
-            COFFER_PREFIX = "\x10\x00",
-            COFFER_PAYOUT_KEY = "\x11",
-            UPDATED_STAT_PREFIX = "\x12\x00",
-            TEST_KEY = "\x13",
-            VERIFICATIONAL_ITEM_PREFIX = "\x14\x00",
-            DROPPED_INCREMENTOR = "\x15";
+        /// <summary>
+        /// Storage Map Prefix to generate keys of Market Item on Storage.
+        /// </summary>
+        public static readonly string MARKET_MAP = "\x01\x00";
+        /// <summary>
+        /// Storage Map Prefix to generate keys of Items on Storage
+        /// </summary>
+        public static readonly string ITEM_MAP = "\x02\x00";
+        /// <summary>
+        /// Storage Map Prefix to generate keys of Strongholds on Storage
+        /// </summary>
+        public static readonly string STRONGHOLD_MAP = "\x03\x00";
+        /// <summary>
+        /// Storage Map Prefix to generate keys of Stronghold Reward Items batch on storage
+        /// </summary>
+        public static readonly string STRONGHOLD_REWARD_BATCH_MAP = "\x04\x00";
+        /// <summary>
+        /// Storage Map Prefix to generate keys of Cities on Storage
+        /// </summary>
+        public static readonly string CITY_MAP = "\x07\x00";
+        /// <summary>
+        /// Storage Map Prefix to generate keys of Heroes on Storage.
+        /// </summary>
+        public static readonly string HERO_MAP = "\x08\x00";
+        /// <summary>
+        /// Storage Key of Hero Creation Fee
+        /// </summary>
+        public static readonly string HERO_CREATION_FEE = "\x16";
+        /// <summary>
+        /// Storage Key of Refering Fee
+        /// </summary>
+        public static readonly string REFERAL_FEE = "\x17";
+        /// <summary>
+        /// Storage Key of fee for 8 hours of item appearance on market
+        /// </summary>
+        public static readonly string HOURS_8_FEE = "\x18";
+        /// <summary>
+        /// Storage Key of fee for 12 hours of item appearance on market
+        /// </summary>
+        public static readonly string HOURS_12_FEE = "\x19";
+        /// <summary>
+        /// Storage Key of fee for 24 hours of item appearance on market
+        /// </summary>
+        public static readonly string HOURS_24_FEE = "\x20";
+        /// <summary>
+        /// Storage Key of fee for city attack
+        /// </summary>
+        public static readonly string PVC_FEE = "\x21";
+        /// <summary>
+        /// Storage Key of fee for bandit camp attack
+        /// </summary>
+        public static readonly string PVE_FEE = "\x22";
+        /// <summary>
+        /// Storage Key of fee for stronghold attack
+        /// </summary>
+        public static readonly string PVP_FEE = "\x23";
+        /// <summary>
+        /// Storage Key of GAS in percents that buyer should attach to buy item.
+        /// As a base sum for calculation of GAS in percents is used the market item price.
+        /// </summary>
+        public static readonly string PURCHASE_PERCENTS = "\x24";
+        /// <summary>
+        /// Storage Key of GAS in percents that lord of a city should get from buyer.
+        /// As a base sum for calculation of GAS in percents that lord of a city should get is used market item price
+        /// </summary>
+        public static readonly string LORD_PERCENTS = "\x25";
+        /// <summary>
+        /// Storage Key of GAS in percents that seller of item will get from buyer.
+        /// As a base sum for calculation of GAS is percents that seller will get is used the market item price.
+        /// </summary>
+        public static readonly string SELLING_COFFER_PERCENTS = "\x26";
+        /// <summary>
+        /// Storage Key of GAS attachments in percents of City Attacks,
+        /// that will be transfered to city coffer  
+        /// </summary>
+        public static readonly string PVC_COFFER_PERCENTS = "\x27";
+        /// <summary>
+        /// Storage Key of GAS in percents that will be sent transferred to player.
+        /// </summary>
+        public static readonly string COFFER_PAY_PERCENTS = "\x28";
+        /// <summary>
+        /// Storage Key of coffer drop interval in blocks.
+        /// </summary>
+        public static readonly string COFFER_INTERVAL = "\x29";
+        /// <summary>
+        /// Storage Key of stronghold reward interval in blocks
+        /// </summary>
+        public static readonly string STRONGHOLD_REWARD_INTERVAL = "\x30";
 
-        public static readonly BigInteger CityType = 0, StrongholdType = 1, BanditCampType = 2;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public static readonly BigInteger 
+            PVC = 0, 
+            PVP = 1, 
+            PVE = 2;
 
         // Items may be given to heroes in two situation: when they create hero or when they own some territory on the game map.
         public static readonly byte HERO_CREATION_BATCH = 0;
         public static readonly byte STRONGHOLD_REWARD_BATCH = 1;
         public static readonly byte NO_BATCH = 2;
-
-        public static readonly BigInteger auctionFee = 5;  // In percents amount of GAS that buyers sends to Game Developers for Putting Item on Market
-        public static readonly BigInteger lordFee = 5;     // In percents default amount of GAS that buyers sends to City Lords for Putting Item on Market
-
-        public static readonly BigInteger DropInterval = 120; // Item will be dropped in every 120 blocks. On Neo Blockchain, each block is generated within 20-30 seconds.
 
         /**
          * 1 GAS === 100_000_000
@@ -45,17 +125,17 @@ namespace LordsContract
          * 
          * Basically 0.1 means 10000000 (10_000_000) during Execution of Smartcontract.
          */
-        public static readonly decimal auction8HoursFee = 10_000_000,              // 0.1 GAS
-                                       auction12HoursFee = 20_000_000,          // 0.2 GAS
-                                       auction24HoursFee = 30_000_000,          // 0.3 GAS
-                                       heroCreationFee = 500_000_000,           // 5.0 GAS
-                                       cityAttackFee = 200_000_000,             // 2.0 GAS
-            strongholdAttackFee = 100_000_000,                                       // 1.0 GAS
-            banditCampAttackFee = 50_000_000,                                       // 0.5 GAS
-            bigCityCoffer = 100_000_000,                                      // 1.0 GAS
-            mediumCityCoffer = 88_000_000,                                       // 0.8 GAS
-            smallCityCoffer = 50_000_000                                       // 0.5 GAS
-            ;
+        //public static readonly decimal auction8HoursFee = 10_000_000,              // 0.1 GAS
+        //                               auction12HoursFee = 20_000_000,          // 0.2 GAS
+        //                               auction24HoursFee = 30_000_000,          // 0.3 GAS
+        //                               heroCreationFee = 500_000_000,           // 5.0 GAS
+        //                               cityAttackFee = 200_000_000,             // 2.0 GAS
+        //    strongholdAttackFee = 100_000_000,                                       // 1.0 GAS
+        //    banditCampAttackFee = 50_000_000,                                       // 0.5 GAS
+        //    bigCityCoffer = 100_000_000,                                      // 1.0 GAS
+        //    mediumCityCoffer = 88_000_000,                                       // 0.8 GAS
+        //    smallCityCoffer = 50_000_000                                       // 0.5 GAS
+        //    ;
 
         // Item can be on Market for 8, 12, 24 hours. If someone tries to buy item on market after expiration,
         // Then, buying item will be invalid.
@@ -65,14 +145,8 @@ namespace LordsContract
 
         // The Smartcontract Owner's Wallet Address. Used to receive some Gas as a transaction fee.
         public static readonly byte[] GameOwner = "AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y".ToScriptHash();//"AML8hyTV4vXuomovxdcAH9pRC9ny618YmA".ToScriptHash();
-       
         public static readonly BigInteger CofferPayoutInterval = 25000;            // In Blocks. Each blocks generated in 20-30 seconds.
-
         public static readonly BigInteger bigCity = 1, mediumCity = 2, smallCity = 3;
-
-        public static readonly BigInteger bigMarketCap = 20, mediumMarketCap = 15, smallMarketCap = 10;
-        public static readonly BigInteger bigTroopsCap = 500, mediumTroopsCap = 400, smallTroopsCap = 300;
-        public static readonly BigInteger bigDefense = 50_000_000, mediumDefense = 55_000_000, smallDefense = 60_000_000;
                 
         /**
          * Entry Point of Smartcontract on Neo Blockchain + C#
@@ -95,6 +169,25 @@ namespace LordsContract
             else if (param.Equals("putCity"))
             {
                 return Put.City((BigInteger)args[0], (BigInteger)args[1]);
+            }
+            else if (param.Equals("putStronghold"))
+            {
+                string key;
+                Stronghold stronghold = new Stronghold();
+                byte[] bytes;
+
+                stronghold.Hero = (BigInteger)args[1];
+                stronghold.ID = (BigInteger)args[0];
+                stronghold.CreatedBlock = Blockchain.GetHeight();
+
+                key = GeneralContract.STRONGHOLD_MAP + stronghold.ID.AsByteArray();
+                bytes = Neo.SmartContract.Framework.Helper.Serialize(stronghold);
+
+                Storage.Put(Storage.CurrentContext, key, bytes);
+
+                Runtime.Log("Stronghold data has been inserted");
+
+                return new BigInteger(0).AsByteArray();
             }
             else if (param.Equals("putItem"))
             {
@@ -161,25 +254,6 @@ namespace LordsContract
 
                 return Put.Hero((BigInteger)args[0], hero);
             }
-            else if (param.Equals("putStronghold"))
-            {
-                string key;
-                Stronghold stronghold = new Stronghold();
-                byte[] bytes;
-
-                stronghold.Hero = (BigInteger)args[1];
-                stronghold.ID = (BigInteger)args[0];
-                stronghold.CreatedBlock = Blockchain.GetHeight();
-            
-                key = GeneralContract.STRONGHOLD_PREFIX + stronghold.ID.AsByteArray();
-                bytes = Neo.SmartContract.Framework.Helper.Serialize(stronghold);
-
-                Storage.Put(Storage.CurrentContext, key, bytes);
-
-                Runtime.Log("Stronghold data has been inserted");
-
-                return new BigInteger(0).AsByteArray();
-            }
             else if (param.Equals("marketAddItem"))
             {
                 // 1: Item ID, 2: Auction Duration, 3: Price, 4: City ID, 5: Seller ID
@@ -219,187 +293,20 @@ namespace LordsContract
             {
                 return Log.Battle(args);
             }
-            //else if (param.Equals("logStrongholdLeave"))
-            //{
-            //    return Log.StrongholdLeave(args);
-            //}
-            //else if (param.Equals("changeTroopsAmount"))
-            //{
-            //    return ChangeTroopsAmount((BigInteger)args[0], (BigInteger)args[1]);
-            //}
-            //else if (param.Equals("changeEquipments"))
-            //{
-            //    return ChangeEquipments((BigInteger)args[0], (BigInteger[])args[1]);
-            //}       
-            //else if (param.Equals("setForTestStatus"))
-            //{
-            //    return SetForTestStatus((bool)args[0]);
-            //} 
-            
 
             //Runtime.Notify("Incorrect Parameter");
             return new BigInteger(1).AsByteArray();
         }
 
-        //public static byte[] ChangeTroopsAmount(BigInteger cityId, BigInteger additionalTroops)
-        //{
-        //    // Get City information
-        //    // is owner of city called this method
-        //    // is amount of troops are not going over limit
-        //    // then, save information
-        //    string cityKey = GeneralContract.CITY_PREFIX + cityId;
-
-        //    // Check existence of City on Blockchain
-        //    byte[] cityBytes = Storage.Get(Storage.CurrentContext, cityKey);
-        //    if (cityBytes.Length == 0)
-        //    {
-        //        Runtime.Notify("City doesn't exist on Blockchain!");
-        //        return new BigInteger(0).AsByteArray();
-        //    }
-
-        //    // Check, that method invoker is lord of city
-        //    City city = (City)Neo.SmartContract.Framework.Helper.Deserialize(cityBytes);
-        //    if (city.Hero == 0)
-        //    {
-        //        Runtime.Notify("City has no owner"); 
-        //        return new BigInteger(0).AsByteArray();
-        //    }
-
-        //    // City holds ID of Owner, so get the Hero data by ID, and see the Wallet address of player
-        //    string heroKey = GeneralContract.HERO_PREFIX + city.Hero;
-        //    Hero hero = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, heroKey));
-
-        //    if (!Runtime.CheckWitness(hero.OWNER))
-        //    {
-        //        Runtime.Notify("Only Lord of city able to change amount of troops in a city!");
-        //        return new BigInteger(0).AsByteArray();
-        //    }
-
-        //    // Check that troops cap is not reached
-        //    city.Troops = city.Troops + additionalTroops;
-
-        //    if (city.Troops > GetTroopsCap(city.Size))
-        //    {
-        //        Runtime.Notify("Too many troops for defend.");
-        //        return new BigInteger(0).AsByteArray();
-        //    }
-
-        //    cityBytes = Neo.SmartContract.Framework.Helper.Serialize(city);
-        //    Storage.Put(Storage.CurrentContext, cityKey, cityBytes);
-
-        //    return new BigInteger(1).AsByteArray();
-        //}
-
-        //// Equipments order matter. Index at argument is for item type of equipment
-        //public static byte[] ChangeEquipments(BigInteger heroId, BigInteger[] equipments)
-        //{
-        //    // Does Hero belong to Smartcontract owner
-        //    string heroKey = HERO_PREFIX + heroId.AsByteArray();
-        //    byte[] heroBytes = Storage.Get(Storage.CurrentContext, heroKey);
-
-        //    if (heroBytes.Length == 0)
-        //    {
-        //        Runtime.Notify("Invalid Hero ID");
-        //        return new BigInteger(0).AsByteArray();
-        //    }
-
-        //    Hero hero = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(heroBytes);
-        //    if (!Runtime.CheckWitness(hero.OWNER))
-        //    {
-        //        Runtime.Notify("Only Hero owner may change equipment set");
-        //        return new BigInteger(0).AsByteArray();
-        //    }
-
-        //    // Is Equipments amount in limit range
-        //    if (equipments.Length != 5)
-        //    {
-        //        Runtime.Notify("Hero may have 5 equipments at once");
-        //        return new BigInteger(0).AsByteArray();
-        //    }
-
-        //    BigInteger statType = 1;
-        //    for (var i = 0; i < 5; i++)
-        //    {
-        //        if (equipments[i] == 0)
-        //        {
-        //            statType = statType + 1;
-        //            continue;
-        //        }
-        //        string itemKey = MANAGABLE_ITEM_PREFIX + equipments[i].AsByteArray();
-        //        byte[] itemBytes = Storage.Get(Storage.CurrentContext, itemKey);
-
-        //        if (itemBytes.Length == 0)
-        //        {
-        //            Runtime.Notify("Invalid Item ID");
-        //            return new BigInteger(0).AsByteArray();
-        //        }
-
-        //        Item item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(itemBytes);
-
-        //        // Does item belong to Hero Owner
-        //        if (!item.OWNER.Equals(hero.OWNER))
-        //        {
-        //            Runtime.Notify("Only Item owner may do operation with an item");
-        //            return new BigInteger(0).AsByteArray();
-        //        }
-
-        //        // Does Equipment have a right stat type
-        //        if (item.STAT_TYPE != statType)
-        //        {
-        //            Runtime.Notify("Invalid Stat type", statType);
-        //            return new BigInteger(0).AsByteArray();
-
-        //        }
-        //        statType = statType + 1;
-        //    }
-
-        //    // Update Current Equipments
-        //    hero.Equipments = equipments;
-        //    hero.EquipmentsAmount = equipments.Length;
-
-        //    heroBytes = Neo.SmartContract.Framework.Helper.Serialize(hero);
-        //    Storage.Put(Storage.CurrentContext, heroKey, heroBytes);
-
-        //    return new BigInteger(1).AsByteArray();
-        //}
-
-        //public static bool IsForTest()
-        //{
-        //    byte[] res = Storage.Get(Storage.CurrentContext, TEST_KEY);
-        //    // By Default, Test Purpose is True
-        //    if (res.Length == 0 )
-        //    {
-        //        return true;
-        //    }
-        //    BigInteger big = res.AsBigInteger();
-        //    if (big.IsZero)
-        //    {
-        //        return false;
-        //    }
-        //    return true;
-        //}
-
-        //public static byte[] SetForTestStatus(bool status)
-        //{
-        //    if (!Runtime.CheckWitness(GameOwner))
-        //    {
-        //        Runtime.Notify("Only Game Owner may set the flag of Testing");
-        //        return new BigInteger(0).AsByteArray();
-        //    }
-
-        //    byte[] value = new BigInteger(0).AsByteArray();
-        //    if (status)
-        //        value = new BigInteger(1).AsByteArray();
-        //    Storage.Put(Storage.CurrentContext, TEST_KEY, value);
-
-        //    return new BigInteger(1).AsByteArray();
-        //}
-
-        //------------------------------------------------------------------------------------
-        //
-        // Helpers used in Smartcontract
-        //
-        //------------------------------------------------------------------------------------
+        /**
+         * Pseudo-random number
+         * 
+         * 
+         * @param ulong     max - Optional parameter of Max Range of number. Be default it is 10.
+         * 
+         * 
+         * @return BigInteger bigRandom - generated random number
+         */
         public static BigInteger GetRandomNumber(ulong max = 10)
         {
             Header header = Blockchain.GetHeader(Blockchain.GetHeight());
@@ -411,19 +318,15 @@ namespace LordsContract
             return bigRandom;
         }
 
-        //public static BigInteger GetTroopsCap(BigInteger citySize)
-        //{
-        //    if (citySize == bigCity)
-        //    {
-        //        return bigTroopsCap;
-        //    }
-        //    else if (citySize == mediumCity)
-        //    {
-        //        return mediumTroopsCap;
-        //    }
-        //    return smallTroopsCap;
-        //}
-
+        /**
+         * Checks whether given sum of GAS is attached or not?
+         * 
+         * 
+         * @param decimal   value - Sum of attached money.
+         * 
+         * 
+         * @return bool  returned whether or not given sum is attached to tx.
+         */
         public static bool IsTransactionOutputExist(decimal value)
         {
             Transaction TX = (Transaction)ExecutionEngine.ScriptContainer;

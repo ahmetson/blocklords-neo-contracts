@@ -31,7 +31,7 @@ namespace LordsContract
             log.AttackerOwner = ExecutionEngine.CallingScriptHash;
 
             // Get Hero
-            string heroKey = GeneralContract.HERO_PREFIX + log.Attacker.AsByteArray();
+            string heroKey = GeneralContract.HERO_MAP + log.Attacker.AsByteArray();
             byte[] heroBytes = Storage.Get(Storage.CurrentContext, heroKey);
             if (heroBytes.Length == 0)
             {
@@ -70,14 +70,14 @@ namespace LordsContract
             // Get Hero of Defender
             string key;
             byte[] bytes;
-            if (log.BattleType == GeneralContract.CityType)
+            if (log.BattleType == GeneralContract.PVC)
             {
                 // Get City
                 // If city doesn't exist, return error
                 // If city doesn't have an owner, write nothing
                 // If city has an owner, check that it is not the attacker, otherwise return error
                 // Write hero id, hero equopments
-                key = GeneralContract.CITY_PREFIX + log.DefenderObject.AsByteArray();
+                key = GeneralContract.CITY_MAP + log.DefenderObject.AsByteArray();
                 bytes = Storage.Get(Storage.CurrentContext, key);
                 if (bytes.Length == 0)
                 {
@@ -92,7 +92,7 @@ namespace LordsContract
                 }
                 if (city.Hero != 0)
                 {
-                    heroKey = GeneralContract.HERO_PREFIX + city.Hero.AsByteArray();
+                    heroKey = GeneralContract.HERO_MAP + city.Hero.AsByteArray();
                     heroBytes = Storage.Get(Storage.CurrentContext, heroKey);
                     // We sure, that hero data exists, so we will not check it for existence
                     Hero defenderHero = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(heroBytes);
@@ -105,14 +105,14 @@ namespace LordsContract
                     //log.DefenderItem5 = defenderHero.Equipments[4];
                 }
             }
-            else if (log.BattleType == GeneralContract.StrongholdType)
+            else if (log.BattleType == GeneralContract.PVP)
             {
                 // Get City
                 // If city doesn't exist, return error
                 // If city doesn't have an owner, write nothing
                 // If city has an owner, check that it is not the attacker, otherwise return error
                 // Write hero id, hero equopments
-                key = GeneralContract.STRONGHOLD_PREFIX + log.DefenderObject.AsByteArray();
+                key = GeneralContract.STRONGHOLD_MAP + log.DefenderObject.AsByteArray();
                 bytes = Storage.Get(Storage.CurrentContext, key);
                 if (bytes.Length == 0)
                 {
@@ -127,7 +127,7 @@ namespace LordsContract
                 }
                 if (stronghold.Hero != 0)
                 {
-                    heroKey = GeneralContract.HERO_PREFIX + stronghold.Hero.AsByteArray();
+                    heroKey = GeneralContract.HERO_MAP + stronghold.Hero.AsByteArray();
                     heroBytes = Storage.Get(Storage.CurrentContext, heroKey);
                     // We sure, that hero data exists, so we will not check it for existence
                     Hero defenderHero = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(heroBytes);
@@ -140,7 +140,7 @@ namespace LordsContract
                     //log.DefenderItem5 = defenderHero.Equipments[4];
                 }
             }
-            else if (log.BattleType == GeneralContract.BanditCampType)
+            else if (log.BattleType == GeneralContract.PVE)
             {
                 // Get Bandir Camp
                 // For now we have only 10 bandit camps
@@ -180,9 +180,9 @@ namespace LordsContract
             // If battle type is stronghold attack, then change owner of the stronghold
             // If battle type is bandit camp attack, update item.
 
-            if (log.BattleType == GeneralContract.CityType)
+            if (log.BattleType == GeneralContract.PVC)
             {
-                key = GeneralContract.CITY_PREFIX + log.DefenderObject.AsByteArray();
+                key = GeneralContract.CITY_MAP + log.DefenderObject.AsByteArray();
                 City city = (City)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, key));
 
                 // Change City Lord
@@ -200,10 +200,10 @@ namespace LordsContract
                 // Save City Information
                 byte[] cityBytes = Neo.SmartContract.Framework.Helper.Serialize(city);
                 Storage.Put(Storage.CurrentContext, key, cityBytes);
-            } else if (log.BattleType == GeneralContract.StrongholdType)
+            } else if (log.BattleType == GeneralContract.PVP)
             {
                 // Change Stronghold Occupier
-                key = GeneralContract.STRONGHOLD_PREFIX + log.DefenderObject.AsByteArray();
+                key = GeneralContract.STRONGHOLD_MAP + log.DefenderObject.AsByteArray();
                 if (log.BattleResult == 1) // Attacker Won?
                 {
                     Stronghold stronghold = new Stronghold();
@@ -215,7 +215,7 @@ namespace LordsContract
 
                     Storage.Put(Storage.CurrentContext, key, bytes);
                 }
-            } else if (log.BattleType == GeneralContract.BanditCampType)
+            } else if (log.BattleType == GeneralContract.PVE)
             {
                 UpdateItemStats(attackerItems, log.BattleId);
             }
@@ -230,7 +230,7 @@ namespace LordsContract
             Runtime.Notify("Stronghold Leaving Initiated");
 
             // Change Stronghold Lord
-            string key = GeneralContract.STRONGHOLD_PREFIX + ((BigInteger)args[0]).AsByteArray();
+            string key = GeneralContract.STRONGHOLD_MAP + ((BigInteger)args[0]).AsByteArray();
 
             Stronghold stronghold = (Stronghold)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, key));
 
@@ -240,7 +240,7 @@ namespace LordsContract
                 return new BigInteger(0).AsByteArray();
             }
 
-            string heroKey = GeneralContract.HERO_PREFIX + stronghold.Hero.AsByteArray();
+            string heroKey = GeneralContract.HERO_MAP + stronghold.Hero.AsByteArray();
             Hero hero = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, heroKey));
 
             Runtime.Log("Check who calls this method!");
@@ -284,7 +284,7 @@ namespace LordsContract
 
             for (int i = 1; i <= 5; i++, checkedId = checkedId + 1)
             {
-                key = GeneralContract.MANAGABLE_ITEM_PREFIX + checkedId.AsByteArray();
+                key = GeneralContract.ITEM_MAP + checkedId.AsByteArray();
                 bytes = Storage.Get(Storage.CurrentContext, key);
 
                 if (bytes.Length > 1)
@@ -317,7 +317,7 @@ namespace LordsContract
 
             Runtime.Log("Before preparing key");
 
-            key = GeneralContract.MANAGABLE_ITEM_PREFIX + itemId.AsByteArray();
+            key = GeneralContract.ITEM_MAP + itemId.AsByteArray();
 
             //Storage.Put(Storage.CurrentContext, index.AsByteArray(), upgradableAmount);
 

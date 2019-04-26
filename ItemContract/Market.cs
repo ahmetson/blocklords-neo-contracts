@@ -33,7 +33,7 @@ namespace LordsContract
         public static byte[] AddItem(BigInteger itemId, MarketItemData item)
         {
             // Item should exist
-            string key = GeneralContract.MANAGABLE_ITEM_PREFIX + itemId.AsByteArray();
+            string key = GeneralContract.ITEM_MAP + itemId.AsByteArray();
             //byte[] itemBytes1 = Storage.Get(Storage.CurrentContext, key);
             //if (itemBytes1.Length == 0)
             //{
@@ -59,7 +59,7 @@ namespace LordsContract
             // TODO check that city item cap is enough.
             // TODO update city market cap
 
-            key = GeneralContract.MARKET_PREFIX + itemId.AsByteArray();
+            key = GeneralContract.MARKET_MAP + itemId.AsByteArray();
 
             // Serialize Custom Object `Item` into bytes, since Neo Storage doesn't support custom classes.
             byte[] itemBytes = Neo.SmartContract.Framework.Helper.Serialize(item);
@@ -86,7 +86,7 @@ namespace LordsContract
             // TODO verify that item owner is not buying
 
             // Item Data that was on Market
-            string key = GeneralContract.MARKET_PREFIX + itemId.AsByteArray();
+            string key = GeneralContract.MARKET_MAP + itemId.AsByteArray();
             byte[] mBytes = Storage.Get(Storage.CurrentContext, key);
 
             if (mBytes.Length == 0)
@@ -107,7 +107,7 @@ namespace LordsContract
             }
 
             // On Blockchain Storage, city stores Wallet Address of that city's owner.
-            string cityKey = GeneralContract.CITY_PREFIX + mItem.City;
+            string cityKey = GeneralContract.CITY_MAP + mItem.City;
 
             City city = (City)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, cityKey));
 
@@ -116,7 +116,7 @@ namespace LordsContract
                 lord = GeneralContract.GameOwner;
             else
             {
-                string heroKey = GeneralContract.HERO_PREFIX + city.Hero;
+                string heroKey = GeneralContract.HERO_MAP + city.Hero;
                 Hero hero = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, heroKey));
 
                 lord = hero.OWNER;     // Owner of city, where item was sold
@@ -205,7 +205,7 @@ namespace LordsContract
                 Storage.Delete(Storage.CurrentContext, key);
 
                 // Change Item's owner too.
-                key = GeneralContract.MANAGABLE_ITEM_PREFIX + itemId.AsByteArray();
+                key = GeneralContract.ITEM_MAP + itemId.AsByteArray();
                 Item item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, key));
 
                 item.OWNER = ExecutionEngine.CallingScriptHash;
@@ -233,7 +233,7 @@ namespace LordsContract
         public static byte[] DeleteItem(BigInteger itemId)
         {
             Runtime.Log("Initialized Auction Cancellation");
-            string key = GeneralContract.MARKET_PREFIX + itemId.AsByteArray();
+            string key = GeneralContract.MARKET_MAP + itemId.AsByteArray();
             byte[] mBytes = Storage.Get(Storage.CurrentContext, key);
             if (mBytes.Length == 0)
             {

@@ -25,7 +25,7 @@ namespace LordsContract
 
             for (int i = 1; i <= 10; i++, checkedId = checkedId+1)
             {
-                key = GeneralContract.STRONGHOLD_PREFIX + checkedId.AsByteArray();
+                key = GeneralContract.STRONGHOLD_MAP + checkedId.AsByteArray();
                 bytes = Storage.Get(Storage.CurrentContext, key);
 
                 if (bytes.Length > 1)
@@ -46,7 +46,7 @@ namespace LordsContract
             }
 
             // Check that Item has no owner
-            string itemKey = GeneralContract.MANAGABLE_ITEM_PREFIX + itemId.AsByteArray();
+            string itemKey = GeneralContract.ITEM_MAP + itemId.AsByteArray();
             bytes = Storage.Get(Storage.CurrentContext, itemKey);
             if (bytes.Length < 1)
             {
@@ -76,7 +76,7 @@ namespace LordsContract
             Runtime.Log("Random stronghold");
             //Storage.Put(Storage.CurrentContext, ExecutionEngine.CallingScriptHash, random);
 
-            key = GeneralContract.STRONGHOLD_PREFIX + random.AsByteArray();
+            key = GeneralContract.STRONGHOLD_MAP + random.AsByteArray();
             bytes = Storage.Get(Storage.CurrentContext, key);
             stronghold = (Stronghold)Neo.SmartContract.Framework.Helper.Deserialize(bytes);
 
@@ -85,7 +85,7 @@ namespace LordsContract
             Runtime.Log("Lord id");
             Storage.Put(Storage.CurrentContext, ExecutionEngine.CallingScriptHash, lordId);
 
-            string heroKey = GeneralContract.HERO_PREFIX + lordId.AsByteArray();
+            string heroKey = GeneralContract.HERO_MAP + lordId.AsByteArray();
             Hero hero = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, heroKey));
 
             Runtime.Log("Returned Stronghold Data");
@@ -114,7 +114,7 @@ namespace LordsContract
 
             BigInteger incrementor = Helper.GetDropIncrementor();
             byte[] incrementorBytes = incrementor.AsByteArray();
-            key = GeneralContract.STRONGHOLD_REWARD_PREFIX + incrementorBytes;
+            key = GeneralContract.STRONGHOLD_REWARD_BATCH + incrementorBytes;
 
             Storage.Put(Storage.CurrentContext, key, bytes);
 
@@ -174,7 +174,7 @@ namespace LordsContract
             // City Coffer Cut.
             for (var i = 0; i < 16; i++, checkedId = checkedId + 1)
             {
-                string key = GeneralContract.CITY_PREFIX + checkedId.AsByteArray();
+                string key = GeneralContract.CITY_MAP + checkedId.AsByteArray();
                 byte[] cityBytes = Storage.Get(Storage.CurrentContext, key);
 
 

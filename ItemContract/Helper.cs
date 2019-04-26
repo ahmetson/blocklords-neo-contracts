@@ -78,7 +78,7 @@ namespace LordsContract
             }
 
             byte[] idBytes = itemId.AsByteArray();
-            string key = GeneralContract.MANAGABLE_ITEM_PREFIX + idBytes;
+            string key = GeneralContract.ITEM_MAP + idBytes;
 
             // If Item's are not exist, exit
             byte[] bytes = Storage.Get(Storage.CurrentContext, key);
@@ -96,7 +96,7 @@ namespace LordsContract
         public static void ChangeItemOwner(BigInteger itemId, byte[] owner)
         {
             byte[] idBytes = itemId.AsByteArray();
-            string key = GeneralContract.MANAGABLE_ITEM_PREFIX + idBytes;
+            string key = GeneralContract.ITEM_MAP + idBytes;
             byte[] bytes = Storage.Get(Storage.CurrentContext, key);
 
             Item item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(bytes);

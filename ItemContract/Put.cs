@@ -28,7 +28,7 @@ namespace LordsContract
             // Put item managable data onto blockchain 
             byte[] managableBytes = Neo.SmartContract.Framework.Helper.Serialize(item);
             byte[] idBytes = itemId.AsByteArray();
-            string managableKey = GeneralContract.MANAGABLE_ITEM_PREFIX + idBytes;
+            string managableKey = GeneralContract.ITEM_MAP + idBytes;
             Runtime.Notify("Id bytes", idBytes, "key", managableKey);
             Storage.Put(Storage.CurrentContext, managableKey, managableBytes);
 
@@ -103,7 +103,7 @@ namespace LordsContract
             }
 
             // Put Hero
-            string key = GeneralContract.HERO_PREFIX + heroId.AsByteArray();
+            string key = GeneralContract.HERO_MAP + heroId.AsByteArray();
             byte[] bytes = Neo.SmartContract.Framework.Helper.Serialize(hero);
             Storage.Put(Storage.CurrentContext, key, bytes);
 
@@ -136,7 +136,7 @@ namespace LordsContract
                 return new BigInteger(0).AsByteArray();
             }
 
-            string key = GeneralContract.CITY_PREFIX + id.AsByteArray();
+            string key = GeneralContract.CITY_MAP + id.AsByteArray();
             byte[] cityBytes = Storage.Get(Storage.CurrentContext, key);
             //if (cityBytes.Length != 0)
             //{
