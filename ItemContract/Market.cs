@@ -130,8 +130,10 @@ namespace LordsContract
             // Attachment #3. GAS amount of 90 percents of Item Price and goes to Item Seller.
             BigInteger percent = mItem.Price / 100;
 
-            BigInteger ownerReceive = percent * GeneralContract.auctionFee;
-            BigInteger lordReceive = percent * GeneralContract.lordFee;
+
+
+            BigInteger ownerReceive = percent * 5;
+            BigInteger lordReceive = percent * 10;
             BigInteger sellerReceive = mItem.Price - (ownerReceive + lordReceive);
 
             bool ownerReceived = false;
@@ -259,22 +261,22 @@ namespace LordsContract
         private static bool CheckIncludedFees(BigInteger duration)
         {
             return true;
-            if (duration == 8)
-            {
-                return GeneralContract.IsTransactionOutputExist(GeneralContract.auction8HoursFee);
+            //if (duration == 8)
+            //{
+            //    return GeneralContract.IsTransactionOutputExist(GeneralContract.auction8HoursFee);
                 
-            }
-            if (duration == 12)
-            {
-                return GeneralContract.IsTransactionOutputExist(GeneralContract.auction12HoursFee);
-            }
-            if (duration == 24)
-            {
-                return GeneralContract.IsTransactionOutputExist(GeneralContract.auction24HoursFee);
-            }
+            //}
+            //if (duration == 12)
+            //{
+            //    return GeneralContract.IsTransactionOutputExist(GeneralContract.auction12HoursFee);
+            //}
+            //if (duration == 24)
+            //{
+            //    return GeneralContract.IsTransactionOutputExist(GeneralContract.auction24HoursFee);
+            //}
 
-            Runtime.Notify("Invalid Duration time, all included fee will be counted as invalid!");
-            return false;
+            //Runtime.Notify("Invalid Duration time, all included fee will be counted as invalid!");
+            //return false;
         }
     }
 

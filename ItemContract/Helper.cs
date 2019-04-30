@@ -107,29 +107,6 @@ namespace LordsContract
             Put.Item(itemId, item);
         }
 
-        public static BigInteger GetDropIncrementor()
-        {
-            byte[] bytes = Storage.Get(Storage.CurrentContext, GeneralContract.DROPPED_INCREMENTOR);
-
-            if (bytes.Length == 0)
-            {
-                return 1;
-            }
-
-            BigInteger incrementor = bytes.AsBigInteger();
-
-            return incrementor;
-        }
-
-        public static void SetDropIncrementor(BigInteger incrementor)
-        {
-            Runtime.Log("Setting Drop Inrecemntor");
-            byte[] number = incrementor.AsByteArray();
-            Runtime.Log("Converted to S");
-            Storage.Put(Storage.CurrentContext, GeneralContract.DROPPED_INCREMENTOR, number);
-            Runtime.Log("Incrementor");
-        }
-
         public static BigInteger GetByIntIndex(BigInteger[] arr, int arrLength, BigInteger index)
         {
             BigInteger passedIndex = 0;

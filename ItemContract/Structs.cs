@@ -78,11 +78,10 @@ namespace LordsContract
     {
         public BigInteger ID;                   // Stronghold ID
         public BigInteger Hero;                 // Hero ID, that occupies City on map
-        //public BigInteger CreatedBlock;         // The Blockchain Height
         public decimal Coffer;               // City Coffer
         public BigInteger Size;
-        public BigInteger Troops;               // Current amount of troops in a city
         public BigInteger ItemsOnMarket;        // Current amount of items on city market
+        public BigInteger ItemsCap;
     }
 
     // Serialize manually, since it is used for out-of-blockchain use with a getStorage method

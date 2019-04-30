@@ -15,62 +15,40 @@ namespace LordsContract
             //  TODO check block interval
             // TODO check that item is from Batch
 
-            BigInteger[] occupied = new BigInteger[10] {0,0,0,0,0,0,0,0,0,0};
-            int occupiedAmount = 0;
+            byte[] strongholdsAmountBytes = Storage.Get(Storage.CurrentContext, GeneralContract.AMOUNT_STRONGHOLDS);
+            BigInteger strongholdsAmount = strongholdsAmountBytes.AsBigInteger();
 
             string key;
             BigInteger checkedId = 1;
             Stronghold stronghold;
             byte[] bytes;
 
-            for (int i = 1; i <= 10; i++, checkedId = checkedId+1)
-            {
-                key = GeneralContract.STRONGHOLD_MAP + checkedId.AsByteArray();
-                bytes = Storage.Get(Storage.CurrentContext, key);
 
-                if (bytes.Length > 1)
-                {
-                    stronghold = (Stronghold)Neo.SmartContract.Framework.Helper.Deserialize(bytes);
-                    if (stronghold.Hero > 0)
-                    {
-                        occupied[occupiedAmount] = checkedId;
-                        occupiedAmount++;
-                    }
-                }
-            }
-
-            if (occupiedAmount == 0)
-            {
-                Runtime.Notify("All strongholds are occupied by NPC");
-                return new BigInteger(1).AsByteArray();
-            }
-
-            // Check that Item has no owner
+            // Check that Item has no owner and that is is on stronghold reward batch
             string itemKey = GeneralContract.ITEM_MAP + itemId.AsByteArray();
             bytes = Storage.Get(Storage.CurrentContext, itemKey);
-            if (bytes.Length < 1)
-            {
-                Runtime.Log("Item doesn't exist on Blockchain!");
-                return new BigInteger(1).AsByteArray();
-            }
-
+            //if (bytes.Length < 1)
+            //{
+            //    Runtime.Log("Item doesn't exist on Blockchain!");
+            //    return new BigInteger(1).AsByteArray();
+            //}
             Item item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(bytes);
-            if (item.BATCH != GeneralContract.STRONGHOLD_REWARD_BATCH)
-            {
-                Runtime.Log("Item is not allowed to be dropped. Only Stronghold Batch items are allowed");
-                return new BigInteger(1).AsByteArray();
-            }
+            //if (item.BATCH != GeneralContract.STRONGHOLD_REWARD_BATCH)
+            //{
+            //    Runtime.Log("Item is not allowed to be dropped. Only Stronghold Batch items are allowed");
+            //    return new BigInteger(1).AsByteArray();
+            //}
 
             Runtime.Log("Before Random");
 
             // returned an index on list of available strongholds ids
-            BigInteger random = GeneralContract.GetRandomNumber((ulong)occupiedAmount);
+            BigInteger random = GeneralContract.GetRandomNumber((ulong)strongholdsAmount);
 
             //Runtime.Log("After random");
             //Storage.Put(Storage.CurrentContext, ExecutionEngine.CallingScriptHash, random);
             Runtime.Notify("Random int ", random);
 
-            random = Helper.GetByIntIndex(occupied, occupiedAmount, random);
+            //random = Helper.GetByIntIndex(occupied, occupiedAmount, random);
             //random = occupied[(int)random - 1]; // from index get stronghold id
 
             Runtime.Log("Random stronghold");
@@ -78,12 +56,24 @@ namespace LordsContract
 
             key = GeneralContract.STRONGHOLD_MAP + random.AsByteArray();
             bytes = Storage.Get(Storage.CurrentContext, key);
+            if (bytes.Length < 1)
+            {
+                // Delete Item
+                Storage.Delete(Storage.CurrentContext, itemKey);
+                Runtime.Log("Storage was chosen empty! Buurrrrrrn item!");
+                return new BigInteger(1).AsByteArray();
+            }
             stronghold = (Stronghold)Neo.SmartContract.Framework.Helper.Deserialize(bytes);
 
             BigInteger lordId = stronghold.Hero;
+            if (lordId < 1)
+            {
+                // Delete Item
+                Storage.Delete(Storage.CurrentContext, itemKey);
 
-            Runtime.Log("Lord id");
-            Storage.Put(Storage.CurrentContext, ExecutionEngine.CallingScriptHash, lordId);
+                Runtime.Log("Stronghold has an NPC! Burn item!");
+                return new BigInteger(1).AsByteArray();
+            }
 
             string heroKey = GeneralContract.HERO_MAP + lordId.AsByteArray();
             Hero hero = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, heroKey));
@@ -101,35 +91,6 @@ namespace LordsContract
             Storage.Delete(Storage.CurrentContext, key);
 
             Runtime.Log("Returned 0");
-            //Set Stronghold update time.
-            DropData dropped = new DropData();
-            dropped.Block = Blockchain.GetHeight();
-            dropped.HeroId = lordId;
-            dropped.ItemId = itemId;
-            dropped.StrongholdId = random;
-
-            bytes = Neo.SmartContract.Framework.Helper.Serialize(dropped);
-
-            Runtime.Log("Returned 1");
-
-            BigInteger incrementor = Helper.GetDropIncrementor();
-            byte[] incrementorBytes = incrementor.AsByteArray();
-            key = GeneralContract.STRONGHOLD_REWARD_BATCH + incrementorBytes;
-
-            Storage.Put(Storage.CurrentContext, key, bytes);
-
-            Runtime.Log("Returs 2");
-
-            incrementor = incrementor + 1;
-
-            Runtime.Log("Returned 3");
-
-            byte[] number = incrementor.AsByteArray();
-            Runtime.Log("Converted to S");
-            Storage.Put(Storage.CurrentContext, GeneralContract.DROPPED_INCREMENTOR, number);
-            Runtime.Log("Incrementor");
-
-            //Helper.SetDropIncrementor(incrementor);
 
             Runtime.Log("Item was Dropped successfully");
             return new BigInteger(1).AsByteArray();
@@ -230,7 +191,7 @@ namespace LordsContract
             BigInteger blockHeight = Blockchain.GetHeight();
             //byte[] bytes = blockHeight.AsByteArray();
 
-            Storage.Put(Storage.CurrentContext, GeneralContract.COFFER_PAYOUT_KEY, blockHeight);
+            Storage.Put(Storage.CurrentContext, GeneralContract.INTERVAL_COFFER, blockHeight);
 
             return new BigInteger(1).AsByteArray();
         }

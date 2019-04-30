@@ -25,6 +25,7 @@ namespace LordsContract
          */
         public static byte[] Item(BigInteger itemId, Item item)
         {
+
             // Put item managable data onto blockchain 
             byte[] managableBytes = Neo.SmartContract.Framework.Helper.Serialize(item);
             byte[] idBytes = itemId.AsByteArray();
@@ -36,31 +37,19 @@ namespace LordsContract
             return new BigInteger(1).AsByteArray();
         }
 
-        /**
-             * Puts hero data on Blockchain.
-             * 
-             * IMPORTANT! Should have a GAS attachment
-             * 
-             * Has 13 arguments
-             * @Hero ID (BigInteger)                - ID of hero that will be added onto the Blockchain Storage.
-             * @Owner (byte[])                      - The wallet address of Hero Owner.
-             * @Troops cap (BigInteger)             - Limit amount for troops
-             * @Intelligence (BigInteger)           - Base stat
-             * @Speed (BigInteger)                  - Another base stat
-             * @Strength (BigInteger)               - Another base stat
-             * @Leadership                          - base stat too
-             * @Defense                             - last base stat
-             * @Signature (byte[])
-             * @Item ID #1 (BigInteger)             - Rewarded Item ID. (Hero is rewarded by 5 items when created.)
-             * @Item ID #2
-             * @Item ID #3
-             * @Item ID #4
-             * @Item ID #5
-             * @Transaction                         - where fee was recorded
-             */
+        /// <summary>
+        /// Puts hero onto blockchain
+        /// </summary>
+        /// <param name="heroId">Hero ID</param>
+        /// <param name="hero">Her Data</param>
+        /// <returns></returns>
         public static byte[] Hero(BigInteger heroId, Hero hero)
         {
             // Hero should not exist
+            // Hero items should not belong to someone
+            // Hero items should not be on stronghold reward batch
+            // Player should not have have a created hero
+            // Attachment should be valid
 
             //if (!Helper.IsItemAvailable(hero.Equipments[0], GeneralContract.HERO_CREATION_BATCH))
             //{
@@ -98,7 +87,7 @@ namespace LordsContract
 
             if (heroId <= 0)
             {
-                Runtime.Notify("Please insert id higher than 0!");
+                Runtime.Log("Please insert id higher than 0!");
                 return new BigInteger(0).AsByteArray();
             }
 
@@ -125,9 +114,11 @@ namespace LordsContract
         /// 
         /// When This method is invoked, it should invlude transaction fee to Smartcontract address.
         /// </summary>
-        /// <param name="args">List of City IDs and Sizes</param>
+        /// <param name="id">City ID</param>
+        /// <param name="size">City Size</param>
+        /// <param name="cap">City's market cap</param>
         /// <returns></returns>
-        public static byte[] City(BigInteger id, BigInteger size)
+        public static byte[] City(BigInteger id, BigInteger size, BigInteger cap)
         {
             // Invoker has permission to execute this function?
             if (!Runtime.CheckWitness(GeneralContract.GameOwner))
@@ -138,46 +129,17 @@ namespace LordsContract
 
             string key = GeneralContract.CITY_MAP + id.AsByteArray();
             byte[] cityBytes = Storage.Get(Storage.CurrentContext, key);
-            //if (cityBytes.Length != 0)
-            //{
-            //    Runtime.Log("City already exists");
-            //    return new BigInteger(0).AsByteArray();
-            // }
 
             City city = new City();
+            city.ID = id;
+            city.Size = size;
+            city.Hero = 0;          // NPC owned
+            city.ItemsCap = 0;
+            city.ItemsOnMarket = 0;
 
-            if (size == GeneralContract.bigCity)
-            {
-                city.Coffer = GeneralContract.bigCityCoffer;
-            }
-            else if (size == GeneralContract.mediumCity)
-                {
-                    city.Coffer = GeneralContract.mediumCityCoffer;
-                }
-                else if (size == GeneralContract.smallCity)
-                {
-                    city.Coffer = GeneralContract.smallCityCoffer;
-                }
+            cityBytes = Neo.SmartContract.Framework.Helper.Serialize(city);
 
-                city.ID = id;
-                //city.CreatedBlock = Blockchain.GetHeight();
-                city.Size = size;
-                city.Hero = 0;          // NPC owned
-                city.Troops = 0;
-                city.ItemsOnMarket = 0;
-
-                cityBytes = Neo.SmartContract.Framework.Helper.Serialize(city);
-
-                Storage.Put(Storage.CurrentContext, key, cityBytes);
-
-
-            /* Transaction TX = (Transaction)ExecutionEngine.ScriptContainer;
-             TransactionOutput[] outputs = TX.GetOutputs();
-             Runtime.Notify("Outputs are", outputs.Length);
-             foreach (var item in outputs)
-             {
-                 Runtime.Notify("Output is", item.Value, "to", item.ScriptHash);
-             }*/
+            Storage.Put(Storage.CurrentContext, key, cityBytes);
 
             Runtime.Notify("City Information was added successfully");
             return new BigInteger(1).AsByteArray();

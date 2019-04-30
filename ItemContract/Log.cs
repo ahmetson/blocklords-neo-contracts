@@ -169,12 +169,6 @@ namespace LordsContract
             //            return new BigInteger(0).AsByteArray();
             //        }
 
-
-            // Log 
-            key = GeneralContract.BATTLE_LOG_PREFIX + log.TX;
-            bytes = Neo.SmartContract.Framework.Helper.Serialize(log);
-            Storage.Put(Storage.CurrentContext, key, bytes);
-
             // Apply Battle Result
             // If battle type is city attack, then change owner of the city
             // If battle type is stronghold attack, then change owner of the stronghold
@@ -194,7 +188,12 @@ namespace LordsContract
                 }
 
                 // Increase City Coffer
-                decimal attackFee = GeneralContract.cityAttackFee / 2;
+                byte[] feePvcBytes = Storage.Get(Storage.CurrentContext, GeneralContract.FEE_PVC);
+                decimal feePvc = (decimal)(feePvcBytes.AsBigInteger());
+                byte[] cofferPercentsBytes = Storage.Get(Storage.CurrentContext, GeneralContract.PERCENTS_PVC_COFFER);
+                decimal cofferPercents = (decimal)(cofferPercentsBytes.AsBigInteger());
+
+                decimal attackFee = feePvc / 100 * cofferPercents;
                 city.Coffer = city.Coffer + attackFee;
 
                 // Save City Information
@@ -223,45 +222,7 @@ namespace LordsContract
             Runtime.Notify("Battle was logged on Blockchain");
             return new BigInteger(1).AsByteArray();
         }
-
-        public static byte[] StrongholdLeave(object[] args)
-        {
-
-            Runtime.Notify("Stronghold Leaving Initiated");
-
-            // Change Stronghold Lord
-            string key = GeneralContract.STRONGHOLD_MAP + ((BigInteger)args[0]).AsByteArray();
-
-            Stronghold stronghold = (Stronghold)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, key));
-
-            if (stronghold.Hero == 0)
-            {
-                Runtime.Notify("Stronghold is already owned by NPC.");
-                return new BigInteger(0).AsByteArray();
-            }
-
-            string heroKey = GeneralContract.HERO_MAP + stronghold.Hero.AsByteArray();
-            Hero hero = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, heroKey));
-
-            Runtime.Log("Check who calls this method!");
-            if (Runtime.CheckWitness(hero.OWNER))
-            {
-                Runtime.Notify("Only Stronghold Owner can initialize this method");
-                return new BigInteger(0).AsByteArray();
-            }
-
-            // Remove Stronghold Owner Information
-            stronghold.CreatedBlock = Blockchain.GetHeight();
-            stronghold.Hero = 0;
-
-            byte[] bytes = Neo.SmartContract.Framework.Helper.Serialize(stronghold);
-
-            Storage.Put(Storage.CurrentContext, key, bytes);
-
-            Runtime.Notify("Stronghold Leaving was logged on Blockchain");
-            return new BigInteger(1).AsByteArray();
-        }
-
+        
         private static void UpdateItemStats(BigInteger[] id, BigInteger battleId)
         {
             string key;
@@ -350,14 +311,7 @@ namespace LordsContract
             bytes = Neo.SmartContract.Framework.Helper.Serialize(item);
             Storage.Put(Storage.CurrentContext, key, bytes);
 
-            Runtime.Log("Before putting drop data on blockchain");
-            bytes = itemId.AsByteArray();
-
-            string keyUpdate = GeneralContract.UPDATED_STAT_PREFIX + battleId.AsByteArray();
-
-            Storage.Put(Storage.CurrentContext, keyUpdate, bytes);
-
-            Runtime.Log("Before returning data");
+            Runtime.Log("returning data");
 
         }
     }

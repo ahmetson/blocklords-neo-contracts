@@ -40,81 +40,86 @@ namespace LordsContract
         /// <summary>
         /// Storage Key of Hero Creation Fee
         /// </summary>
-        public static readonly string HERO_CREATION_FEE = "\x16";
+        public static readonly string FEE_HERO_CREATION = "\x16";
         /// <summary>
         /// Storage Key of Refering Fee
         /// </summary>
-        public static readonly string REFERAL_FEE = "\x17";
+        public static readonly string FEE_REFERAL = "\x17";
         /// <summary>
         /// Storage Key of fee for 8 hours of item appearance on market
         /// </summary>
-        public static readonly string HOURS_8_FEE = "\x18";
+        public static readonly string FEE_8_HOURS = "\x18";
         /// <summary>
         /// Storage Key of fee for 12 hours of item appearance on market
         /// </summary>
-        public static readonly string HOURS_12_FEE = "\x19";
+        public static readonly string FEE_12_HOURS = "\x19";
         /// <summary>
         /// Storage Key of fee for 24 hours of item appearance on market
         /// </summary>
-        public static readonly string HOURS_24_FEE = "\x20";
+        public static readonly string FEE_24_HOURS = "\x20";
         /// <summary>
         /// Storage Key of fee for city attack
         /// </summary>
-        public static readonly string PVC_FEE = "\x21";
+        public static readonly string FEE_PVC = "\x21";
         /// <summary>
         /// Storage Key of fee for bandit camp attack
         /// </summary>
-        public static readonly string PVE_FEE = "\x22";
+        public static readonly string FEE_PVE = "\x22";
         /// <summary>
         /// Storage Key of fee for stronghold attack
         /// </summary>
-        public static readonly string PVP_FEE = "\x23";
+        public static readonly string FEE_PVP = "\x23";
         /// <summary>
         /// Storage Key of GAS in percents that buyer should attach to buy item.
         /// As a base sum for calculation of GAS in percents is used the market item price.
         /// </summary>
-        public static readonly string PURCHASE_PERCENTS = "\x24";
+        public static readonly string PERCENTS_PURCHACE = "\x24";
         /// <summary>
         /// Storage Key of GAS in percents that lord of a city should get from buyer.
         /// As a base sum for calculation of GAS in percents that lord of a city should get is used market item price
         /// </summary>
-        public static readonly string LORD_PERCENTS = "\x25";
+        public static readonly string PERCENTS_LORD = "\x25";
         /// <summary>
         /// Storage Key of GAS in percents that seller of item will get from buyer.
         /// As a base sum for calculation of GAS is percents that seller will get is used the market item price.
         /// </summary>
-        public static readonly string SELLING_COFFER_PERCENTS = "\x26";
+        public static readonly string PERCENTS_SELLER_COFFER = "\x26";
         /// <summary>
         /// Storage Key of GAS attachments in percents of City Attacks,
         /// that will be transfered to city coffer  
         /// </summary>
-        public static readonly string PVC_COFFER_PERCENTS = "\x27";
+        public static readonly string PERCENTS_PVC_COFFER = "\x27";
         /// <summary>
         /// Storage Key of GAS in percents that will be sent transferred to player.
         /// </summary>
-        public static readonly string COFFER_PAY_PERCENTS = "\x28";
+        public static readonly string PERCENTS_COFFER_PAY = "\x28";
         /// <summary>
         /// Storage Key of coffer drop interval in blocks.
         /// </summary>
-        public static readonly string COFFER_INTERVAL = "\x29";
+        public static readonly string INTERVAL_COFFER = "\x29";
         /// <summary>
         /// Storage Key of stronghold reward interval in blocks
         /// </summary>
-        public static readonly string STRONGHOLD_REWARD_INTERVAL = "\x30";
+        public static readonly string INTERVAL_STRONGHOLD_REWARD = "\x30";
+        /// <summary>
+        /// Tracks strongholds amount on Contract
+        /// </summary>
+        public static readonly string AMOUNT_STRONGHOLDS = "\x31";
+        /// <summary>
+        /// Tracks cities amount on Contract
+        /// </summary>
+        public static readonly string AMOUNT_CITIES = "\x32";
 
 
         /// <summary>
-        /// 
+        /// Battle type
         /// </summary>
-        public static readonly BigInteger 
-            PVC = 0, 
-            PVP = 1, 
-            PVE = 2;
+        public static readonly BigInteger PVC = 0, PVP = 1, PVE = 2;
 
-        // Items may be given to heroes in two situation: when they create hero or when they own some territory on the game map.
-        public static readonly byte HERO_CREATION_BATCH = 0;
-        public static readonly byte STRONGHOLD_REWARD_BATCH = 1;
-        public static readonly byte NO_BATCH = 2;
+        /// <summary>
+        /// Item batch type
+        /// </summary>
+        public static readonly byte HERO_CREATION_BATCH = 0, STRONGHOLD_REWARD_BATCH = 1, NO_BATCH = 2;
 
         /**
          * 1 GAS === 100_000_000
@@ -137,27 +142,34 @@ namespace LordsContract
         //    smallCityCoffer = 50_000_000                                       // 0.5 GAS
         //    ;
 
-        // Item can be on Market for 8, 12, 24 hours. If someone tries to buy item on market after expiration,
-        // Then, buying item will be invalid.
-        public static readonly BigInteger duration8Hours = 28800;                  // 28_800 Seconds are 8 hours
-        public static readonly BigInteger duration12Hours = 43200;                 // 43_200 Seconds are 12 hours
-        public static readonly BigInteger duration24Hours = 86400;                 // 86_400 Seconds are 24 hours
+        public static readonly BigInteger duration8Hours = 28800, duration12Hours = 43200, duration24Hours = 86400;                 // 86_400 Seconds are 24 hours
 
         // The Smartcontract Owner's Wallet Address. Used to receive some Gas as a transaction fee.
+
+        /// <summary>
+        /// Game Owner's script hash
+        /// </summary>
         public static readonly byte[] GameOwner = "AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y".ToScriptHash();//"AML8hyTV4vXuomovxdcAH9pRC9ny618YmA".ToScriptHash();
         public static readonly BigInteger CofferPayoutInterval = 25000;            // In Blocks. Each blocks generated in 20-30 seconds.
-        public static readonly BigInteger bigCity = 1, mediumCity = 2, smallCity = 3;
+
+        /// <summary>
+        /// City type
+        /// </summary>
+        public static readonly BigInteger CITY_TYPE_BIG = 1, CITY_TYPE_MID = 2, CITY_TYPE_SMALL = 3;
                 
-        /**
-         * Entry Point of Smartcontract on Neo Blockchain + C#
-         * 
-         * @Param (BigInteger) - Function Name that should be called
-         * @args  (Object[])  - Arguments of Function that will be called. Function name is given by @param.
-         */
+        /// <summary>
+        /// Entry point of smartcontract
+        /// </summary>
+        /// <param name="param">Method name</param>
+        /// <param name="args">method arguments array</param>
+        /// <returns>1 if success, 0 if failed</returns>
         public static byte[] Main(string param, object[] args)
         {
-
-            if (param.Equals("cofferPayout"))
+            if (param.Equals("setSetting"))
+            {
+                return Settings.Set((string)args[0], args[1]);
+            }
+            else if (param.Equals("cofferPayout"))
             {
                 return Periodical.CofferPayout();
             }
@@ -165,10 +177,9 @@ namespace LordsContract
             {
                 return Periodical.SimpleDropItems((BigInteger)args[0]);
             }
-
             else if (param.Equals("putCity"))
             {
-                return Put.City((BigInteger)args[0], (BigInteger)args[1]);
+                return Put.City((BigInteger)args[0], (BigInteger)args[1], (BigInteger)args[2]);
             }
             else if (param.Equals("putStronghold"))
             {
@@ -298,15 +309,11 @@ namespace LordsContract
             return new BigInteger(1).AsByteArray();
         }
 
-        /**
-         * Pseudo-random number
-         * 
-         * 
-         * @param ulong     max - Optional parameter of Max Range of number. Be default it is 10.
-         * 
-         * 
-         * @return BigInteger bigRandom - generated random number
-         */
+        /// <summary>
+        /// Retrieve pseudo random number
+        /// </summary>
+        /// <param name="max">Max range</param>
+        /// <returns>generated number</returns>
         public static BigInteger GetRandomNumber(ulong max = 10)
         {
             Header header = Blockchain.GetHeader(Blockchain.GetHeight());
@@ -318,15 +325,11 @@ namespace LordsContract
             return bigRandom;
         }
 
-        /**
-         * Checks whether given sum of GAS is attached or not?
-         * 
-         * 
-         * @param decimal   value - Sum of attached money.
-         * 
-         * 
-         * @return bool  returned whether or not given sum is attached to tx.
-         */
+        /// <summary>
+        /// Checks whether given sum of GAS is attached or not?
+        /// </summary>
+        /// <param name="value">sum of GAS</param>
+        /// <returns>true if attached, false if not</returns>
         public static bool IsTransactionOutputExist(decimal value)
         {
             Transaction TX = (Transaction)ExecutionEngine.ScriptContainer;
