@@ -1,4 +1,4 @@
-using Neo.SmartContract.Framework;
+﻿using Neo.SmartContract.Framework;
 using Neo.SmartContract.Framework.Services.Neo;
 using System.Numerics;
 
@@ -123,6 +123,18 @@ namespace LordsContract
                 Runtime.Log("Permission denied! Only game admin can use this function!");
                 return new BigInteger(0).AsByteArray();
             }
+
+            if (id <= 0)
+            {
+                Runtime.Log("City ID should be greater than 0!");
+                return new BigInteger(0).AsByteArray();
+            }
+            if (cap <= 0)
+            {
+                Runtime.Log("City market cap must be greater than 0!");
+                return new BigInteger(0).AsByteArray();
+            }
+
 
             string key = GeneralContract.CITY_MAP + id.AsByteArray();
             byte[] cityBytes = Storage.Get(Storage.CurrentContext, key);
