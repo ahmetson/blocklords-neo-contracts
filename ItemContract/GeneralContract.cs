@@ -167,7 +167,8 @@ namespace LordsContract
         {
             if (param.Equals("setSetting"))
             {
-                return Settings.Set((string)args[0], args[1]);
+                Runtime.Log("Set Settings");
+                return Settings.Set((string)args[0], (BigInteger)args[1]);
             }
             else if (param.Equals("cofferPayout"))
             {

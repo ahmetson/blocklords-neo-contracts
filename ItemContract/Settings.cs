@@ -15,97 +15,83 @@ namespace LordsContract
         /// <param name="key">setting type</param>
         /// <param name="value">setting value</param>
         /// <returns></returns>
-        public static byte[] Set(string key, object value)
+        public static byte[] Set(string key, BigInteger value)
         {
             if (key.Equals(GeneralContract.FEE_HERO_CREATION))
             {
-                byte[] b = GeneralContract.FEE_HERO_CREATION.AsByteArray();
-                byte[] v = value.Serialize();
-                Storage.Put(Storage.CurrentContext, b, v);
+                Runtime.Log("Hero Creation");
+                Storage.Put( Storage.CurrentContext, GeneralContract.FEE_HERO_CREATION, value);
             }
             else if (key.Equals(GeneralContract.FEE_REFERAL))
             {
-                byte[] b = GeneralContract.FEE_REFERAL.AsByteArray();
-                byte[] v = value.Serialize();
-                Storage.Put(Storage.CurrentContext, b, v);
+                byte[] v = value.AsByteArray();
+                Storage.Put(Storage.CurrentContext, GeneralContract.FEE_REFERAL, v);
             }
             else if (key.Equals(GeneralContract.FEE_8_HOURS))
             {
-                byte[] b = GeneralContract.FEE_8_HOURS.AsByteArray();
-                byte[] v = value.Serialize();
-                Storage.Put(Storage.CurrentContext, b, v);
+                byte[] v = value.AsByteArray();
+                Storage.Put(Storage.CurrentContext, GeneralContract.FEE_8_HOURS, v);
             }
             else if (key.Equals(GeneralContract.FEE_12_HOURS))
             {
-                byte[] b = GeneralContract.FEE_12_HOURS.AsByteArray();
-                byte[] v = value.Serialize();
-                Storage.Put(Storage.CurrentContext, b, v);
+                byte[] v = value.AsByteArray();
+                Storage.Put(Storage.CurrentContext, GeneralContract.FEE_12_HOURS, v);
             }
             else if (key.Equals(GeneralContract.FEE_24_HOURS))
             {
-                byte[] b = GeneralContract.FEE_24_HOURS.AsByteArray();
-                byte[] v = value.Serialize();
-                Storage.Put(Storage.CurrentContext, b, v);
+                byte[] v = value.AsByteArray();
+                Storage.Put(Storage.CurrentContext, GeneralContract.FEE_24_HOURS, v);
             }
             else if (key.Equals(GeneralContract.FEE_PVC))
             {
-                byte[] b = GeneralContract.FEE_PVC.AsByteArray();
-                byte[] v = value.Serialize();
-                Storage.Put(Storage.CurrentContext, b, v);
+                byte[] v = value.AsByteArray();
+                Storage.Put(Storage.CurrentContext, GeneralContract.FEE_PVC, v);
             }
             else if (key.Equals(GeneralContract.FEE_PVE))
             {
-                byte[] b = GeneralContract.FEE_PVE.AsByteArray();
-                byte[] v = value.Serialize();
-                Storage.Put(Storage.CurrentContext, b, v);
+                byte[] v = value.AsByteArray();
+                Storage.Put(Storage.CurrentContext, GeneralContract.FEE_PVE, v);
             }
             else if (key.Equals(GeneralContract.FEE_PVP))
             {
-                byte[] b = GeneralContract.FEE_PVP.AsByteArray();
-                byte[] v = value.Serialize();
-                Storage.Put(Storage.CurrentContext, b, v);
+                byte[] v = value.AsByteArray();
+                Storage.Put(Storage.CurrentContext, GeneralContract.FEE_PVP, v);
             }
             else if (key.Equals(GeneralContract.PERCENTS_PURCHACE))
             {
-                byte[] b = GeneralContract.PERCENTS_PURCHACE.AsByteArray();
-                byte[] v = value.Serialize();
-                Storage.Put(Storage.CurrentContext, b, v);
+                byte[] v = value.AsByteArray();
+                Storage.Put(Storage.CurrentContext, GeneralContract.PERCENTS_PURCHACE, v);
             }
             else if (key.Equals(GeneralContract.PERCENTS_LORD))
-            {byte[] b = GeneralContract.PERCENTS_LORD.AsByteArray();
-                byte[] v = value.Serialize();
-                Storage.Put(Storage.CurrentContext, b, v);
+            {
+                byte[] v = value.AsByteArray();
+                Storage.Put(Storage.CurrentContext, GeneralContract.PERCENTS_LORD, v);
             }
             else if (key.Equals(GeneralContract.PERCENTS_SELLER_COFFER))
             {
-                byte[] b = GeneralContract.PERCENTS_SELLER_COFFER.AsByteArray();
-                byte[] v = value.Serialize();
-                Storage.Put(Storage.CurrentContext, b, v);
+                byte[] v = value.AsByteArray();
+                Storage.Put(Storage.CurrentContext, GeneralContract.PERCENTS_SELLER_COFFER, v);
             }
             else if (key.Equals(GeneralContract.PERCENTS_PVC_COFFER))
             {
-                byte[] b = GeneralContract.PERCENTS_PVC_COFFER.AsByteArray();
-                byte[] v = value.Serialize();
-                Storage.Put(Storage.CurrentContext, b, v);
+                byte[] v = value.AsByteArray();
+                Storage.Put(Storage.CurrentContext, GeneralContract.PERCENTS_PVC_COFFER, v);
             }
             else if (key.Equals(GeneralContract.PERCENTS_COFFER_PAY))
             {
-                byte[] b = GeneralContract.PERCENTS_COFFER_PAY.AsByteArray();
-                byte[] v = value.Serialize();
-                Storage.Put(Storage.CurrentContext, b, v);
+                byte[] v = value.AsByteArray();
+                Storage.Put(Storage.CurrentContext, GeneralContract.PERCENTS_COFFER_PAY, v);
             }
 
             else if (key.Equals(GeneralContract.INTERVAL_COFFER))
             {
-                byte[] b = GeneralContract.INTERVAL_COFFER.AsByteArray();
-                byte[] v = value.Serialize();
-                Storage.Put(Storage.CurrentContext, b, v);
+                byte[] v = value.AsByteArray();
+                Storage.Put(Storage.CurrentContext, GeneralContract.INTERVAL_COFFER, v);
             }
             else if (key.Equals(GeneralContract.INTERVAL_STRONGHOLD_REWARD))
             {
-                byte[] b = GeneralContract.INTERVAL_STRONGHOLD_REWARD.AsByteArray();
-                byte[] v = value.Serialize();
-                Storage.Put(Storage.CurrentContext, b, v);
+                byte[] v = value.AsByteArray();
+                Storage.Put(Storage.CurrentContext, GeneralContract.INTERVAL_STRONGHOLD_REWARD, v);
             }
             else
             {
