@@ -111,8 +111,6 @@ namespace LordsContract
 
         /// <summary>
         /// Method is invoked by Game Owner.
-        /// 
-        /// When This method is invoked, it should invlude transaction fee to Smartcontract address.
         /// </summary>
         /// <param name="id">City ID</param>
         /// <param name="size">City Size</param>
@@ -130,21 +128,50 @@ namespace LordsContract
             string key = GeneralContract.CITY_MAP + id.AsByteArray();
             byte[] cityBytes = Storage.Get(Storage.CurrentContext, key);
 
+            if (cityBytes.Length > 0)
+            {
+                Runtime.Log("City is already on Blockchain");
+                return new BigInteger(0).AsByteArray();
+            }
+
             City city = new City();
             city.ID = id;
             city.Size = size;
             city.Hero = 0;          // NPC owned
-            city.ItemsCap = 0;
+            city.ItemsCap = cap;
             city.ItemsOnMarket = 0;
 
             cityBytes = Neo.SmartContract.Framework.Helper.Serialize(city);
 
             Storage.Put(Storage.CurrentContext, key, cityBytes);
 
+            IncrementCityAmount();
+
             Runtime.Notify("City Information was added successfully");
             return new BigInteger(1).AsByteArray();
         }
 
+        /// <summary>
+        /// Updates amount of cities on Blockchain. This method should be called after each city putting on Blockchain
+        /// </summary>
+        /// <returns></returns>
+        public static void IncrementCityAmount()
+        {
+            byte[] amountBytes = Storage.Get(Storage.CurrentContext, GeneralContract.AMOUNT_CITIES);
+            BigInteger amount = 0;
+            if (amountBytes.Length > 0)
+            {
+                amount = amountBytes.AsBigInteger();
+            }
+            else
+            {
+                amount = 0;
+            }
+
+            amount = BigInteger.Add(amount, 1);
+
+            Storage.Put(Storage.CurrentContext, GeneralContract.AMOUNT_CITIES, amount);
+        }
     }
 }
 
