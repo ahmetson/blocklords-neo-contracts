@@ -184,22 +184,23 @@ namespace LordsContract
             }
             else if (param.Equals("putStronghold"))
             {
-                string key;
-                Stronghold stronghold = new Stronghold();
-                byte[] bytes;
+                //string key;
+                //Stronghold stronghold = new Stronghold();
+                //byte[] bytes;
 
-                stronghold.Hero = (BigInteger)args[1];
-                stronghold.ID = (BigInteger)args[0];
-                stronghold.CreatedBlock = Blockchain.GetHeight();
+                //stronghold.Hero = (BigInteger)args[1];
+                //stronghold.ID = (BigInteger)args[0];
+                //stronghold.CreatedBlock = Blockchain.GetHeight();
 
-                key = GeneralContract.STRONGHOLD_MAP + stronghold.ID.AsByteArray();
-                bytes = Neo.SmartContract.Framework.Helper.Serialize(stronghold);
+                //key = GeneralContract.STRONGHOLD_MAP + stronghold.ID.AsByteArray();
+                //bytes = Neo.SmartContract.Framework.Helper.Serialize(stronghold);
 
-                Storage.Put(Storage.CurrentContext, key, bytes);
+                //Storage.Put(Storage.CurrentContext, key, bytes);
 
-                Runtime.Log("Stronghold data has been inserted");
+                //Runtime.Log("Stronghold data has been inserted");
 
-                return new BigInteger(0).AsByteArray();
+                //return new BigInteger(0).AsByteArray();
+                return Put.Stronghold((BigInteger)args[0]);
             }
             else if (param.Equals("putItem"))
             {

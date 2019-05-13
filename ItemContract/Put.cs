@@ -1,13 +1,12 @@
-﻿using Neo.SmartContract.Framework;
+using Neo.SmartContract.Framework;
 using Neo.SmartContract.Framework.Services.Neo;
-using Neo.SmartContract.Framework.Services.System;
 using System.Numerics;
 
 namespace LordsContract
 {
-    /**
-     * This class puts on blockchain storage new Items, Heroes and Cities.
-     */
+    /// <summary>
+    /// Class interacts with Storage
+    /// </summary>
     public static class Put
     {
         /**
@@ -171,6 +170,72 @@ namespace LordsContract
             amount = BigInteger.Add(amount, 1);
 
             Storage.Put(Storage.CurrentContext, GeneralContract.AMOUNT_CITIES, amount);
+        }
+
+        /// <summary>
+        /// Method is invoked by Game Owner.
+        /// </summary>
+        /// <param name="id">stronghold ID</param>
+        /// <returns></returns>
+        public static byte[] Stronghold(BigInteger id)
+        {
+            // Invoker has permission to execute this function?
+            if (!Runtime.CheckWitness(GeneralContract.GameOwner))
+            {
+                Runtime.Log("Permission denied! Only game admin can use this function!");
+                return new BigInteger(0).AsByteArray();
+            }
+
+            if (id <= 0)
+            {
+                Runtime.Log("Stronghold ID should be greater than 0!");
+                return new BigInteger(0).AsByteArray();
+            }
+
+            string key = GeneralContract.STRONGHOLD_MAP + id.AsByteArray();
+            byte[] bytes = Storage.Get(Storage.CurrentContext, key);
+
+            if (bytes.Length > 0)
+            {
+                Runtime.Log("Stronghold is already on Blockchain");
+                return new BigInteger(0).AsByteArray();
+            }
+
+            Stronghold stronghold = new Stronghold();
+            stronghold.ID = id;
+            stronghold.Hero = 0;
+            stronghold.CreatedBlock = Blockchain.GetHeight();
+
+            bytes = Neo.SmartContract.Framework.Helper.Serialize(stronghold);
+
+            Storage.Put(Storage.CurrentContext, key, bytes);
+
+            IncrementStrongholdAmount();
+
+            Runtime.Notify("Stronghold Information was added successfully");
+            return new BigInteger(1).AsByteArray();
+        }
+
+        /// <summary>
+        /// Updates amount of strongholds on Blockchain. This method should be called after each stronghold putting on Blockchain
+        /// </summary>
+        /// <returns></returns>
+        public static void IncrementStrongholdAmount()
+        {
+            byte[] amountBytes = Storage.Get(Storage.CurrentContext, GeneralContract.AMOUNT_STRONGHOLDS);
+            BigInteger amount = 0;
+            if (amountBytes.Length > 0)
+            {
+                amount = amountBytes.AsBigInteger();
+            }
+            else
+            {
+                amount = 0;
+            }
+
+            amount = BigInteger.Add(amount, 1);
+
+            Storage.Put(Storage.CurrentContext, GeneralContract.AMOUNT_STRONGHOLDS, amount);
         }
     }
 }
