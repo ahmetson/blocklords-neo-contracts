@@ -9,28 +9,42 @@ namespace LordsContract
     /// </summary>
     public static class Put
     {
-        /**
-         * Puts Item data on Blockchain.
-         * 
-         * IMPORTANT! Only game owner may call it.
-         * 
-         * @Item ID (BigInteger)    - ID of Item that will be added to the Storage
-         * @Given For (byte)        - Item added into the batch. And will be given to game players as a reward. For what it can be given?
-         * @Stat Type (byte)        - Item Parameter. Check Item Struct for more info.
-         * @Quality (byte)          - Item Parameter. Check Item Struct for more info.
-         * @Generation (BigInteger) - Batch Series number. Check Item Struct for more info.
-         * @Stat Value (BigInteger) - Item Parameter. Check Item Struct for more info.
-         * @Level (BigInteger)      - Item Parameter. Check Item Struct for more info.
-         */
+        ///
+        /// <summary>Puts Item data on Blockchain.
+        /// 
+        /// IMPORTANT! Only game owner may call it.
+        ///
+        /// </summary>
+        /// <param name="itemId">Id of Item that will be added onto storage</param>
+        /// <param name="item">Item data in Structs.Item type</param>
         public static byte[] Item(BigInteger itemId, Item item)
         {
+            if (itemId <= 0)
+            {
+                Runtime.Log("Item ID must be greater than 0!");
+                return new BigInteger(0).AsByteArray();
+            }
+            // Invoker has permission to execute this function?
+            if (!Runtime.CheckWitness(GeneralContract.GameOwner))
+            {
+                Runtime.Log("Permission denied! Only game admin can use this function!");
+                return new BigInteger(0).AsByteArray();
+            }
+            // Item should not exist.
+            byte[] idBytes = itemId.AsByteArray();
+            string key = GeneralContract.ITEM_MAP + idBytes;
+            byte[] bytes = Storage.Get(Storage.CurrentContext, key);
+
+            if (bytes.Length > 0)
+            {
+                Runtime.Log("Item should not exist on Blockchain!");
+                return new BigInteger(0).AsByteArray();
+            }
 
             // Put item managable data onto blockchain 
-            byte[] managableBytes = Neo.SmartContract.Framework.Helper.Serialize(item);
-            byte[] idBytes = itemId.AsByteArray();
-            string managableKey = GeneralContract.ITEM_MAP + idBytes;
-            Runtime.Notify("Id bytes", idBytes, "key", managableKey);
-            Storage.Put(Storage.CurrentContext, managableKey, managableBytes);
+            bytes = Neo.SmartContract.Framework.Helper.Serialize(item);
+            
+            Storage.Put(Storage.CurrentContext, key, bytes);
 
             Runtime.Notify("Item was successfully put to storage");
             return new BigInteger(1).AsByteArray();
@@ -96,11 +110,11 @@ namespace LordsContract
             Storage.Put(Storage.CurrentContext, key, bytes);
 
             // Change Item Owners
-            Helper.ChangeItemOwner(hero.Equipments[0], hero.OWNER);
-            Helper.ChangeItemOwner(hero.Equipments[1], hero.OWNER);
-            Helper.ChangeItemOwner(hero.Equipments[2], hero.OWNER);
-            Helper.ChangeItemOwner(hero.Equipments[3], hero.OWNER);
-            Helper.ChangeItemOwner(hero.Equipments[4], hero.OWNER);
+            Helper.ChangeItemOwner(hero.Equipments[0], hero.ID);
+            Helper.ChangeItemOwner(hero.Equipments[1], hero.ID);
+            Helper.ChangeItemOwner(hero.Equipments[2], hero.ID);
+            Helper.ChangeItemOwner(hero.Equipments[3], hero.ID);
+            Helper.ChangeItemOwner(hero.Equipments[4], hero.ID);
 
             Runtime.Log("Hero was created and Hero got his Items");
 

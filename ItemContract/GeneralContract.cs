@@ -226,9 +226,10 @@ namespace LordsContract
                 item.GENERATION = (BigInteger)args[4];      // ???
 
                 item.STAT_VALUE = (BigInteger)args[5];      // ???
-                item.LEVEL = (BigInteger)args[6];           // ???
+                item.LEVEL = 0;           // ???
                 //item.OWNER = new byte[] { };                // 20
                 item.XP = 0;                                // ???
+                item.HERO = 0;
                 //item.INITIAL = (BigInteger)args[7];         // 1
                 //item.OWNER = ExecutionEngine.CallingScriptHash;
                 item.BATCH = (byte)args[0];

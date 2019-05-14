@@ -34,7 +34,7 @@ namespace LordsContract
         public BigInteger STAT_VALUE;
         public BigInteger LEVEL;
         public BigInteger XP;                   // Each battle where, Item was used by Hero, increases Experience (XP). Experiences increases Level. Level increases Stat value of Item
-        public byte[] OWNER;                    // Wallet address of Item owner.
+        public BigInteger HERO;                    // Wallet address of Item owner.
 
         public BigInteger BATCH;                // Batch type of item. Either Stronghold Reward, or hero Creation
     }
@@ -63,6 +63,7 @@ namespace LordsContract
         public BigInteger[] Equipments;         // Items that are equipped on hero
         public BigInteger EquipmentsAmount;     // Amount of items that are equipped on hero
         //public BigInteger Banned;             // Whether hero is banned by Game Admin for Cheating or not
+        public BigInteger ID;
     }
 
     [Serializable]

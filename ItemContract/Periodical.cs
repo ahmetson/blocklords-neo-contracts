@@ -80,7 +80,7 @@ namespace LordsContract
 
             Runtime.Log("Returned Stronghold Data");
             // Change owner of Item.
-            item.OWNER = hero.OWNER;
+            item.HERO = hero.ID;
             item.BATCH = GeneralContract.NO_BATCH;
             byte[] itemBytes = Neo.SmartContract.Framework.Helper.Serialize(item);
 
