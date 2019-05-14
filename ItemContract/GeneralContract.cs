@@ -205,14 +205,6 @@ namespace LordsContract
             else if (param.Equals("putItem"))
             {
                 Runtime.Log("Put Item on Storage");
-
-                // Invoker has permission to execute this function?
-                if (!Runtime.CheckWitness(GameOwner))
-                {
-                    Runtime.Log("Permission denied! Only game admin can add new items. Atleast for now!");
-                    return new BigInteger(0).AsByteArray();
-                }
-
                 if (args.Length != 7)
                 {
                     Runtime.Log("Invalid parameters."); // This function has 7 parameters
@@ -235,10 +227,10 @@ namespace LordsContract
 
                 item.STAT_VALUE = (BigInteger)args[5];      // ???
                 item.LEVEL = (BigInteger)args[6];           // ???
-                item.OWNER = new byte[] { };                // 20
+                //item.OWNER = new byte[] { };                // 20
                 item.XP = 0;                                // ???
                 //item.INITIAL = (BigInteger)args[7];         // 1
-                item.OWNER = ExecutionEngine.CallingScriptHash;
+                //item.OWNER = ExecutionEngine.CallingScriptHash;
                 item.BATCH = (byte)args[0];
 
                 Put.Item((BigInteger)args[1], item);

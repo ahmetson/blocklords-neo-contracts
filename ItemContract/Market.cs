@@ -210,7 +210,7 @@ namespace LordsContract
                 key = GeneralContract.ITEM_MAP + itemId.AsByteArray();
                 Item item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, key));
 
-                item.OWNER = ExecutionEngine.CallingScriptHash;
+                //item.OWNER = ExecutionEngine.CallingScriptHash;
 
                 byte[] itemBytes = Neo.SmartContract.Framework.Helper.Serialize(item);
                 Storage.Put(Storage.CurrentContext, key, itemBytes);

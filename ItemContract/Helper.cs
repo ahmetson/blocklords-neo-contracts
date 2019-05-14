@@ -7,69 +7,7 @@ namespace LordsContract
 {
     public static class Helper
     {
-        //------------------------------------------------------------------------------------
-        //
-        // functions for:
-        // GAME OBJECT CREATION
-        //
-        //------------------------------------------------------------------------------------
-        public static byte[] SerializeVerificationalData(Item item)
-        {
-            byte[] emptyField = new byte[] { 0 };
-
-            byte[] delimeter = new byte[] { 0, 0 };     // Two zeros mean delimeter of parameters
-
-            byte[] res;//item.LENGTH;
-
-            byte[] generation = new byte[] { 0 }; //BigInteger i = new BigInteger(generation.Length); lengths[0] = Int2byte(i);
-            byte[] level = new byte[] { 0 };// lengths[2] = Int2byte(new BigInteger(level.Length));
-            byte[] quality = new byte[] { 0 }; //lengths[3] = Int2byte(new BigInteger(quality.Length));
-            byte[] statType = new byte[] { 0 }; //lengths[4] = Int2byte(new BigInteger(statType.Length));
-            byte[] statValue = new byte[] { 0 }; //lengths[5] = Int2byte(new BigInteger(statValue.Length));
-            byte[] xp = new byte[] { 0 };
-
-            if (item.GENERATION != 0)
-            {
-                generation = item.GENERATION.AsByteArray();
-            }
-            if (item.LEVEL != 0)
-            {
-               level = item.LEVEL.AsByteArray();
-            }
-            if (item.QUALITY != 0)
-            {
-                quality = item.QUALITY.AsByteArray();
-            }
-            if (item.STAT_TYPE != 0)
-            {
-                statType = item.STAT_TYPE.AsByteArray();
-            }
-            if (item.STAT_VALUE != 0)
-            {
-                statValue = item.STAT_VALUE.AsByteArray();
-            }
-            if (item.XP != 0)
-            {
-                xp = item.XP.AsByteArray();
-            }
-
-            res = generation;
-            res = res.Concat(delimeter);
-            res = res.Concat(level);
-            res = res.Concat(delimeter);
-            res = res.Concat(level);
-            res = res.Concat(delimeter);
-            res = res.Concat(level);
-            res = res.Concat(delimeter);
-            res = res.Concat(level);
-            res = res.Concat(delimeter);
-            res = res.Concat(level);
-            res = res.Concat(delimeter);
-            res = res.Concat(item.OWNER);
-
-            return res;
-        }
-
+        
         public static bool IsItemAvailable(BigInteger itemId, byte batchType)
         {
             if (itemId == 0)
@@ -93,7 +31,7 @@ namespace LordsContract
         }
 
         
-        public static void ChangeItemOwner(BigInteger itemId, byte[] owner)
+        public static void ChangeItemOwner(BigInteger itemId, BigInteger heroId)
         {
             byte[] idBytes = itemId.AsByteArray();
             string key = GeneralContract.ITEM_MAP + idBytes;
@@ -101,7 +39,7 @@ namespace LordsContract
 
             Item item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(bytes);
 
-            item.OWNER = owner;
+            item.HERO = heroId;
             bytes = Neo.SmartContract.Framework.Helper.Serialize(item);
 
             Put.Item(itemId, item);
