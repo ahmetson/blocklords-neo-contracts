@@ -235,7 +235,7 @@ namespace LordsContract
                 //item.OWNER = ExecutionEngine.CallingScriptHash;
                 item.BATCH = (byte)args[0];
 
-                Put.Item((BigInteger)args[1], item);
+                Put.Item((BigInteger)args[1], item, false);
             }
             else if (param.Equals("putHero"))
             {
@@ -355,32 +355,21 @@ namespace LordsContract
                 hero3.LEADERSHIP = stats[1];
                 hero3.DEFENSE = stats[0];
 
-                return Put.Hero(heroId, hero3);
-
-                Runtime.Log("Finish");
-                return new BigInteger(0).AsByteArray();
-                // Items parameters must be included
-                // Items on blockchain must be on
-                // Items on blockchain should be on hero batch
-
-                Runtime.Log("Hero putting initialized");
-                Runtime.Notify(refererScriptHash);
-                Hero hero = new Hero();
-                hero.OWNER = ExecutionEngine.CallingScriptHash;
-                hero.INTELLIGENCE = (BigInteger)args[3];
-                hero.SPEED = (BigInteger)args[4];
-                hero.STRENGTH = (BigInteger)args[5];
-                hero.LEADERSHIP = (BigInteger)args[6];
-                hero.DEFENSE = (BigInteger)args[7];
+                BigInteger[] equipments = (BigInteger[])args[5];
+                if (equipments.Length != 5)
+                {
+                    Runtime.Log("EQUIPMENTS_NUMBER_SHOULD_BE_5");
+                    throw new Exception();
+                }
 
                 // Change Item Owners
-                Helper.ChangeItemOwner((BigInteger)args[7], hero.ID);
-                Helper.ChangeItemOwner((BigInteger)args[8], hero.ID);
-                Helper.ChangeItemOwner((BigInteger)args[9], hero.ID);
-                Helper.ChangeItemOwner((BigInteger)args[10], hero.ID);
-                Helper.ChangeItemOwner((BigInteger)args[11], hero.ID);
+                Helper.ChangeItemOwner(equipments[0], heroId);
+                Helper.ChangeItemOwner(equipments[1], heroId);
+                Helper.ChangeItemOwner(equipments[2], heroId);
+                Helper.ChangeItemOwner(equipments[3], heroId);
+                Helper.ChangeItemOwner(equipments[4], heroId);
 
-                return Put.Hero((BigInteger)args[0], hero);
+                return Put.Hero(heroId, hero3);
             }
             else if (param.Equals("marketAddItem"))
             {

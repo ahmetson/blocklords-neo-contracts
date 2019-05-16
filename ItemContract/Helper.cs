@@ -37,12 +37,25 @@ namespace LordsContract
             string key = GeneralContract.ITEM_MAP + idBytes;
             byte[] bytes = Storage.Get(Storage.CurrentContext, key);
 
+            if (bytes.Length <= 0)
+            {
+                Runtime.Log("ITEM_MUST_BE_ON_BLOCKCHAIN");
+                throw new System.Exception();
+            }
+
             Item item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(bytes);
+            if (item.BATCH != GeneralContract.HERO_CREATION_BATCH)
+            {
+                Runtime.Log("ITEM_MUST_BE_IN_HERO_CREATION_BATCH");
+                throw new System.Exception();
+            }
 
             item.HERO = heroId;
+            item.BATCH = GeneralContract.NO_BATCH;
             bytes = Neo.SmartContract.Framework.Helper.Serialize(item);
 
-            Put.Item(itemId, item);
+            //Put.Item(itemId, item, true);
+            Storage.Put(Storage.CurrentContext, key, bytes);
         }
 
         public static BigInteger GetByIntIndex(BigInteger[] arr, int arrLength, BigInteger index)

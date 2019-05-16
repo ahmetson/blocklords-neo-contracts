@@ -17,7 +17,7 @@ namespace LordsContract
         /// </summary>
         /// <param name="itemId">Id of Item that will be added onto storage</param>
         /// <param name="item">Item data in Structs.Item type</param>
-        public static byte[] Item(BigInteger itemId, Item item)
+        public static byte[] Item(BigInteger itemId, Item item, bool isInner)
         {
             if (itemId <= 0)
             {
@@ -25,7 +25,7 @@ namespace LordsContract
                 return new BigInteger(0).AsByteArray();
             }
             // Invoker has permission to execute this function?
-            if (!Runtime.CheckWitness(GeneralContract.GameOwner))
+            if (!isInner && !Runtime.CheckWitness(GeneralContract.GameOwner))
             {
                 Runtime.Log("Permission denied! Only game admin can use this function!");
                 return new BigInteger(0).AsByteArray();
