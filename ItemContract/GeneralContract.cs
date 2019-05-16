@@ -1,6 +1,7 @@
 using Neo.SmartContract.Framework;
 using Neo.SmartContract.Framework.Services.Neo;
 using Neo.SmartContract.Framework.Services.System;
+using System;
 using System.Numerics;
 
 namespace LordsContract
@@ -326,7 +327,8 @@ namespace LordsContract
                         Runtime.Log("HERO_CREATION_FEE_MUST_BE_INCLUDED");
                         throw new System.Exception();
                     }
-                } else
+                }
+                else
                 {
                     byte[] feeBytes = Storage.Get(Storage.CurrentContext, FEE_HERO_CREATION);
                     BigInteger fee = feeBytes.AsBigInteger();
@@ -338,13 +340,20 @@ namespace LordsContract
 
                 }
 
+                BigInteger[] stats = (BigInteger[])args[4]; 
+                if (stats.Length != 5)
+                {
+                    Runtime.Log("STATS_NUMBER_SHOULD_BE_5");
+                    throw new Exception();
+                }
+
                 Hero hero3 = new Hero();
                 hero3.OWNER = scriptHash;
-                hero3.INTELLIGENCE = 12;
-                hero3.SPEED = 12;
-                hero3.STRENGTH = 12;
-                hero3.LEADERSHIP = 12;
-                hero3.DEFENSE = 12;
+                hero3.INTELLIGENCE = stats[2];
+                hero3.SPEED = stats[3];
+                hero3.STRENGTH = stats[4];
+                hero3.LEADERSHIP = stats[1];
+                hero3.DEFENSE = stats[0];
 
                 return Put.Hero(heroId, hero3);
 
