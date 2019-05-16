@@ -58,6 +58,20 @@ namespace LordsContract
 
             return 0;
         }
+
+        public static byte[] GetHeroOwner(BigInteger heroId)
+        {
+            string key = GeneralContract.HERO_MAP + heroId.AsByteArray();
+            byte[] bytes = Storage.Get(Storage.CurrentContext, key);
+            if (bytes.Length <= 0)
+            {
+                Runtime.Log("HERO_IS_NOT_ON_BLOCKCHAIN");
+                throw new System.Exception("HERO_IS_NOT_ON_BLOCKCHAIN");
+            }
+            Hero hero = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(bytes);
+
+            return hero.OWNER;
+        }
     }
 }
 

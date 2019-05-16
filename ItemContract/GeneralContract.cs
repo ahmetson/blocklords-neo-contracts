@@ -205,7 +205,7 @@ namespace LordsContract
             else if (param.Equals("putItem"))
             {
                 Runtime.Log("Put Item on Storage");
-                if (args.Length != 7)
+                if (args.Length != 6)
                 {
                     Runtime.Log("Invalid parameters."); // This function has 7 parameters
                     return new BigInteger(0).AsByteArray();
@@ -238,25 +238,138 @@ namespace LordsContract
             }
             else if (param.Equals("putHero"))
             {
-                if (args.Length != 11)
+                //if (args.Length != 14)
+                //{
+                //Runtime.Log("Invalid amount parameters");
+                //return new BigInteger(0).AsByteArray();
+                //}
+                // If Referer ID is 0, do not check it.
+                // If referer id is not 0 but hero doesn't exist on Blockchain, throw an Error
+                // Check if there are referer fee existing
+
+                if (Runtime.CheckWitness(GameOwner))
                 {
-                    Runtime.Log("Invalid amount parameters");
-                    return new BigInteger(0).AsByteArray();
+                    Runtime.Log("GAME_OWNER_DO_NOT_ALLOWED_TO_PLAY_GAME");
+                    throw new System.Exception("GAME_OWNER_DO_NOT_ALLOWED_TO_PLAY_GAME");
+                }
+                else
+                {
+                    Runtime.Log("Smartcontract is called from average player!");
                 }
 
+                byte[] scriptHash = (byte[])args[0];
+                if (!Runtime.CheckWitness(scriptHash))
+                {
+                    Runtime.Log("MISSED_CALLER_REVERSED_SCRIPT_HASH");
+                    throw new System.Exception("MISSED_CALLER_REVERSED_SCRIPT_HASH");
+                }
+
+                BigInteger heroId = (BigInteger)args[1];
+                BigInteger refererHeroId = (BigInteger)args[2];
+                byte[] refererScriptHash = (byte[])args[3];
+
+                if (heroId <= 0)
+                {
+                    Runtime.Log("HERO_ID_MUST_BE_GREATER_THAN_0");
+                    throw new System.Exception("HERO_ID_MUST_BE_GREATER_THAN_0");
+                }
+
+                string heroKey = HERO_MAP + heroId.AsByteArray();
+                byte[] heroBytes = Storage.Get(Storage.CurrentContext, heroKey);
+                if (heroBytes.Length > 0)
+                {
+                    Runtime.Log("HERO_ON_BLOCKCHAIN_ALREADY");
+                    throw new System.Exception("HERO_ON_BLOCKCHAIN_ALREADY");
+                }
+
+                if (refererHeroId > 0)
+                {
+                    string refererHeroKey = HERO_MAP + refererHeroId.AsByteArray();
+                    byte[] refererHeroBytes = Storage.Get(Storage.CurrentContext, refererHeroKey);
+                    if (refererHeroBytes.Length <= 0)
+                    {
+                        Runtime.Log("REFERER_HERO_MUST_BE_ON_BLOCKCHAIN");
+                        throw new System.Exception("REFERER_HERO_MUST_BE_ON_BLOCKCHAIN");
+                    }
+
+                    Hero refererHero = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(refererHeroBytes);
+
+                    if (Runtime.CheckWitness(refererHero.OWNER))
+                    {
+                        Runtime.Log("CAN_NOT_REFER_BY_YOURSELF");
+                        throw new System.Exception("CAN_NOT_REFER_BY_YOURSELF");
+                    }
+
+                    if (refererHero.OWNER.AsBigInteger() != refererScriptHash.AsBigInteger())
+                    {
+                        Runtime.Log("INVALID_REFERER_SCRIPT_HASH_GIVEN");
+                        throw new System.Exception("INVALID_REFERER_SCRIPT_HASH_GIVEN");
+                    }
+
+                    byte[] feeBytes = Storage.Get(Storage.CurrentContext, FEE_HERO_CREATION);
+                    BigInteger fee = feeBytes.AsBigInteger();
+
+                    byte[] refererBytes = Storage.Get(Storage.CurrentContext, FEE_REFERAL);
+                    BigInteger refererFee = refererBytes.AsBigInteger();
+
+                    // Game owner's fee is less, if we have a referer
+                    fee = BigInteger.Subtract(fee, refererFee);
+
+                    if (!AttachmentExist(refererFee, refererHero.OWNER))
+                    {
+                        Runtime.Log("REFERER_FEE_MUST_BE_INCLUDED");
+                        throw new System.Exception();
+                    }
+
+                    if (!AttachmentExist(fee, GameOwner))
+                    {
+                        Runtime.Log("HERO_CREATION_FEE_MUST_BE_INCLUDED");
+                        throw new System.Exception();
+                    }
+                } else
+                {
+                    byte[] feeBytes = Storage.Get(Storage.CurrentContext, FEE_HERO_CREATION);
+                    BigInteger fee = feeBytes.AsBigInteger();
+                    if (!AttachmentExist(fee, GameOwner))
+                    {
+                        Runtime.Log("HERO_CREATION_FEE_MUST_BE_INCLUDED");
+                        throw new System.Exception();
+                    }
+
+                }
+
+                Hero hero3 = new Hero();
+                hero3.OWNER = scriptHash;
+                hero3.INTELLIGENCE = 12;
+                hero3.SPEED = 12;
+                hero3.STRENGTH = 12;
+                hero3.LEADERSHIP = 12;
+                hero3.DEFENSE = 12;
+
+                return Put.Hero(heroId, hero3);
+
+                Runtime.Log("Finish");
+                return new BigInteger(0).AsByteArray();
+                // Items parameters must be included
+                // Items on blockchain must be on
+                // Items on blockchain should be on hero batch
+
                 Runtime.Log("Hero putting initialized");
+                Runtime.Notify(refererScriptHash);
                 Hero hero = new Hero();
                 hero.OWNER = ExecutionEngine.CallingScriptHash;
-                //hero.TROOPS_CAP = (BigInteger)args[2];
-                hero.INTELLIGENCE = (BigInteger)args[1];
-                hero.SPEED = (BigInteger)args[2];
-                hero.STRENGTH = (BigInteger)args[3];
-                hero.LEADERSHIP = (BigInteger)args[4];
-                hero.DEFENSE = (BigInteger)args[5];
-                //hero.TX = ((Transaction)ExecutionEngine.ScriptContainer).Hash;
+                hero.INTELLIGENCE = (BigInteger)args[3];
+                hero.SPEED = (BigInteger)args[4];
+                hero.STRENGTH = (BigInteger)args[5];
+                hero.LEADERSHIP = (BigInteger)args[6];
+                hero.DEFENSE = (BigInteger)args[7];
 
-                hero.Equipments = new BigInteger[5] { (BigInteger)args[6], (BigInteger)args[7], (BigInteger)args[8], (BigInteger)args[9], (BigInteger)args[10] };
-                hero.EquipmentsAmount = 5;
+                // Change Item Owners
+                Helper.ChangeItemOwner((BigInteger)args[7], hero.ID);
+                Helper.ChangeItemOwner((BigInteger)args[8], hero.ID);
+                Helper.ChangeItemOwner((BigInteger)args[9], hero.ID);
+                Helper.ChangeItemOwner((BigInteger)args[10], hero.ID);
+                Helper.ChangeItemOwner((BigInteger)args[11], hero.ID);
 
                 return Put.Hero((BigInteger)args[0], hero);
             }
@@ -325,7 +438,7 @@ namespace LordsContract
         /// </summary>
         /// <param name="value">sum of GAS</param>
         /// <returns>true if attached, false if not</returns>
-        public static bool IsTransactionOutputExist(decimal value)
+        public static bool IsTransactionOutputExist(BigInteger value)
         {
             Transaction TX = (Transaction)ExecutionEngine.ScriptContainer;
             TransactionOutput[] outputs = TX.GetOutputs();
@@ -336,6 +449,26 @@ namespace LordsContract
                 if (output.ScriptHash.AsBigInteger() == GeneralContract.GameOwner.AsBigInteger())
                 {
                     Runtime.Notify("Game Owner received ", output.Value);
+                    if (output.Value == value)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        public static bool AttachmentExist(BigInteger value, byte[] receivingScriptHash)
+        {
+            Transaction TX = (Transaction)ExecutionEngine.ScriptContainer;
+            TransactionOutput[] outputs = TX.GetOutputs();
+            Runtime.Notify("Outputs are", outputs.Length);
+            foreach (var output in outputs)
+            {
+                // Game Developers got their fee?
+                if (output.ScriptHash.AsBigInteger() == receivingScriptHash.AsBigInteger())
+                {
                     if (output.Value == value)
                     {
                         return true;

@@ -109,13 +109,6 @@ namespace LordsContract
             byte[] bytes = Neo.SmartContract.Framework.Helper.Serialize(hero);
             Storage.Put(Storage.CurrentContext, key, bytes);
 
-            // Change Item Owners
-            Helper.ChangeItemOwner(hero.Equipments[0], hero.ID);
-            Helper.ChangeItemOwner(hero.Equipments[1], hero.ID);
-            Helper.ChangeItemOwner(hero.Equipments[2], hero.ID);
-            Helper.ChangeItemOwner(hero.Equipments[3], hero.ID);
-            Helper.ChangeItemOwner(hero.Equipments[4], hero.ID);
-
             Runtime.Log("Hero was created and Hero got his Items");
 
             return new BigInteger(1).AsByteArray();
