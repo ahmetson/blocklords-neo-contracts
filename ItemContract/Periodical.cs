@@ -159,11 +159,11 @@ namespace LordsContract
                 //string heroKey = GeneralContract.HERO_PREFIX + city.Hero.AsByteArray();
                 //Hero hero = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, key));
 
-                decimal percent = city.Coffer / 100;
-                decimal remainedValue = percent * 70;
+                //decimal percent = city.Coffer / 100;
+                //decimal remainedValue = percent * 70;
 
-                city.Coffer = remainedValue;
-                cityBytes = Neo.SmartContract.Framework.Helper.Serialize(city);
+                //city.Coffer = remainedValue;
+                //cityBytes = Neo.SmartContract.Framework.Helper.Serialize(city);
 
                 Storage.Put(Storage.CurrentContext, key, cityBytes);
 

@@ -158,6 +158,7 @@ namespace LordsContract
             city.Hero = 0;          // NPC owned
             city.ItemsCap = cap;
             city.ItemsOnMarket = 0;
+            city.Coffer = 0;
 
             cityBytes = Neo.SmartContract.Framework.Helper.Serialize(city);
 

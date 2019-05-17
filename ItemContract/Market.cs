@@ -33,7 +33,7 @@ namespace LordsContract
         public static byte[] AddItem(BigInteger itemId, MarketItemData item)
         {
             // Item should exist
-            string key = GeneralContract.ITEM_MAP + itemId.AsByteArray();
+            //string key = GeneralContract.ITEM_MAP + itemId.AsByteArray();
             //byte[] itemBytes1 = Storage.Get(Storage.CurrentContext, key);
             //if (itemBytes1.Length == 0)
             //{
@@ -59,7 +59,7 @@ namespace LordsContract
             // TODO check that city item cap is enough.
             // TODO update city market cap
 
-            key = GeneralContract.MARKET_MAP + itemId.AsByteArray();
+            string key = GeneralContract.MARKET_MAP + itemId.AsByteArray();
 
             // Serialize Custom Object `Item` into bytes, since Neo Storage doesn't support custom classes.
             byte[] itemBytes = Neo.SmartContract.Framework.Helper.Serialize(item);

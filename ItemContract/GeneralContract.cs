@@ -2,6 +2,7 @@ using Neo.SmartContract.Framework;
 using Neo.SmartContract.Framework.Services.Neo;
 using Neo.SmartContract.Framework.Services.System;
 using System;
+using System.ComponentModel;
 using System.Numerics;
 
 namespace LordsContract
@@ -81,8 +82,7 @@ namespace LordsContract
         /// </summary>
         public static readonly string PERCENTS_LORD = "\x25";
         /// <summary>
-        /// Storage Key of GAS in percents that seller of item will get from buyer.
-        /// As a base sum for calculation of GAS is percents that seller will get is used the market item price.
+        /// Storage Key of GAS in percents that city coffer will get for every added market item.
         /// </summary>
         public static readonly string PERCENTS_SELLER_COFFER = "\x26";
         /// <summary>
@@ -157,7 +157,10 @@ namespace LordsContract
         /// City type
         /// </summary>
         public static readonly BigInteger CITY_TYPE_BIG = 1, CITY_TYPE_MID = 2, CITY_TYPE_SMALL = 3;
-                
+
+        [DisplayName("heroCreation")]
+        public static event Action<BigInteger, byte[], BigInteger[], BigInteger[]> heroCreation;
+
         /// <summary>
         /// Entry point of smartcontract
         /// </summary>
@@ -233,7 +236,7 @@ namespace LordsContract
                 item.HERO = 0;
                 //item.INITIAL = (BigInteger)args[7];         // 1
                 //item.OWNER = ExecutionEngine.CallingScriptHash;
-                item.BATCH = (byte)args[0];
+                item.BATCH = (BigInteger)args[0];
 
                 Put.Item((BigInteger)args[1], item, false);
             }
@@ -369,38 +372,300 @@ namespace LordsContract
                 Helper.ChangeItemOwner(equipments[3], heroId);
                 Helper.ChangeItemOwner(equipments[4], heroId);
 
-                return Put.Hero(heroId, hero3);
+                byte[] result = Put.Hero(heroId, hero3);
+
+                heroCreation(heroId, scriptHash, stats, equipments);
+
+                /// Weird, command below fails, with Referer code.
+                /// Add fee
+                //Storage.Put(Storage.CurrentContext, scriptHash, heroId);
+
+                return result;
             }
             else if (param.Equals("marketAddItem"))
             {
-                // 1: Item ID, 2: Auction Duration, 3: Price, 4: City ID, 5: Seller ID
+                // 1: Hero Id, 2: Item Id, 3: Price, 4: Duration in seconds, 5: City ID
                 if (args.Length != 5)
                 {
                     Runtime.Log("Invalid parameters."); // This command has 5 parameters
                     return new BigInteger(0).AsByteArray();
                 }
 
+                BigInteger itemId = (BigInteger)args[0];
+                BigInteger price = (BigInteger)args[1];
+                BigInteger duration = (BigInteger)args[2];
+                BigInteger cityId = (BigInteger)args[3];
+
+                if (Runtime.CheckWitness(GameOwner))
+                {
+                    Runtime.Log("GAME_OWNER_CAN_NOT_PLAY_GAME");
+                    throw new Exception();
+                }
+
+                byte[] durationFeeBytes = new BigInteger(0).AsByteArray();
+                if (duration == duration8Hours)
+                {
+                    durationFeeBytes = Storage.Get(Storage.CurrentContext, FEE_8_HOURS);
+                }
+                else if (duration == duration12Hours)
+                {
+                    durationFeeBytes = Storage.Get(Storage.CurrentContext, FEE_12_HOURS);
+                }
+                else if (duration == duration24Hours)
+                {
+                    durationFeeBytes = Storage.Get(Storage.CurrentContext, FEE_24_HOURS);
+                }
+                else { 
+                    Runtime.Log("DURATION_MUST_BE_VALID_AND_IN_SECONDS");
+                    throw new Exception();
+                }
+
+                string cityKey = CITY_MAP + cityId.AsByteArray();
+                byte[] cityBytes = Storage.Get(Storage.CurrentContext, cityKey);
+                if (cityBytes.Length <= 0)
+                {
+                    Runtime.Log("CITY_MUST_BE_ON_BLOCKCHAIN");
+                    throw new Exception();
+                }
+
+                City city = (City)Neo.SmartContract.Framework.Helper.Deserialize(cityBytes);
+                
+                if (city.ItemsOnMarket >= city.ItemsCap)
+                {
+                    Runtime.Log("CITY_MARKET_MUST_BE_NON_FULL");
+                    throw new Exception();
+                }
+
+                byte[] itemIdBytes = itemId.AsByteArray();
+
+                string itemKey = ITEM_MAP + itemIdBytes;
+                byte[] itemBytes = Storage.Get(Storage.CurrentContext, itemKey);
+
+                if (itemBytes.Length <= 0)
+                {
+                    Runtime.Log("ITEM_MUST_BE_ON_BLOCKCHAIN");
+                    throw new Exception();
+                }
+
+                Item item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(itemBytes);
+                if (item.HERO <= 0)
+                {
+                    Runtime.Log("ITEM_HOLDING_HERO_MUST_ADD_ITEM_ONTO_MARKET");
+                    throw new Exception();
+                }
+
+                string heroKey = HERO_MAP + item.HERO.AsByteArray();
+                byte[] heroBytes = Storage.Get(Storage.CurrentContext, heroKey);
+                if (heroBytes.Length <= 0)
+                {
+                    Runtime.Log("ITEM_SELLER_MUST_BE_ON_BLOCKCHAIN");
+                    throw new Exception();
+                }
+
+                // Seller
+                Hero hero = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(heroBytes);
+                if (!Runtime.CheckWitness(hero.OWNER))
+                {
+                    Runtime.Log("ITEM_OWNER_MUST_SELL_ITEM");
+                    throw new Exception();
+                }
+
+                string marketItemKey = MARKET_MAP + itemId.AsByteArray();
+                byte[] marketItemBytes = Storage.Get(Storage.CurrentContext, marketItemKey);
+                if (marketItemBytes.Length > 0)
+                {
+                    MarketItemData oldMarketItem = (MarketItemData)Neo.SmartContract.Framework.Helper.Deserialize(marketItemBytes);
+                    if (oldMarketItem.Duration + oldMarketItem.CreatedTime <= Blockchain.GetBlock(Blockchain.GetHeight()).Timestamp)
+                    {
+                        Runtime.Log("ITEM_MUST_BE_NOT_ON_MARKET");
+                        throw new Exception();
+                    }
+                    else
+                    {
+                        Runtime.Notify("Market item duration is expired, duration and created time", oldMarketItem.Duration, oldMarketItem.CreatedTime);
+                    }
+                }
+
+                BigInteger durationFee = durationFeeBytes.AsBigInteger();
+                if (!AttachmentExist(durationFee, GameOwner))
+                {
+                    Runtime.Log("ATTACHMENT_FEE_MUST_BE_INCLUDED");
+                    throw new Exception();
+                }
+
                 MarketItemData marketItem = new MarketItemData();
-                marketItem.Duration = (BigInteger)args[1];
-                marketItem.Price = (BigInteger)args[2];
-                marketItem.City = (BigInteger)args[3];
-                marketItem.CreatedTime = Blockchain.GetBlock(Blockchain.GetHeight()).Timestamp;
-                marketItem.Seller = ExecutionEngine.CallingScriptHash;
+                marketItem.Duration = duration;
+                marketItem.Price = price;
+                marketItem.City = cityId;
+                marketItem.CreatedTime = Blockchain.GetHeader(Blockchain.GetHeight()).Timestamp;
+                marketItem.Seller = hero.OWNER;
 
-                Transaction TX = (Transaction)ExecutionEngine.ScriptContainer;
-                //marketItem.TX = TX.Hash;
+                Runtime.Notify("Price is ", marketItem.Price, "Incoming price", price);
 
-                Runtime.Notify("Price is ", marketItem.Price, "Incoming price", (BigInteger)args[2]);
+                marketItemBytes = Neo.SmartContract.Framework.Helper.Serialize(item);
 
-                return Market.AddItem((BigInteger)args[0], marketItem);
+                // Save on Storage!!!
+                Storage.Put(Storage.CurrentContext, marketItemKey, marketItemBytes);
+
+                // Increase coffer
+                byte[] purchaseCofferPercentsBytes = Storage.Get(Storage.CurrentContext, PERCENTS_SELLER_COFFER);
+                BigInteger purchaseCofferPercents = purchaseCofferPercentsBytes.AsBigInteger();
+                BigInteger sellFeePercents = BigInteger.Divide(durationFee, 100);
+                BigInteger purchaseCoffer = BigInteger.Multiply(purchaseCofferPercents, sellFeePercents);
+                city.Coffer = BigInteger.Add(city.Coffer, purchaseCoffer);
+                city.ItemsOnMarket = BigInteger.Add(city.ItemsOnMarket, 1);
+
+                //// Update City
+                cityBytes = Neo.SmartContract.Framework.Helper.Serialize(city);
+                Storage.Put(Storage.CurrentContext, cityKey, cityBytes);
+
+
+                Runtime.Log("Item added onto market");
+                return new BigInteger(0).AsByteArray();
             }
             else if (param.Equals("marketBuyItem"))
             {
-                // Check Does item exist
-                Runtime.Log("Calling Auction End");
+                BigInteger heroId = (BigInteger)args[0];
+                BigInteger itemId = (BigInteger)args[1];
 
-                //return new BigInteger(0).AsByteArray();
-                return Market.BuyItem((BigInteger)args[0]);
+                if (Runtime.CheckWitness(GameOwner))
+                {
+                    Runtime.Log("GAME_OWNER_CAN_NOT_PLAY_GAME");
+                    throw new Exception();
+                }
+
+                byte[] itemIdBytes = itemId.AsByteArray();
+
+                string itemKey = ITEM_MAP + itemIdBytes;
+                byte[] itemBytes = Storage.Get(Storage.CurrentContext, itemKey);
+
+                if (itemBytes.Length <= 0)
+                {
+                    Runtime.Log("ITEM_MUST_BE_ON_BLOCKCHAIN");
+                    throw new Exception();
+                }
+
+                Item item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(itemBytes);
+                if (item.HERO <= 0)
+                {
+                    Runtime.Log("ITEM_HOLDING_HERO_MUST_ADD_ITEM_ONTO_MARKET");
+                    throw new Exception();
+                }
+
+                string heroKey = HERO_MAP + item.HERO.AsByteArray();
+                byte[] heroBytes = Storage.Get(Storage.CurrentContext, heroKey);
+                if (heroBytes.Length <= 0)
+                {
+                    Runtime.Log("ITEM_SELLER_MUST_BE_ON_BLOCKCHAIN");
+                    throw new Exception();
+                }
+
+                // Seller
+                Hero hero = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(heroBytes);
+                if (Runtime.CheckWitness(hero.OWNER))
+                {
+                    Runtime.Log("ITEM_BUYER_MUST_BE_NOT_SELLER");
+                    throw new Exception();
+                }
+
+                string buyerHeroKey = HERO_MAP + heroId.AsByteArray();
+                byte[] buyerHeroBytes = Storage.Get(Storage.CurrentContext, buyerHeroKey);
+                if (buyerHeroBytes.Length <= 0)
+                {
+                    Runtime.Log("ITEM_BUYER_MUST_BE_ON_BLOCKCHAIN");
+                    throw new Exception();
+                }
+
+                Hero buyer = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(buyerHeroBytes);
+                if (!Runtime.CheckWitness(buyer.OWNER))
+                {
+                    Runtime.Log("BUYER_HERO_MUST_BE_VALID");
+                    throw new Exception();
+                }
+
+                string marketItemKey = MARKET_MAP + itemId.AsByteArray();
+                byte[] marketItemBytes = Storage.Get(Storage.CurrentContext, marketItemKey);
+                if (marketItemBytes.Length > 0)
+                {
+                    MarketItemData marketItem = (MarketItemData)Neo.SmartContract.Framework.Helper.Deserialize(marketItemBytes);
+                    if (marketItem.Duration + marketItem.CreatedTime >= Blockchain.GetBlock(Blockchain.GetHeight()).Timestamp)
+                    {
+                        Runtime.Log("ITEM_MUST_BE_ON_MARKET");
+                        throw new Exception();
+                    }
+                    else
+                    {
+                        Runtime.Notify("Market item duration is not expired, duration and created time", marketItem.Duration, marketItem.CreatedTime);
+
+                        /// original price based sum of money that buyer should attach to tx.
+                        byte[] totalPricePercentsBytes = Storage.Get(Storage.CurrentContext, PERCENTS_PURCHACE);
+                        BigInteger totalPricePercents = totalPricePercentsBytes.AsBigInteger();
+
+                        BigInteger pricePercent = BigInteger.Divide(marketItem.Price, 100);
+                        BigInteger totalPrice = BigInteger.Multiply(pricePercent, totalPricePercents);
+
+                        byte[] lordPercentsBytes = Storage.Get(Storage.CurrentContext, PERCENTS_LORD);
+                        BigInteger lordPercents = lordPercentsBytes.AsBigInteger();
+
+                        BigInteger gameOwnerExpectation = 0;
+                        BigInteger lordExpectation = 0;
+                        BigInteger sellerExpectation = marketItem.Price;
+
+                        string cityKey = CITY_MAP + marketItem.City.AsByteArray();
+                        City city = (City)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, cityKey));
+                        if (city.Hero > 0 && city.Hero == heroId)
+                        {
+                            sellerExpectation = 0;
+                            lordExpectation = BigInteger.Add(marketItem.Price, BigInteger.Multiply(pricePercent, lordPercents));
+                        }
+                        else if (city.Hero > 0)
+                        {
+                            lordExpectation = BigInteger.Multiply(pricePercent, lordPercents);
+                        }
+
+                        /// All additional GAS over original price goes to Game Owner
+                        gameOwnerExpectation = BigInteger.Subtract(totalPrice, marketItem.Price);
+                        if (city.Hero <= 0)
+                        { 
+                            // City lord exists? Game owner can not pretend to lord's fee!
+                            gameOwnerExpectation = BigInteger.Subtract(gameOwnerExpectation, BigInteger.Multiply(pricePercent, lordPercents));
+                        }
+
+                        if (sellerExpectation > 0 && !AttachmentExist(sellerExpectation, hero.OWNER))
+                        {
+                            Runtime.Log("ITEM_SELLER_MUST_GET_CORRECT_GAS_AMOUNT");
+                            throw new Exception();
+                        }
+
+                        if (city.Hero > 0)
+                        {
+                            string cityLordKey = HERO_MAP + city.Hero.AsByteArray();
+                            Hero cityLord = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, cityLordKey));
+                            if (lordExpectation > 0 && !AttachmentExist(lordExpectation, cityLord.OWNER))
+                            {
+                                Runtime.Log("CITY_LORD_MUST_GET_CORRECT_GAS_AMOUNT");
+                                throw new Exception();
+                            }
+                        }
+
+                        if (gameOwnerExpectation > 0 && !AttachmentExist(gameOwnerExpectation, GameOwner))
+                        {
+                            Runtime.Log("GAME_CREATERS_MUST_GET_CORRECT_GAS_AMOUNT");
+                            throw new Exception();
+                        }
+
+                        city.ItemsOnMarket = BigInteger.Subtract(city.ItemsOnMarket, 1);
+                        Storage.Put(Storage.CurrentContext, cityKey, Neo.SmartContract.Framework.Helper.Serialize(city));
+
+                        item.HERO = heroId;
+                        Storage.Put(Storage.CurrentContext, itemKey, Neo.SmartContract.Framework.Helper.Serialize(item));
+
+                        Storage.Delete(Storage.CurrentContext, marketItemKey);
+
+                        
+                    }
+                }
+                return new BigInteger(0).AsByteArray();
             }
             else if (param.Equals("marketDeleteItem"))
             {

@@ -188,13 +188,13 @@ namespace LordsContract
                 }
 
                 // Increase City Coffer
-                byte[] feePvcBytes = Storage.Get(Storage.CurrentContext, GeneralContract.FEE_PVC);
-                decimal feePvc = (decimal)(feePvcBytes.AsBigInteger());
-                byte[] cofferPercentsBytes = Storage.Get(Storage.CurrentContext, GeneralContract.PERCENTS_PVC_COFFER);
-                decimal cofferPercents = (decimal)(cofferPercentsBytes.AsBigInteger());
+                //byte[] feePvcBytes = Storage.Get(Storage.CurrentContext, GeneralContract.FEE_PVC);
+                //decimal feePvc = (decimal)(feePvcBytes.AsBigInteger());
+                //byte[] cofferPercentsBytes = Storage.Get(Storage.CurrentContext, GeneralContract.PERCENTS_PVC_COFFER);
+                //decimal cofferPercents = (decimal)(cofferPercentsBytes.AsBigInteger());
 
-                decimal attackFee = feePvc / 100 * cofferPercents;
-                city.Coffer = city.Coffer + attackFee;
+                //decimal attackFee = feePvc / 100 * cofferPercents;
+                //city.Coffer = city.Coffer + attackFee;
 
                 // Save City Information
                 byte[] cityBytes = Neo.SmartContract.Framework.Helper.Serialize(city);
