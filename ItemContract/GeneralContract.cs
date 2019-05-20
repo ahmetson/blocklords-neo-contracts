@@ -450,7 +450,7 @@ namespace LordsContract
                 Item item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(itemBytes);
                 if (item.HERO <= 0)
                 {
-                    Runtime.Log("ITEM_HOLDING_HERO_MUST_ADD_ITEM_ONTO_MARKET");
+                    Runtime.Log("ITEM_OWNING_HERO_MUST_ADD_ITEM_ONTO_MARKET");
                     throw new Exception();
                 }
 
@@ -475,9 +475,9 @@ namespace LordsContract
                 if (marketItemBytes.Length > 0)
                 {
                     MarketItemData oldMarketItem = (MarketItemData)Neo.SmartContract.Framework.Helper.Deserialize(marketItemBytes);
-                    if (oldMarketItem.Duration + oldMarketItem.CreatedTime <= Blockchain.GetBlock(Blockchain.GetHeight()).Timestamp)
+                    if (Blockchain.GetBlock(Blockchain.GetHeight()).Timestamp < oldMarketItem.Duration + oldMarketItem.CreatedTime)
                     {
-                        Runtime.Log("ITEM_MUST_BE_NOT_ON_MARKET");
+                        Runtime.Log("ITEM_MUST_BE_NOT_ON_MARKET_WITH_VALID_POST_DURATION");
                         throw new Exception();
                     }
                     else
@@ -502,7 +502,7 @@ namespace LordsContract
 
                 Runtime.Notify("Price is ", marketItem.Price, "Incoming price", price);
 
-                marketItemBytes = Neo.SmartContract.Framework.Helper.Serialize(item);
+                marketItemBytes = Neo.SmartContract.Framework.Helper.Serialize(marketItem);
 
                 // Save on Storage!!!
                 Storage.Put(Storage.CurrentContext, marketItemKey, marketItemBytes);
@@ -548,7 +548,7 @@ namespace LordsContract
                 Item item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(itemBytes);
                 if (item.HERO <= 0)
                 {
-                    Runtime.Log("ITEM_HOLDING_HERO_MUST_ADD_ITEM_ONTO_MARKET");
+                    Runtime.Log("ITEM_OWNING_HERO_MUST_ADD_ITEM_ONTO_MARKET");
                     throw new Exception();
                 }
 
@@ -588,9 +588,9 @@ namespace LordsContract
                 if (marketItemBytes.Length > 0)
                 {
                     MarketItemData marketItem = (MarketItemData)Neo.SmartContract.Framework.Helper.Deserialize(marketItemBytes);
-                    if (marketItem.Duration + marketItem.CreatedTime >= Blockchain.GetBlock(Blockchain.GetHeight()).Timestamp)
+                    if (Blockchain.GetHeader(Blockchain.GetHeight()).Timestamp > marketItem.Duration + marketItem.CreatedTime)
                     {
-                        Runtime.Log("ITEM_MUST_BE_ON_MARKET");
+                        Runtime.Log("ITEM_MUST_BE_EXPIRED");
                         throw new Exception();
                     }
                     else
@@ -625,7 +625,7 @@ namespace LordsContract
 
                         /// All additional GAS over original price goes to Game Owner
                         gameOwnerExpectation = BigInteger.Subtract(totalPrice, marketItem.Price);
-                        if (city.Hero <= 0)
+                        if (city.Hero > 0)
                         { 
                             // City lord exists? Game owner can not pretend to lord's fee!
                             gameOwnerExpectation = BigInteger.Subtract(gameOwnerExpectation, BigInteger.Multiply(pricePercent, lordPercents));
@@ -665,11 +665,62 @@ namespace LordsContract
                         
                     }
                 }
+                else
+                {
+                    Runtime.Log("ITEM_MUST_BE_ON_MARKET");
+                    throw new Exception();
+                }
                 return new BigInteger(0).AsByteArray();
             }
             else if (param.Equals("marketDeleteItem"))
             {
-                return Market.DeleteItem((BigInteger)args[0]);
+                Runtime.Log("Delete Market Item");
+
+                // Game Owner can not run this action
+                // Item should be on the blockchain
+                // Item should be owned by a tx invoker
+                // Item should be on the market.
+                // Item should be deleted
+                // City market size should be reduced
+                BigInteger itemId = (BigInteger)args[0];
+
+                if (Runtime.CheckWitness(GameOwner))
+                {
+                    Runtime.Log("GAME_OWNER_CAN_NOT_PLAY_GAME");
+                    throw new Exception();
+                }
+
+                string key = MARKET_MAP + itemId.AsByteArray();
+                byte[] mBytes = Storage.Get(Storage.CurrentContext, key);
+                if (mBytes.Length <= 0)
+                {
+                    Runtime.Notify("ITEM_MUST_BE_ON_MARKET");
+                    throw new Exception();
+                }
+
+                MarketItemData mItem = (MarketItemData)Neo.SmartContract.Framework.Helper.Deserialize(mBytes);
+
+                if (!Runtime.CheckWitness(mItem.Seller))
+                {
+                    Runtime.Notify("ITEM_OWNER_CAN_DELETE_ITEM_ON_MARKET");
+                    throw new Exception();
+                }
+
+                string cityKey = CITY_MAP + mItem.City.AsByteArray();
+                byte[] cityBytes = Storage.Get(Storage.CurrentContext, cityKey);
+
+                City city = (City)Neo.SmartContract.Framework.Helper.Deserialize(cityBytes);
+                city.ItemsOnMarket = BigInteger.Subtract(city.ItemsOnMarket, 1);
+
+                Storage.Delete(Storage.CurrentContext, key);
+
+                cityBytes = Neo.SmartContract.Framework.Helper.Serialize(city);
+                Storage.Put(Storage.CurrentContext, cityKey, cityBytes);
+
+                Runtime.Notify("Item was successfully deleted from Market!");
+                return new BigInteger(1).AsByteArray();
+
+                //return Market.DeleteItem((BigInteger)args[0]);
             }
             else if (param.Equals("logBattle"))
             {
