@@ -42,7 +42,7 @@ namespace LordsContract
             Runtime.Log("Before Random");
 
             // returned an index on list of available strongholds ids
-            BigInteger random = GeneralContract.GetRandomNumber((ulong)strongholdsAmount);
+            BigInteger random = GeneralContract.GetRandomNumber(0, (ulong)strongholdsAmount);
 
             //Runtime.Log("After random");
             //Storage.Put(Storage.CurrentContext, ExecutionEngine.CallingScriptHash, random);

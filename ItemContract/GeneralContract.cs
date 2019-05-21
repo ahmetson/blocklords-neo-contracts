@@ -110,6 +110,18 @@ namespace LordsContract
         /// Tracks cities amount on Contract
         /// </summary>
         public static readonly string AMOUNT_CITIES = "\x32";
+        /// <summary>
+        /// Storage prefix for bandit points
+        /// </summary>
+        public static readonly string BANDIT_CAMP_MAP = "\x33\x00";
+        /// <summary>
+        /// Battle Log Prefix
+        /// </summary>
+        public static readonly string BATTLE_LOG_MAP = "\x34\x00";
+        /// <summary>
+        /// Amount of Bandit camps
+        /// </summary>
+        public static readonly string AMOUNT_BATTLE_CAMP = "\x35";
 
 
         /// <summary>
@@ -158,6 +170,11 @@ namespace LordsContract
         /// </summary>
         public static readonly BigInteger CITY_TYPE_BIG = 1, CITY_TYPE_MID = 2, CITY_TYPE_SMALL = 3;
 
+        /// <summary>
+        /// Battle result type
+        /// </summary>
+        public static readonly BigInteger ATTACKER_WON = 1, ATTACKER_LOSE = 2;
+
         [DisplayName("heroCreation")]
         public static event Action<BigInteger, byte[], BigInteger[], BigInteger[]> heroCreation;
 
@@ -205,6 +222,26 @@ namespace LordsContract
 
                 //return new BigInteger(0).AsByteArray();
                 return Put.Stronghold((BigInteger)args[0]);
+            }
+            else if (param.Equals("putBanditCamp"))
+            {
+                //string key;
+                //Stronghold stronghold = new Stronghold();
+                //byte[] bytes;
+
+                //stronghold.Hero = (BigInteger)args[1];
+                //stronghold.ID = (BigInteger)args[0];
+                //stronghold.CreatedBlock = Blockchain.GetHeight();
+
+                //key = GeneralContract.STRONGHOLD_MAP + stronghold.ID.AsByteArray();
+                //bytes = Neo.SmartContract.Framework.Helper.Serialize(stronghold);
+
+                //Storage.Put(Storage.CurrentContext, key, bytes);
+
+                //Runtime.Log("Stronghold data has been inserted");
+
+                //return new BigInteger(0).AsByteArray();
+                return Put.BanditCamp((BigInteger)args[0]);
             }
             else if (param.Equals("putItem"))
             {
@@ -357,6 +394,7 @@ namespace LordsContract
                 hero3.STRENGTH = stats[4];
                 hero3.LEADERSHIP = stats[1];
                 hero3.DEFENSE = stats[0];
+                hero3.StrongholsAmount = 0;
 
                 BigInteger[] equipments = (BigInteger[])args[5];
                 if (equipments.Length != 5)
@@ -734,17 +772,29 @@ namespace LordsContract
         /// <summary>
         /// Retrieve pseudo random number
         /// </summary>
+        /// <param name="min">Min range</param>
         /// <param name="max">Max range</param>
         /// <returns>generated number</returns>
-        public static BigInteger GetRandomNumber(ulong max = 10)
+        public static BigInteger GetRandomNumber(BigInteger min, BigInteger max)
         {
-            Header header = Blockchain.GetHeader(Blockchain.GetHeight());
-            ulong randomNumber = header.ConsensusData;
-            ulong percentage = (randomNumber % max);
+            byte[] salt = Gen();
+            byte[] rand = Ran(salt, 6);
+            BigInteger randBig = rand.AsBigInteger();
 
-            BigInteger bigRandom = percentage;
+            return randBig % max;
+        }
 
-            return bigRandom;
+        public static byte[] Ran(byte[] salt, int size = 1)
+        {
+            Transaction tx = (Transaction)ExecutionEngine.ScriptContainer;
+            Header bl = Blockchain.GetHeader(Blockchain.GetHeight());
+            return Hash256(bl.Hash.Concat(tx.Hash).Concat(salt)).Range(0, size);
+        }
+
+        public static byte[] Gen(int size = 5)
+        {
+            byte[] zero = new byte[0];
+            return Ran(zero, size);
         }
 
         /// <summary>

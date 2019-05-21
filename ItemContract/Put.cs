@@ -171,7 +171,7 @@ namespace LordsContract
         }
 
         /// <summary>
-        /// Updates amount of cities on Blockchain. This method should be called after each city putting on Blockchain
+        /// Updates amount of cities on Blockchain. This method should be called after every city putting on Blockchain
         /// </summary>
         /// <returns></returns>
         public static void IncrementCityAmount()
@@ -232,12 +232,12 @@ namespace LordsContract
 
             IncrementStrongholdAmount();
 
-            Runtime.Notify("Stronghold Information was added successfully");
+            Runtime.Notify("Stronghold data was added successfully");
             return new BigInteger(1).AsByteArray();
         }
 
         /// <summary>
-        /// Updates amount of strongholds on Blockchain. This method should be called after each stronghold putting on Blockchain
+        /// Updates amount of strongholds on Blockchain. This method should be called after every stronghold putting on Blockchain
         /// </summary>
         /// <returns></returns>
         public static void IncrementStrongholdAmount()
@@ -256,6 +256,65 @@ namespace LordsContract
             amount = BigInteger.Add(amount, 1);
 
             Storage.Put(Storage.CurrentContext, GeneralContract.AMOUNT_STRONGHOLDS, amount);
+        }
+
+        /// <summary>
+        /// Method is invoked by Game Owner.
+        /// </summary>
+        /// <param name="id">stronghold ID</param>
+        /// <returns></returns>
+        public static byte[] BanditCamp(BigInteger id)
+        {
+            // Invoker has permission to execute this function?
+            if (!Runtime.CheckWitness(GeneralContract.GameOwner))
+            {
+                Runtime.Log("Permission denied! Only game admin can use this function!");
+                return new BigInteger(0).AsByteArray();
+            }
+
+            if (id <= 0)
+            {
+                Runtime.Log("Bandit Camp ID should be greater than 0!");
+                return new BigInteger(0).AsByteArray();
+            }
+
+            string key = GeneralContract.BANDIT_CAMP_MAP + id.AsByteArray();
+            byte[] bytes = Storage.Get(Storage.CurrentContext, key);
+
+            if (bytes.Length > 0)
+            {
+                Runtime.Log("Bandit camp is already on Blockchain");
+                return new BigInteger(0).AsByteArray();
+            }
+
+            Storage.Put(Storage.CurrentContext, key, 1);
+
+            IncrementBanditCampAmount();
+
+            Runtime.Notify("Bandit camp data was added successfully");
+            return new BigInteger(1).AsByteArray();
+        }
+
+        /// <summary>
+        /// Updates amount of bandit camps on Blockchain. This method should be called after every bandit camp putting on Blockchain
+        /// </summary>
+        /// <returns></returns>
+        public static void IncrementBanditCampAmount()
+        {
+            byte[] amountBytes = Storage.Get(Storage.CurrentContext, GeneralContract.AMOUNT_BATTLE_CAMP);
+            BigInteger amount = 0;
+            if (amountBytes.Length > 0)
+            {
+                amount = amountBytes.AsBigInteger();
+            }
+            else
+            {
+                amount = 0;
+            }
+
+            amount = BigInteger.Add(amount, 1);
+
+            Storage.Put(Storage.CurrentContext, GeneralContract.AMOUNT_BATTLE_CAMP, amount);
         }
     }
 }

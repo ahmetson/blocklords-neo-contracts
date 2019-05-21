@@ -64,6 +64,7 @@ namespace LordsContract
         public BigInteger EquipmentsAmount;     // Amount of items that are equipped on hero
         //public BigInteger Banned;             // Whether hero is banned by Game Admin for Cheating or not
         public BigInteger ID;
+        public BigInteger StrongholsAmount;
     }
 
     [Serializable]
