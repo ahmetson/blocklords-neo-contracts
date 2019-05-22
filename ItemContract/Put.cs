@@ -21,13 +21,11 @@ namespace LordsContract
         {
             if (itemId <= 0)
             {
-                Runtime.Log("Item ID must be greater than 0!");
                 return new BigInteger(0).AsByteArray();
             }
             // Invoker has permission to execute this function?
             if (!isInner && !Runtime.CheckWitness(GeneralContract.GameOwner))
             {
-                Runtime.Log("Permission denied! Only game admin can use this function!");
                 return new BigInteger(0).AsByteArray();
             }
             // Item should not exist.
@@ -37,7 +35,6 @@ namespace LordsContract
 
             if (bytes.Length > 0)
             {
-                Runtime.Log("Item should not exist on Blockchain!");
                 return new BigInteger(0).AsByteArray();
             }
 
@@ -46,7 +43,6 @@ namespace LordsContract
             
             Storage.Put(Storage.CurrentContext, key, bytes);
 
-            Runtime.Notify("Item was successfully put to storage");
             return new BigInteger(1).AsByteArray();
         }
 
@@ -58,58 +54,11 @@ namespace LordsContract
         /// <returns></returns>
         public static byte[] Hero(BigInteger heroId, Hero hero)
         {
-            // Hero should not exist
-            // Hero items should not belong to someone
-            // Hero items should not be on stronghold reward batch
-            // Player should not have have a created hero
-            // Attachment should be valid
-
-            //if (!Helper.IsItemAvailable(hero.Equipments[0], GeneralContract.HERO_CREATION_BATCH))
-            //{
-            //    Runtime.Notify("Item is not exist", hero.Equipments[0]);
-            //    return new BigInteger(0).AsByteArray();
-            //}
-            //if (!Helper.IsItemAvailable(hero.Equipments[1], GeneralContract.HERO_CREATION_BATCH))
-            //{
-            //    Runtime.Notify("Item is not exist", hero.Equipments[1]);
-            //    return new BigInteger(0).AsByteArray();
-            //}
-            //if (!Helper.IsItemAvailable(hero.Equipments[2], GeneralContract.HERO_CREATION_BATCH))
-            //{
-            //    Runtime.Notify("Item is not exist", hero.Equipments[2]);
-            //    return new BigInteger(0).AsByteArray();
-            //}
-            //if (!Helper.IsItemAvailable(hero.Equipments[3], GeneralContract.HERO_CREATION_BATCH))
-            //{
-            //    Runtime.Notify("Item is not exist", hero.Equipments[3]);
-            //    return new BigInteger(0).AsByteArray();
-            //}
-            //if (!Helper.IsItemAvailable(hero.Equipments[4], GeneralContract.HERO_CREATION_BATCH))
-            //{
-            //    Runtime.Notify("Item is not exist", hero.Equipments[4]);
-            //    return new BigInteger(0).AsByteArray();
-            //}
-
-            // Putting Hero costs 1 GAS for player.
-            // Check attachments to Transaction, where should be sended 1 GAS to Game Owner
-            //if (!GeneralContract.IsTransactionOutputExist(GeneralContract.heroCreationFee))
-            //{
-            //    Runtime.Log("Hero Creation Fee is not included! Hero wasn't put on Blockchain");
-            //    return new BigInteger(0).AsByteArray();
-            //}
-
-            if (heroId <= 0)
-            {
-                Runtime.Log("Please insert id higher than 0!");
-                return new BigInteger(0).AsByteArray();
-            }
 
             // Put Hero
             string key = GeneralContract.HERO_MAP + heroId.AsByteArray();
             byte[] bytes = Neo.SmartContract.Framework.Helper.Serialize(hero);
             Storage.Put(Storage.CurrentContext, key, bytes);
-
-            Runtime.Log("Hero was created and Hero got his Items");
 
             return new BigInteger(1).AsByteArray();
         }
@@ -127,18 +76,15 @@ namespace LordsContract
             // Invoker has permission to execute this function?
             if (!Runtime.CheckWitness(GeneralContract.GameOwner))
             {
-                Runtime.Log("Permission denied! Only game admin can use this function!");
                 return new BigInteger(0).AsByteArray();
             }
 
             if (id <= 0)
             {
-                Runtime.Log("City ID should be greater than 0!");
                 return new BigInteger(0).AsByteArray();
             }
             if (cap <= 0)
             {
-                Runtime.Log("City market cap must be greater than 0!");
                 return new BigInteger(0).AsByteArray();
             }
 
@@ -148,7 +94,6 @@ namespace LordsContract
 
             if (cityBytes.Length > 0)
             {
-                Runtime.Log("City is already on Blockchain");
                 return new BigInteger(0).AsByteArray();
             }
 
@@ -167,7 +112,6 @@ namespace LordsContract
 
             IncrementCityAmount();
 
-            Runtime.Notify("City Information was added successfully");
             return new BigInteger(1).AsByteArray();
         }
 
@@ -203,13 +147,11 @@ namespace LordsContract
             // Invoker has permission to execute this function?
             if (!Runtime.CheckWitness(GeneralContract.GameOwner))
             {
-                Runtime.Log("Permission denied! Only game admin can use this function!");
                 return new BigInteger(0).AsByteArray();
             }
 
             if (id <= 0)
             {
-                Runtime.Log("Stronghold ID should be greater than 0!");
                 return new BigInteger(0).AsByteArray();
             }
 
@@ -218,7 +160,6 @@ namespace LordsContract
 
             if (bytes.Length > 0)
             {
-                Runtime.Log("Stronghold is already on Blockchain");
                 return new BigInteger(0).AsByteArray();
             }
 
@@ -233,7 +174,6 @@ namespace LordsContract
 
             IncrementStrongholdAmount();
 
-            Runtime.Notify("Stronghold data was added successfully");
             return new BigInteger(1).AsByteArray();
         }
 
@@ -269,13 +209,11 @@ namespace LordsContract
             // Invoker has permission to execute this function?
             if (!Runtime.CheckWitness(GeneralContract.GameOwner))
             {
-                Runtime.Log("Permission denied! Only game admin can use this function!");
                 return new BigInteger(0).AsByteArray();
             }
 
             if (id <= 0)
             {
-                Runtime.Log("Bandit Camp ID should be greater than 0!");
                 return new BigInteger(0).AsByteArray();
             }
 
@@ -284,7 +222,6 @@ namespace LordsContract
 
             if (bytes.Length > 0)
             {
-                Runtime.Log("Bandit camp is already on Blockchain");
                 return new BigInteger(0).AsByteArray();
             }
 
@@ -292,7 +229,6 @@ namespace LordsContract
 
             IncrementBanditCampAmount();
 
-            Runtime.Notify("Bandit camp data was added successfully");
             return new BigInteger(1).AsByteArray();
         }
 

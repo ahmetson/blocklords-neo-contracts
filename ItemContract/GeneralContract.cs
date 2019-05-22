@@ -191,8 +191,8 @@ namespace LordsContract
         /// </summary>
         public static readonly BigInteger ATTACKER_WON = 1, ATTACKER_LOSE = 2;
 
-        [DisplayName("heroCreation")]
-        public static event Action<BigInteger, byte[], BigInteger[], BigInteger[]> heroCreation;
+        //[DisplayName("heroCreation")]
+        //public static event Action<BigInteger, byte[], BigInteger[], BigInteger[]> heroCreation;
 
         /// <summary>
         /// Entry point of smartcontract
@@ -204,13 +204,8 @@ namespace LordsContract
         {
             if (param.Equals("setSetting"))
             {
-                Runtime.Log("Set Settings");
                 return Settings.Set((string)args[0], (BigInteger)args[1]);
             }
-            //else if (param.Equals("cofferPayout"))
-            //{
-            //    return Periodical.CofferPayout();
-            //}
             else if (param.Equals("payoutCityCoffer"))
             {
                 return Periodical.PayCityCoffer((BigInteger)args[0]);
@@ -225,57 +220,24 @@ namespace LordsContract
             }
             else if (param.Equals("putStronghold"))
             {
-                //string key;
-                //Stronghold stronghold = new Stronghold();
-                //byte[] bytes;
-
-                //stronghold.Hero = (BigInteger)args[1];
-                //stronghold.ID = (BigInteger)args[0];
-                //stronghold.CreatedBlock = Blockchain.GetHeight();
-
-                //key = GeneralContract.STRONGHOLD_MAP + stronghold.ID.AsByteArray();
-                //bytes = Neo.SmartContract.Framework.Helper.Serialize(stronghold);
-
-                //Storage.Put(Storage.CurrentContext, key, bytes);
-
-                //Runtime.Log("Stronghold data has been inserted");
-
-                //return new BigInteger(0).AsByteArray();
+               
                 return Put.Stronghold((BigInteger)args[0]);
             }
             else if (param.Equals("putBanditCamp"))
             {
-                //string key;
-                //Stronghold stronghold = new Stronghold();
-                //byte[] bytes;
-
-                //stronghold.Hero = (BigInteger)args[1];
-                //stronghold.ID = (BigInteger)args[0];
-                //stronghold.CreatedBlock = Blockchain.GetHeight();
-
-                //key = GeneralContract.STRONGHOLD_MAP + stronghold.ID.AsByteArray();
-                //bytes = Neo.SmartContract.Framework.Helper.Serialize(stronghold);
-
-                //Storage.Put(Storage.CurrentContext, key, bytes);
-
-                //Runtime.Log("Stronghold data has been inserted");
-
-                //return new BigInteger(0).AsByteArray();
                 return Put.BanditCamp((BigInteger)args[0]);
             }
             else if (param.Equals("putItem"))
             {
-                Runtime.Log("Put Item on Storage");
                 if (args.Length != 6)
                 {
-                    Runtime.Log("Invalid parameters."); // This function has 7 parameters
+                    Runtime.Notify(1001); // This function has 7 parameters
                     return new BigInteger(0).AsByteArray();
                 }
 
                 // Item given type: for hero creation or drop for stronghold
                 if ((BigInteger)args[0] != STRONGHOLD_REWARD_BATCH && (BigInteger)args[0] != HERO_CREATION_BATCH)
                 {
-                    Runtime.Log("Given method of Item is invalid");
                     return new BigInteger(0).AsByteArray();
                 }
 
@@ -299,30 +261,18 @@ namespace LordsContract
             }
             else if (param.Equals("putHero"))
             {
-                //if (args.Length != 14)
-                //{
-                //Runtime.Log("Invalid amount parameters");
-                //return new BigInteger(0).AsByteArray();
-                //}
-                // If Referer ID is 0, do not check it.
-                // If referer id is not 0 but hero doesn't exist on Blockchain, throw an Error
-                // Check if there are referer fee existing
-
                 if (Runtime.CheckWitness(GameOwner))
                 {
-                    Runtime.Log("GAME_OWNER_DO_NOT_ALLOWED_TO_PLAY_GAME");
-                    throw new System.Exception("GAME_OWNER_DO_NOT_ALLOWED_TO_PLAY_GAME");
+                    Runtime.Notify(1);
+                    throw new Exception();
                 }
-                else
-                {
-                    Runtime.Log("Smartcontract is called from average player!");
-                }
+
 
                 byte[] scriptHash = (byte[])args[0];
                 if (!Runtime.CheckWitness(scriptHash))
                 {
-                    Runtime.Log("MISSED_CALLER_REVERSED_SCRIPT_HASH");
-                    throw new System.Exception("MISSED_CALLER_REVERSED_SCRIPT_HASH");
+                    Runtime.Notify(4002);
+                    throw new Exception();
                 }
 
                 BigInteger heroId = (BigInteger)args[1];
@@ -331,16 +281,16 @@ namespace LordsContract
 
                 if (heroId <= 0)
                 {
-                    Runtime.Log("HERO_ID_MUST_BE_GREATER_THAN_0");
-                    throw new System.Exception("HERO_ID_MUST_BE_GREATER_THAN_0");
+                    Runtime.Notify(4003);
+                    throw new Exception();
                 }
 
                 string heroKey = HERO_MAP + heroId.AsByteArray();
                 byte[] heroBytes = Storage.Get(Storage.CurrentContext, heroKey);
                 if (heroBytes.Length > 0)
                 {
-                    Runtime.Log("HERO_ON_BLOCKCHAIN_ALREADY");
-                    throw new System.Exception("HERO_ON_BLOCKCHAIN_ALREADY");
+                    Runtime.Notify(4004);
+                    throw new Exception();
                 }
 
                 if (refererHeroId > 0)
@@ -349,22 +299,22 @@ namespace LordsContract
                     byte[] refererHeroBytes = Storage.Get(Storage.CurrentContext, refererHeroKey);
                     if (refererHeroBytes.Length <= 0)
                     {
-                        Runtime.Log("REFERER_HERO_MUST_BE_ON_BLOCKCHAIN");
-                        throw new System.Exception("REFERER_HERO_MUST_BE_ON_BLOCKCHAIN");
+                        Runtime.Notify(4005);
+                        throw new Exception();
                     }
 
                     Hero refererHero = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(refererHeroBytes);
 
                     if (Runtime.CheckWitness(refererHero.OWNER))
                     {
-                        Runtime.Log("CAN_NOT_REFER_BY_YOURSELF");
-                        throw new System.Exception("CAN_NOT_REFER_BY_YOURSELF");
+                        Runtime.Notify(4006);
+                        throw new Exception();
                     }
 
                     if (refererHero.OWNER.AsBigInteger() != refererScriptHash.AsBigInteger())
                     {
-                        Runtime.Log("INVALID_REFERER_SCRIPT_HASH_GIVEN");
-                        throw new System.Exception("INVALID_REFERER_SCRIPT_HASH_GIVEN");
+                        Runtime.Notify(4007);
+                        throw new Exception();
                     }
 
                     byte[] feeBytes = Storage.Get(Storage.CurrentContext, FEE_HERO_CREATION);
@@ -378,14 +328,14 @@ namespace LordsContract
 
                     if (!AttachmentExist(refererFee, refererHero.OWNER))
                     {
-                        Runtime.Log("REFERER_FEE_MUST_BE_INCLUDED");
-                        throw new System.Exception();
+                        Runtime.Notify(4008);
+                        throw new Exception();
                     }
 
                     if (!AttachmentExist(fee, GameOwner))
                     {
-                        Runtime.Log("HERO_CREATION_FEE_MUST_BE_INCLUDED");
-                        throw new System.Exception();
+                        Runtime.Notify(4009);
+                        throw new Exception();
                     }
                 }
                 else
@@ -394,8 +344,8 @@ namespace LordsContract
                     BigInteger fee = feeBytes.AsBigInteger();
                     if (!AttachmentExist(fee, GameOwner))
                     {
-                        Runtime.Log("HERO_CREATION_FEE_MUST_BE_INCLUDED");
-                        throw new System.Exception();
+                        Runtime.Notify(4009);
+                        throw new Exception();
                     }
 
                 }
@@ -403,7 +353,7 @@ namespace LordsContract
                 BigInteger[] stats = (BigInteger[])args[4]; 
                 if (stats.Length != 5)
                 {
-                    Runtime.Log("STATS_NUMBER_SHOULD_BE_5");
+                    Runtime.Notify(4010);
                     throw new Exception();
                 }
 
@@ -419,7 +369,7 @@ namespace LordsContract
                 BigInteger[] equipments = (BigInteger[])args[5];
                 if (equipments.Length != 5)
                 {
-                    Runtime.Log("EQUIPMENTS_NUMBER_SHOULD_BE_5");
+                    Runtime.Notify(4011);
                     throw new Exception();
                 }
 
@@ -432,12 +382,10 @@ namespace LordsContract
 
                 byte[] result = Put.Hero(heroId, hero3);
 
-                heroCreation(heroId, scriptHash, stats, equipments);
+                //heroCreation(heroId, scriptHash, stats, equipments);
 
-                /// Weird, command below fails, with Referer code.
-                /// Add fee
-                //Storage.Put(Storage.CurrentContext, scriptHash, heroId);
-
+                Runtime.Notify(4000, scriptHash, heroId, refererHeroId, refererScriptHash, stats, equipments);
+                
                 return result;
             }
             else if (param.Equals("marketAddItem"))
@@ -445,7 +393,7 @@ namespace LordsContract
                 // 1: Hero Id, 2: Item Id, 3: Price, 4: Duration in seconds, 5: City ID
                 if (args.Length != 5)
                 {
-                    Runtime.Log("Invalid parameters."); // This command has 5 parameters
+                    Runtime.Notify(1001);
                     return new BigInteger(0).AsByteArray();
                 }
 
@@ -456,7 +404,7 @@ namespace LordsContract
 
                 if (Runtime.CheckWitness(GameOwner))
                 {
-                    Runtime.Log("GAME_OWNER_CAN_NOT_PLAY_GAME");
+                    Runtime.Notify(1);
                     throw new Exception();
                 }
 
@@ -474,7 +422,7 @@ namespace LordsContract
                     durationFeeBytes = Storage.Get(Storage.CurrentContext, FEE_24_HOURS);
                 }
                 else { 
-                    Runtime.Log("DURATION_MUST_BE_VALID_AND_IN_SECONDS");
+                    Runtime.Notify(1002);
                     throw new Exception();
                 }
 
@@ -482,7 +430,7 @@ namespace LordsContract
                 byte[] cityBytes = Storage.Get(Storage.CurrentContext, cityKey);
                 if (cityBytes.Length <= 0)
                 {
-                    Runtime.Log("CITY_MUST_BE_ON_BLOCKCHAIN");
+                    Runtime.Notify(1003);
                     throw new Exception();
                 }
 
@@ -490,7 +438,7 @@ namespace LordsContract
                 
                 if (city.ItemsOnMarket >= city.ItemsCap)
                 {
-                    Runtime.Log("CITY_MARKET_MUST_BE_NON_FULL");
+                    Runtime.Notify(1004);
                     throw new Exception();
                 }
 
@@ -501,14 +449,14 @@ namespace LordsContract
 
                 if (itemBytes.Length <= 0)
                 {
-                    Runtime.Log("ITEM_MUST_BE_ON_BLOCKCHAIN");
+                    Runtime.Notify(1005);
                     throw new Exception();
                 }
 
                 Item item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(itemBytes);
                 if (item.HERO <= 0)
                 {
-                    Runtime.Log("ITEM_OWNING_HERO_MUST_ADD_ITEM_ONTO_MARKET");
+                    Runtime.Notify(1006);
                     throw new Exception();
                 }
 
@@ -516,7 +464,7 @@ namespace LordsContract
                 byte[] heroBytes = Storage.Get(Storage.CurrentContext, heroKey);
                 if (heroBytes.Length <= 0)
                 {
-                    Runtime.Log("ITEM_SELLER_MUST_BE_ON_BLOCKCHAIN");
+                    Runtime.Notify(1007);
                     throw new Exception();
                 }
 
@@ -524,7 +472,7 @@ namespace LordsContract
                 Hero hero = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(heroBytes);
                 if (!Runtime.CheckWitness(hero.OWNER))
                 {
-                    Runtime.Log("ITEM_OWNER_MUST_SELL_ITEM");
+                    Runtime.Notify(1008);
                     throw new Exception();
                 }
 
@@ -535,19 +483,16 @@ namespace LordsContract
                     MarketItemData oldMarketItem = (MarketItemData)Neo.SmartContract.Framework.Helper.Deserialize(marketItemBytes);
                     if (Blockchain.GetBlock(Blockchain.GetHeight()).Timestamp < oldMarketItem.Duration + oldMarketItem.CreatedTime)
                     {
-                        Runtime.Log("ITEM_MUST_BE_NOT_ON_MARKET_WITH_VALID_POST_DURATION");
+                        Runtime.Notify(1009);
                         throw new Exception();
                     }
-                    else
-                    {
-                        Runtime.Notify("Market item duration is expired, duration and created time", oldMarketItem.Duration, oldMarketItem.CreatedTime);
-                    }
+
                 }
 
                 BigInteger durationFee = durationFeeBytes.AsBigInteger();
                 if (!AttachmentExist(durationFee, GameOwner))
                 {
-                    Runtime.Log("ATTACHMENT_FEE_MUST_BE_INCLUDED");
+                    Runtime.Notify(1010);
                     throw new Exception();
                 }
 
@@ -557,8 +502,6 @@ namespace LordsContract
                 marketItem.City = cityId;
                 marketItem.CreatedTime = Blockchain.GetHeader(Blockchain.GetHeight()).Timestamp;
                 marketItem.Seller = hero.OWNER;
-
-                Runtime.Notify("Price is ", marketItem.Price, "Incoming price", price);
 
                 marketItemBytes = Neo.SmartContract.Framework.Helper.Serialize(marketItem);
 
@@ -577,8 +520,7 @@ namespace LordsContract
                 cityBytes = Neo.SmartContract.Framework.Helper.Serialize(city);
                 Storage.Put(Storage.CurrentContext, cityKey, cityBytes);
 
-
-                Runtime.Log("Item added onto market");
+                Runtime.Notify(1000, itemId, price, duration, cityId);
                 return new BigInteger(0).AsByteArray();
             }
             else if (param.Equals("marketBuyItem"))
@@ -588,7 +530,7 @@ namespace LordsContract
 
                 if (Runtime.CheckWitness(GameOwner))
                 {
-                    Runtime.Log("GAME_OWNER_CAN_NOT_PLAY_GAME");
+                    Runtime.Notify(1);
                     throw new Exception();
                 }
 
@@ -599,14 +541,14 @@ namespace LordsContract
 
                 if (itemBytes.Length <= 0)
                 {
-                    Runtime.Log("ITEM_MUST_BE_ON_BLOCKCHAIN");
+                    Runtime.Notify(1005);
                     throw new Exception();
                 }
 
                 Item item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(itemBytes);
                 if (item.HERO <= 0)
                 {
-                    Runtime.Log("ITEM_OWNING_HERO_MUST_ADD_ITEM_ONTO_MARKET");
+                    Runtime.Notify(1006);
                     throw new Exception();
                 }
 
@@ -614,7 +556,7 @@ namespace LordsContract
                 byte[] heroBytes = Storage.Get(Storage.CurrentContext, heroKey);
                 if (heroBytes.Length <= 0)
                 {
-                    Runtime.Log("ITEM_SELLER_MUST_BE_ON_BLOCKCHAIN");
+                    Runtime.Notify(1007);
                     throw new Exception();
                 }
 
@@ -622,7 +564,7 @@ namespace LordsContract
                 Hero hero = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(heroBytes);
                 if (Runtime.CheckWitness(hero.OWNER))
                 {
-                    Runtime.Log("ITEM_BUYER_MUST_BE_NOT_SELLER");
+                    Runtime.Notify(2004);
                     throw new Exception();
                 }
 
@@ -630,14 +572,14 @@ namespace LordsContract
                 byte[] buyerHeroBytes = Storage.Get(Storage.CurrentContext, buyerHeroKey);
                 if (buyerHeroBytes.Length <= 0)
                 {
-                    Runtime.Log("ITEM_BUYER_MUST_BE_ON_BLOCKCHAIN");
+                    Runtime.Notify(2005);
                     throw new Exception();
                 }
 
                 Hero buyer = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(buyerHeroBytes);
                 if (!Runtime.CheckWitness(buyer.OWNER))
                 {
-                    Runtime.Log("BUYER_HERO_MUST_BE_VALID");
+                    Runtime.Notify(2006);
                     throw new Exception();
                 }
 
@@ -648,13 +590,11 @@ namespace LordsContract
                     MarketItemData marketItem = (MarketItemData)Neo.SmartContract.Framework.Helper.Deserialize(marketItemBytes);
                     if (Blockchain.GetHeader(Blockchain.GetHeight()).Timestamp > marketItem.Duration + marketItem.CreatedTime)
                     {
-                        Runtime.Log("ITEM_MUST_BE_EXPIRED");
+                        Runtime.Notify(2007);
                         throw new Exception();
                     }
                     else
                     {
-                        Runtime.Notify("Market item duration is not expired, duration and created time", marketItem.Duration, marketItem.CreatedTime);
-
                         /// original price based sum of money that buyer should attach to tx.
                         byte[] totalPricePercentsBytes = Storage.Get(Storage.CurrentContext, PERCENTS_PURCHACE);
                         BigInteger totalPricePercents = totalPricePercentsBytes.AsBigInteger();
@@ -691,7 +631,7 @@ namespace LordsContract
 
                         if (sellerExpectation > 0 && !AttachmentExist(sellerExpectation, hero.OWNER))
                         {
-                            Runtime.Log("ITEM_SELLER_MUST_GET_CORRECT_GAS_AMOUNT");
+                            Runtime.Notify(2008);
                             throw new Exception();
                         }
 
@@ -701,14 +641,14 @@ namespace LordsContract
                             Hero cityLord = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, cityLordKey));
                             if (lordExpectation > 0 && !AttachmentExist(lordExpectation, cityLord.OWNER))
                             {
-                                Runtime.Log("CITY_LORD_MUST_GET_CORRECT_GAS_AMOUNT");
+                                Runtime.Notify(2009);
                                 throw new Exception();
                             }
                         }
 
                         if (gameOwnerExpectation > 0 && !AttachmentExist(gameOwnerExpectation, GameOwner))
                         {
-                            Runtime.Log("GAME_CREATERS_MUST_GET_CORRECT_GAS_AMOUNT");
+                            Runtime.Notify(2010);
                             throw new Exception();
                         }
 
@@ -720,31 +660,23 @@ namespace LordsContract
 
                         Storage.Delete(Storage.CurrentContext, marketItemKey);
 
-                        
+                        Runtime.Notify(2000, itemId, heroId, sellerExpectation, lordExpectation, gameOwnerExpectation);
                     }
                 }
                 else
                 {
-                    Runtime.Log("ITEM_MUST_BE_ON_MARKET");
+                    Runtime.Notify(2000);
                     throw new Exception();
                 }
                 return new BigInteger(0).AsByteArray();
             }
             else if (param.Equals("marketDeleteItem"))
             {
-                Runtime.Log("Delete Market Item");
-
-                // Game Owner can not run this action
-                // Item should be on the blockchain
-                // Item should be owned by a tx invoker
-                // Item should be on the market.
-                // Item should be deleted
-                // City market size should be reduced
                 BigInteger itemId = (BigInteger)args[0];
 
                 if (Runtime.CheckWitness(GameOwner))
                 {
-                    Runtime.Log("GAME_OWNER_CAN_NOT_PLAY_GAME");
+                    Runtime.Notify(1);
                     throw new Exception();
                 }
 
@@ -752,7 +684,7 @@ namespace LordsContract
                 byte[] mBytes = Storage.Get(Storage.CurrentContext, key);
                 if (mBytes.Length <= 0)
                 {
-                    Runtime.Notify("ITEM_MUST_BE_ON_MARKET");
+                    Runtime.Notify(2011);
                     throw new Exception();
                 }
 
@@ -760,7 +692,7 @@ namespace LordsContract
 
                 if (!Runtime.CheckWitness(mItem.Seller))
                 {
-                    Runtime.Notify("ITEM_OWNER_CAN_DELETE_ITEM_ON_MARKET");
+                    Runtime.Notify(3002);
                     throw new Exception();
                 }
 
@@ -775,17 +707,14 @@ namespace LordsContract
                 cityBytes = Neo.SmartContract.Framework.Helper.Serialize(city);
                 Storage.Put(Storage.CurrentContext, cityKey, cityBytes);
 
-                Runtime.Notify("Item was successfully deleted from Market!");
+                Runtime.Notify(3000, itemId);
                 return new BigInteger(1).AsByteArray();
-
-                //return Market.DeleteItem((BigInteger)args[0]);
             }
             else if (param.Equals("logBattle"))
             {
                 return Log.Battle(args);
             }
 
-            //Runtime.Notify("Incorrect Parameter");
             return new BigInteger(1).AsByteArray();
         }
 
@@ -826,13 +755,13 @@ namespace LordsContract
         {
             Transaction TX = (Transaction)ExecutionEngine.ScriptContainer;
             TransactionOutput[] outputs = TX.GetOutputs();
-            Runtime.Notify("Outputs are", outputs.Length);
+
             foreach (var output in outputs)
             {
                 // Game Developers got their fee?
                 if (output.ScriptHash.AsBigInteger() == GeneralContract.GameOwner.AsBigInteger())
                 {
-                    Runtime.Notify("Game Owner received ", output.Value);
+
                     if (output.Value == value)
                     {
                         return true;
@@ -847,7 +776,7 @@ namespace LordsContract
         {
             Transaction TX = (Transaction)ExecutionEngine.ScriptContainer;
             TransactionOutput[] outputs = TX.GetOutputs();
-            Runtime.Notify("Outputs are", outputs.Length);
+
             foreach (var output in outputs)
             {
                 // Game Developers got their fee?

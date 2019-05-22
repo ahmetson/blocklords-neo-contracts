@@ -39,14 +39,14 @@ namespace LordsContract
 
             if (bytes.Length <= 0)
             {
-                Runtime.Log("ITEM_MUST_BE_ON_BLOCKCHAIN");
+                Runtime.Notify(1005);
                 throw new System.Exception();
             }
 
             Item item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(bytes);
             if (item.BATCH != GeneralContract.HERO_CREATION_BATCH)
             {
-                Runtime.Log("ITEM_MUST_BE_IN_HERO_CREATION_BATCH");
+                Runtime.Notify(4012);
                 throw new System.Exception();
             }
 
@@ -72,19 +72,6 @@ namespace LordsContract
             return 0;
         }
 
-        public static byte[] GetHeroOwner(BigInteger heroId)
-        {
-            string key = GeneralContract.HERO_MAP + heroId.AsByteArray();
-            byte[] bytes = Storage.Get(Storage.CurrentContext, key);
-            if (bytes.Length <= 0)
-            {
-                Runtime.Log("HERO_IS_NOT_ON_BLOCKCHAIN");
-                throw new System.Exception("HERO_IS_NOT_ON_BLOCKCHAIN");
-            }
-            Hero hero = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(bytes);
-
-            return hero.OWNER;
-        }
     }
 }
 

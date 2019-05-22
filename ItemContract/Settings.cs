@@ -19,7 +19,6 @@ namespace LordsContract
         {
             if (key.Equals(GeneralContract.FEE_HERO_CREATION))
             {
-                Runtime.Log("Hero Creation");
                 Storage.Put( Storage.CurrentContext, GeneralContract.FEE_HERO_CREATION, value);
             }
             else if (key.Equals(GeneralContract.FEE_REFERAL))
@@ -95,7 +94,6 @@ namespace LordsContract
             }
             else
             {
-                Runtime.Log("Failed to set setting");
                 return new BigInteger(0).AsByteArray();
             }
 
