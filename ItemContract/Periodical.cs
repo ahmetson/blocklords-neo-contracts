@@ -15,6 +15,25 @@ namespace LordsContract
             //  TODO check block interval
             // TODO check that item is from Batch
 
+            DropData strongholdReward = new DropData();
+            strongholdReward.Block = 0;
+            strongholdReward.StrongholdId = 0;
+
+            byte[] lastStrongholdRewardBytes = Storage.Get(Storage.CurrentContext, GeneralContract.STRONGHOLD_REWARD);
+            if (lastStrongholdRewardBytes.Length > 0)
+            {
+                strongholdReward = (DropData)Neo.SmartContract.Framework.Helper.Deserialize(lastStrongholdRewardBytes);
+            }
+
+            byte[] rewardIntervalBytes = Storage.Get(Storage.CurrentContext, GeneralContract.INTERVAL_STRONGHOLD_REWARD);
+            BigInteger rewardInterval = rewardIntervalBytes.AsBigInteger();
+
+            if (Blockchain.GetHeight() <= rewardInterval + strongholdReward.Block)
+            {
+                Runtime.Log("PAUSE_INTERVAL_MUST_BE_PASSED");
+                throw new System.Exception();
+            }
+
             byte[] strongholdsAmountBytes = Storage.Get(Storage.CurrentContext, GeneralContract.AMOUNT_STRONGHOLDS);
             BigInteger strongholdsAmount = strongholdsAmountBytes.AsBigInteger();
 
@@ -27,71 +46,72 @@ namespace LordsContract
             // Check that Item has no owner and that is is on stronghold reward batch
             string itemKey = GeneralContract.ITEM_MAP + itemId.AsByteArray();
             bytes = Storage.Get(Storage.CurrentContext, itemKey);
-            //if (bytes.Length < 1)
-            //{
-            //    Runtime.Log("Item doesn't exist on Blockchain!");
-            //    return new BigInteger(1).AsByteArray();
-            //}
+            if (bytes.Length < 1)
+            {
+                Runtime.Log("ITEM_MUST_BE_ON_BLOCKCHAIN");
+                throw new System.Exception();
+            }
             Item item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(bytes);
-            //if (item.BATCH != GeneralContract.STRONGHOLD_REWARD_BATCH)
-            //{
-            //    Runtime.Log("Item is not allowed to be dropped. Only Stronghold Batch items are allowed");
-            //    return new BigInteger(1).AsByteArray();
-            //}
-
-            Runtime.Log("Before Random");
+            if (item.BATCH != GeneralContract.STRONGHOLD_REWARD_BATCH)
+            {
+                Runtime.Log("ITEM_BATCH_MUST_BE_FOR_STRONGHOLD_REWARD");
+                throw new System.Exception();
+            }
 
             // returned an index on list of available strongholds ids
             BigInteger random = GeneralContract.GetRandomNumber(0, (ulong)strongholdsAmount);
-
-            //Runtime.Log("After random");
-            //Storage.Put(Storage.CurrentContext, ExecutionEngine.CallingScriptHash, random);
-            Runtime.Notify("Random int ", random);
-
-            //random = Helper.GetByIntIndex(occupied, occupiedAmount, random);
-            //random = occupied[(int)random - 1]; // from index get stronghold id
-
-            Runtime.Log("Random stronghold");
-            //Storage.Put(Storage.CurrentContext, ExecutionEngine.CallingScriptHash, random);
+            random = BigInteger.Add(random, 1);
 
             key = GeneralContract.STRONGHOLD_MAP + random.AsByteArray();
             bytes = Storage.Get(Storage.CurrentContext, key);
-            if (bytes.Length < 1)
+            if (bytes.Length <= 0)
             {
                 // Delete Item
                 Storage.Delete(Storage.CurrentContext, itemKey);
-                Runtime.Log("Storage was chosen empty! Buurrrrrrn item!");
+                Runtime.Log("STORAGE_MUST_BE_ON_BLOCKCHAIN");
                 return new BigInteger(1).AsByteArray();
             }
-            stronghold = (Stronghold)Neo.SmartContract.Framework.Helper.Deserialize(bytes);
-
-            BigInteger lordId = stronghold.Hero;
-            if (lordId < 1)
+            else
             {
-                // Delete Item
-                Storage.Delete(Storage.CurrentContext, itemKey);
+                stronghold = (Stronghold)Neo.SmartContract.Framework.Helper.Deserialize(bytes);
 
-                Runtime.Log("Stronghold has an NPC! Burn item!");
-                return new BigInteger(1).AsByteArray();
+                BigInteger lordId = stronghold.Hero;
+                if (lordId < 1)
+                {
+                    // Delete Item
+                    Storage.Delete(Storage.CurrentContext, itemKey);
+
+                    Runtime.Log("STORAGE_HAS_NO_LORD");
+                    return new BigInteger(1).AsByteArray();
+                }
+                else
+                {
+
+                    string heroKey = GeneralContract.HERO_MAP + lordId.AsByteArray();
+                    Hero hero = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, heroKey));
+
+                    Runtime.Log("Returned Stronghold Data");
+                    // Change owner of Item.
+                    item.HERO = hero.ID;
+                    item.BATCH = GeneralContract.NO_BATCH;
+                    byte[] itemBytes = Neo.SmartContract.Framework.Helper.Serialize(item);
+
+                    // Save Item
+                    Storage.Put(Storage.CurrentContext, itemKey, itemBytes);
+
+                    // Delete Stronghold owner. (It means "kicking out from Stronghold"). According to rule, if stronghold owner got item, he should be kicked out from stronghold
+                    Storage.Delete(Storage.CurrentContext, key);
+
+                    strongholdReward.Block = Blockchain.GetHeight();
+                    strongholdReward.HeroId = hero.ID;
+                    strongholdReward.ItemId = itemId;
+                    strongholdReward.StrongholdId = random;
+
+                    lastStrongholdRewardBytes = Neo.SmartContract.Framework.Helper.Serialize(strongholdReward);
+
+                    Storage.Put(Storage.CurrentContext, GeneralContract.STRONGHOLD_REWARD, lastStrongholdRewardBytes);
+                }
             }
-
-            string heroKey = GeneralContract.HERO_MAP + lordId.AsByteArray();
-            Hero hero = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, heroKey));
-
-            Runtime.Log("Returned Stronghold Data");
-            // Change owner of Item.
-            item.HERO = hero.ID;
-            item.BATCH = GeneralContract.NO_BATCH;
-            byte[] itemBytes = Neo.SmartContract.Framework.Helper.Serialize(item);
-
-            // Save Item
-            Storage.Put(Storage.CurrentContext, itemKey, itemBytes);
-
-            // Delete Stronghold owner. (It means "kicking out from Stronghold"). According to rule, if stronghold owner got item, he should be kicked out from stronghold
-            Storage.Delete(Storage.CurrentContext, key);
-
-            Runtime.Log("Returned 0");
-
             Runtime.Log("Item was Dropped successfully");
             return new BigInteger(1).AsByteArray();
         }
@@ -194,6 +214,125 @@ namespace LordsContract
             Storage.Put(Storage.CurrentContext, GeneralContract.INTERVAL_COFFER, blockHeight);
 
             return new BigInteger(1).AsByteArray();
+        }
+
+        public static byte[] PayCityCoffer(BigInteger cityId)
+        {
+            CofferPayment payment = new CofferPayment();
+            payment.BlockStart = Blockchain.GetHeight();
+            payment.BlockEnd = payment.BlockStart;
+            payment.Session = 1;
+            payment.AmountPaidCity = 0;
+
+            byte[] amountCityBytes = Storage.Get(Storage.CurrentContext, GeneralContract.AMOUNT_CITIES);
+            BigInteger amountCity = amountCityBytes.AsBigInteger();
+
+            byte[] paymentIntervalBytes = Storage.Get(Storage.CurrentContext, GeneralContract.INTERVAL_COFFER);
+            BigInteger paymentInterval = paymentIntervalBytes.AsBigInteger();
+
+            byte[] lastCofferSession = Storage.Get(Storage.CurrentContext, GeneralContract.COFFER_PAYMENT_SESSION);
+            if (lastCofferSession.Length > 0)
+            {
+                payment = (CofferPayment)Neo.SmartContract.Framework.Helper.Deserialize(lastCofferSession);
+                
+            }
+
+            if (payment.AmountPaidCity >= amountCity)
+            {
+                if (Blockchain.GetHeight() < payment.BlockEnd + paymentInterval)
+                {
+                    Runtime.Log("PAYMENT_IN_PAUSE_INTERVAL");
+                    throw new System.Exception();
+                }
+
+                BigInteger newSession = BigInteger.Add(payment.Session, 1);
+
+                payment = new CofferPayment();
+                payment.BlockStart = Blockchain.GetHeight();
+                payment.BlockEnd = payment.BlockStart;
+                payment.Session = newSession;
+                payment.AmountPaidCity = 0;
+            }
+
+            string cityKey = GeneralContract.CITY_MAP + cityId.AsByteArray();
+            byte[] cityBytes = Storage.Get(Storage.CurrentContext, cityKey);
+            if (cityBytes.Length <= 0)
+            {
+                Runtime.Log("CITY_MUST_BE_ON_BLOCKCHAIN");
+                throw new System.Exception();
+            }
+
+            City city = (City)Neo.SmartContract.Framework.Helper.Deserialize(cityBytes);
+            if (city.CofferPayoutSession >= payment.Session)
+            {
+                Runtime.Log("CITY_PAYMENT_SESSION_NOT_MATCHES_TO_CURRENT_COFFER_PAYMENT_SESSION");
+                throw new System.Exception();
+            }
+
+            byte[] lord = GeneralContract.GameOwner;
+            if (city.Hero > 0)
+            {
+                string heroKey = GeneralContract.HERO_MAP + city.Hero.AsByteArray();
+                byte[] heroBytes = Storage.Get(Storage.CurrentContext, heroKey);
+
+                Hero hero = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(heroBytes);
+                lord = hero.OWNER;
+            }
+
+            if (city.Coffer <= 0)
+            {
+                city.CofferPayoutSession = payment.Session;
+                cityBytes = Neo.SmartContract.Framework.Helper.Serialize(city);
+                Storage.Put(Storage.CurrentContext, cityKey, cityBytes);
+
+                payment.AmountPaidCity = BigInteger.Add(payment.AmountPaidCity, 1);
+
+                if (payment.AmountPaidCity >= amountCity)
+                {
+                    payment.BlockEnd = Blockchain.GetHeight();
+                    string paymentKey = GeneralContract.COFFER_PAYMENT_SESSION_MAP + payment.Session.AsByteArray();
+                    byte[] paymentBytes = Neo.SmartContract.Framework.Helper.Serialize(payment);
+                    Storage.Put(Storage.CurrentContext, paymentKey, paymentBytes);
+                }
+            }
+            else
+            {
+                BigInteger percent = BigInteger.Divide(city.Coffer, 100);
+
+                byte[] cofferPercentsBytes = Storage.Get(Storage.CurrentContext, GeneralContract.PERCENTS_COFFER_PAY);
+                BigInteger cofferPercents = cofferPercentsBytes.AsBigInteger();
+
+                BigInteger cofferPaymentSize = BigInteger.Multiply(percent, cofferPercents);
+
+                if (!GeneralContract.AttachmentExist(cofferPaymentSize, lord))
+                {
+                    Runtime.Log("CITY_LORD_MUST_RECIEVCE_CORRECT_GAS_AMOUNT");
+                    throw new System.Exception();
+                }
+                else
+                {
+                    city.Coffer = BigInteger.Subtract(city.Coffer, cofferPaymentSize);
+                    city.CofferPayoutSession = payment.Session;
+
+                    cityBytes = Neo.SmartContract.Framework.Helper.Serialize(city);
+                    Storage.Put(Storage.CurrentContext, cityKey, cityBytes);
+
+                    payment.AmountPaidCity = BigInteger.Add(payment.AmountPaidCity, 1);
+                    payment.BlockEnd = Blockchain.GetHeight();
+
+                    lastCofferSession = Neo.SmartContract.Framework.Helper.Serialize(payment);
+
+                    if (payment.AmountPaidCity >= amountCity)
+                    {
+                        
+                        string paymentKey = GeneralContract.COFFER_PAYMENT_SESSION_MAP + payment.Session.AsByteArray();
+                        Storage.Put(Storage.CurrentContext, paymentKey, lastCofferSession);
+                    }
+
+                    Storage.Put(Storage.CurrentContext, GeneralContract.COFFER_PAYMENT_SESSION, lastCofferSession);
+                }
+            }
+            return new BigInteger(0).AsByteArray();
         }
 
         //------------------------------------------------------------------------------------

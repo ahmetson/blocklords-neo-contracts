@@ -122,6 +122,22 @@ namespace LordsContract
         /// Amount of Bandit camps
         /// </summary>
         public static readonly string AMOUNT_BATTLE_CAMP = "\x35";
+        /// <summary>
+        /// Coffer Payment Map
+        /// </summary>
+        public static readonly string COFFER_PAYMENT_SESSION_MAP = "\x36\x00";
+        /// <summary>
+        /// Last Session
+        /// </summary>
+        public static readonly string COFFER_PAYMENT_SESSION = "\x37";
+        /// <summary>
+        /// Stronghold Reward Log
+        /// </summary>
+        public static readonly string STRONGHOLD_REWARD_MAP = "\x38\x00";
+        /// <summary>
+        /// Latest Stronghold Reward
+        /// </summary>
+        public static readonly string STRONGHOLD_REWARD = "\x39";
 
 
         /// <summary>
@@ -191,9 +207,13 @@ namespace LordsContract
                 Runtime.Log("Set Settings");
                 return Settings.Set((string)args[0], (BigInteger)args[1]);
             }
-            else if (param.Equals("cofferPayout"))
+            //else if (param.Equals("cofferPayout"))
+            //{
+            //    return Periodical.CofferPayout();
+            //}
+            else if (param.Equals("payoutCityCoffer"))
             {
-                return Periodical.CofferPayout();
+                return Periodical.PayCityCoffer((BigInteger)args[0]);
             }
             else if (param.Equals("dropItems"))
             {

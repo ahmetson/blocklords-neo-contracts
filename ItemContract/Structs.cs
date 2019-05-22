@@ -59,9 +59,6 @@ namespace LordsContract
         public BigInteger STRENGTH;             // Strength Stat value
         public BigInteger SPEED;                // Speed Stat value
         public BigInteger DEFENSE;              // Defense Stat value
-        //public byte[] TX;                       // Transaction ID where Hero creation was recorded
-        public BigInteger[] Equipments;         // Items that are equipped on hero
-        public BigInteger EquipmentsAmount;     // Amount of items that are equipped on hero
         //public BigInteger Banned;             // Whether hero is banned by Game Admin for Cheating or not
         public BigInteger ID;
         public BigInteger StrongholsAmount;
@@ -84,6 +81,7 @@ namespace LordsContract
         public BigInteger Size;
         public BigInteger ItemsOnMarket;        // Current amount of items on city market
         public BigInteger ItemsCap;
+        public BigInteger CofferPayoutSession;
     }
 
     // Serialize manually, since it is used for out-of-blockchain use with a getStorage method
@@ -104,26 +102,35 @@ namespace LordsContract
         public BigInteger AttackerItem5;
         public BigInteger DefenderObject;   // City|Stronghold|NPC ID based on battle type
 
-        public BigInteger Defender;         // City Owner ID|Stronghold Owner ID or NPC ID
-        public byte[] DefenderOwner;
+        //public BigInteger Defender;         // City Owner ID|Stronghold Owner ID or NPC ID
+        //public byte[] DefenderOwner;
         public BigInteger DefenderTroops;
         public BigInteger DefenderRemained; // Remained amount of troops
-        public BigInteger DefenderItem1;
-        public BigInteger DefenderItem2;
-        public BigInteger DefenderItem3;
-        public BigInteger DefenderItem4;
-        public BigInteger DefenderItem5;
+        //public BigInteger DefenderItem1;
+        //public BigInteger DefenderItem2;
+        //public BigInteger DefenderItem3;
+        //public BigInteger DefenderItem4;
+        //public BigInteger DefenderItem5;
 
         public BigInteger Time;             // Unix Timestamp in seconds. Time, when battle happened 
-        public byte[] TX;                   // Transaction where Battle Log was recorded.
+        //public byte[] TX;                   // Transaction where Battle Log was recorded.
     }
 
     // Serialize manually, since it is used for out-of-blockchain use with a getStorage method
-    [Serializable]
-    public class UpdatedItem
+    //[Serializable]
+    //public class UpdatedItem
+    //{
+    //    public BigInteger ItemId;                   // Item ID
+    //    public BigInteger IncreaseValue;
+    //}
+
+    //[Serializable]
+    public class CofferPayment
     {
-        public BigInteger ItemId;                   // Item ID
-        public BigInteger IncreaseValue;
+        public BigInteger BlockStart;                   // Session Begin
+        public BigInteger BlockEnd;                   // Session End
+        public BigInteger Session;
+        public BigInteger AmountPaidCity;
     }
 }
 
