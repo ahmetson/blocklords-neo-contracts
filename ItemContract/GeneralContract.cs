@@ -148,7 +148,7 @@ namespace LordsContract
         /// <summary>
         /// Item batch type
         /// </summary>
-        public static readonly byte HERO_CREATION_BATCH = 0, STRONGHOLD_REWARD_BATCH = 1, NO_BATCH = 2;
+        public static readonly byte HERO_CREATION_BATCH = 1, STRONGHOLD_REWARD_BATCH = 0, NO_BATCH = 2;
 
         /**
          * 1 GAS === 100_000_000
@@ -179,6 +179,7 @@ namespace LordsContract
         /// Game Owner's script hash
         /// </summary>
         public static readonly byte[] GameOwner = "AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y".ToScriptHash();//"AML8hyTV4vXuomovxdcAH9pRC9ny618YmA".ToScriptHash();
+        //public static readonly byte[] GameOwner = "ARxEMtapvYPp6ACc5P86WHSZPeVzgoB18r".ToScriptHash();//"AML8hyTV4vXuomovxdcAH9pRC9ny618YmA".ToScriptHash();
         public static readonly BigInteger CofferPayoutInterval = 25000;            // In Blocks. Each blocks generated in 20-30 seconds.
 
         /// <summary>
@@ -232,13 +233,14 @@ namespace LordsContract
                 if (args.Length != 6)
                 {
                     Runtime.Notify(1001); // This function has 7 parameters
-                    return new BigInteger(0).AsByteArray();
+                    throw new Exception();
                 }
 
                 // Item given type: for hero creation or drop for stronghold
                 if ((BigInteger)args[0] != STRONGHOLD_REWARD_BATCH && (BigInteger)args[0] != HERO_CREATION_BATCH)
                 {
-                    return new BigInteger(0).AsByteArray();
+                    Runtime.Notify(1002);
+                    throw new Exception();
                 }
 
                 // Item Parameters
