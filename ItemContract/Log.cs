@@ -58,20 +58,17 @@ namespace LordsContract
                 throw new System.Exception();
             }
 
-            BigInteger[] attackerItems = new BigInteger[5]
-            {
-                (BigInteger)args[9],
-                (BigInteger)args[10],
-                (BigInteger)args[11],
-                (BigInteger)args[12],
-                (BigInteger)args[13]
-            };
+            byte[] attackerItem1 = (byte[])args[9];
+            byte[] attackerItem2 = (byte[])args[10];
+            byte[] attackerItem3 = (byte[])args[11];
+            byte[] attackerItem4 = (byte[])args[12];
+            byte[] attackerItem5 = (byte[])args[13];
 
-            CheckItemOwnership(attackerItems[0], log.Attacker);
-            CheckItemOwnership(attackerItems[1], log.Attacker);
-            CheckItemOwnership(attackerItems[2], log.Attacker);
-            CheckItemOwnership(attackerItems[3], log.Attacker);
-            CheckItemOwnership(attackerItems[4], log.Attacker);
+            CheckItemOwnership(attackerItem1, log.Attacker);
+            CheckItemOwnership(attackerItem2, log.Attacker);
+            CheckItemOwnership(attackerItem3, log.Attacker);
+            CheckItemOwnership(attackerItem4, log.Attacker);
+            CheckItemOwnership(attackerItem5, log.Attacker);
 
             // Get Hero of Defender
             string key;
@@ -210,11 +207,11 @@ namespace LordsContract
 
                     if (log.BattleResult == GeneralContract.ATTACKER_WON)
                     {
-                        UpdateItemStats(attackerItems, log.BattleId, 2);
+                        UpdateItemStats(attackerItem1, attackerItem2, attackerItem3, attackerItem4, attackerItem5, log.BattleId, 2);
                     }
                     else if (log.BattleResult == GeneralContract.ATTACKER_LOSE)
                     {
-                        UpdateItemStats(attackerItems, log.BattleId, 1);
+                        UpdateItemStats(attackerItem1, attackerItem2, attackerItem3, attackerItem4, attackerItem5, log.BattleId, 1);
                     }
                     else
                     {
@@ -244,37 +241,65 @@ namespace LordsContract
                 log.DefenderTroops, log.DefenderRemained);
             return new BigInteger(1).AsByteArray();
         }
-        
-        private static void UpdateItemStats(BigInteger[] ids, BigInteger battleId, BigInteger exp)
+
+        private static bool IsUpgradableItem(byte[] itemId)
         {
-            string key;
-
-            BigInteger[] upgradable = new BigInteger[5] { 0, 0, 0, 0, 0 };
-            int upgradableAmount = 0;
-
-            BigInteger checkedId = 1;
             byte[] bytes;
             Item item;
 
-            for (int i = 1; i <= 5; i++, checkedId = checkedId + 1)
+            string key = GeneralContract.ITEM_MAP + itemId;
+            bytes = Storage.Get(Storage.CurrentContext, key);
+
+            if (bytes.Length > 1)
             {
-                key = GeneralContract.ITEM_MAP + checkedId.AsByteArray();
-                bytes = Storage.Get(Storage.CurrentContext, key);
+                item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(bytes);
 
-                if (bytes.Length > 1)
-                {
-                    item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(bytes);
+                // If item reached to max level, then it's not counted as upgradable
+                if (item.QUALITY == 1 && item.LEVEL == 3) return false;
+                if (item.QUALITY == 2 && item.LEVEL == 5) return false;
+                if (item.QUALITY == 3 && item.LEVEL == 7) return false;
+                if (item.QUALITY == 4 && item.LEVEL == 9) return false;
+                if (item.QUALITY == 5 && item.LEVEL == 10) return false;
 
-                    // If item reached to max level, then it's not counted as upgradable
-                    if (item.QUALITY == 1 && item.LEVEL == 3) continue;
-                    if (item.QUALITY == 2 && item.LEVEL == 5) continue;
-                    if (item.QUALITY == 3 && item.LEVEL == 7) continue;
-                    if (item.QUALITY == 4 && item.LEVEL == 9) continue;
-                    if (item.QUALITY == 5 && item.LEVEL == 10) continue;
+                Runtime.Log("Item is upgradable");
+                return true;
+            }
+            Runtime.Log("Item is not Upgradable");
+            return false;
+        }
 
-                    upgradable[upgradableAmount] = checkedId;
-                    upgradableAmount++;
-                }
+        private static void UpdateItemStats(byte[] id1, byte[] id2, byte[] id3, byte[] id4, byte[] id5, 
+            BigInteger battleId, BigInteger exp)
+        {
+            BigInteger[] upgradableItemIndexes = new BigInteger[5] { 0, 0, 0, 0, 0 };
+            int upgradableAmount = 0;
+
+            BigInteger checkedIndex = 0;
+
+            if (IsUpgradableItem(id1))
+            {
+                upgradableItemIndexes[0] = 0;
+                upgradableAmount++;
+            }
+            if (IsUpgradableItem(id2))
+            {
+                upgradableItemIndexes[1] = 1;
+                upgradableAmount++;
+            }
+            if (IsUpgradableItem(id3))
+            {
+                upgradableItemIndexes[2] = 2;
+                upgradableAmount++;
+            }
+            if (IsUpgradableItem(id4))
+            {
+                upgradableItemIndexes[3] = 3;
+                upgradableAmount++;
+            }
+            if (IsUpgradableItem(id5))
+            {
+                upgradableItemIndexes[4] = 4;
+                upgradableAmount++;
             }
 
             if (upgradableAmount == 0)
@@ -282,13 +307,22 @@ namespace LordsContract
                 return;
             }
 
-            BigInteger index =  GeneralContract.GetRandomNumber(0, (ulong)upgradableAmount);
+            BigInteger randomUpgradableIndex =  GeneralContract.GetRandomNumber(0, (ulong)upgradableAmount);
 
-            BigInteger itemId = Helper.GetByIntIndex(upgradable, upgradableAmount, index);
+            BigInteger randomItemIndex = Helper.GetByIntIndex(upgradableItemIndexes, upgradableAmount, randomUpgradableIndex);
+            byte[] itemId = id1;
+            if (randomItemIndex == 1)
+                itemId = id2;
+            else if (randomItemIndex == 2)
+                itemId = id3;
+            else if (randomItemIndex == 3)
+                itemId = id4;
+            else if (randomItemIndex == 4)
+                itemId = id5;
 
-            key = GeneralContract.ITEM_MAP + itemId.AsByteArray();
+            string key = GeneralContract.ITEM_MAP + itemId;
 
-            item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, key));
+            Item item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, key));
 
             // Increase XP that represents on how many items the Item was involved
             item.XP = BigInteger.Add(item.XP, exp);
@@ -310,26 +344,25 @@ namespace LordsContract
             }
 
             // Put back On Storage the Item with increased values
-            bytes = Neo.SmartContract.Framework.Helper.Serialize(item);
+            byte[] bytes = Neo.SmartContract.Framework.Helper.Serialize(item);
             Storage.Put(Storage.CurrentContext, key, bytes);
 
+            Runtime.Log("Item exp increased");
             Runtime.Notify(7019, itemId, battleId, exp);
         }
 
-        public static void CheckItemOwnership(BigInteger itemId, BigInteger itemOwner)
+        public static void CheckItemOwnership(byte[] itemId, BigInteger itemOwner)
         {
-            string itemKey = GeneralContract.ITEM_MAP + itemId.AsByteArray();
+            string itemKey = GeneralContract.ITEM_MAP + itemId;
             byte[] itemBytes = Storage.Get(Storage.CurrentContext, itemKey);
-            if (itemBytes.Length <= 0)
+            if (itemBytes.Length > 0)
             {
-                Runtime.Notify(1005);
-                throw new System.Exception();
-            }
-            Item item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(itemBytes);
-            if (item.HERO != itemOwner || item.BATCH != GeneralContract.NO_BATCH)
-            {
-                Runtime.Notify(8002);
-                throw new System.Exception();
+                Item item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(itemBytes);
+                if (item.HERO != itemOwner || item.BATCH != GeneralContract.NO_BATCH)
+                {
+                    Runtime.Notify(8002);
+                    throw new System.Exception();
+                }
             }
         }
     }

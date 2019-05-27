@@ -45,7 +45,7 @@ namespace LordsContract
     {
         public BigInteger Block;                // Blockchain Height, in which player got Item as a reward
         public BigInteger StrongholdId;         // Stronghold on the map, for which player got Item
-        public BigInteger ItemId;               // Item id that was given as a reward
+        public byte[] ItemId;               // Item id that was given as a reward
         public BigInteger HeroId;
     }
 

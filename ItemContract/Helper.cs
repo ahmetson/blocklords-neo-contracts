@@ -31,10 +31,9 @@ namespace LordsContract
         }
 
         
-        public static void ChangeItemOwner(BigInteger itemId, BigInteger heroId)
+        public static void ChangeItemOwner(byte[] itemId, BigInteger heroId)
         {
-            byte[] idBytes = itemId.AsByteArray();
-            string key = GeneralContract.ITEM_MAP + idBytes;
+            string key = GeneralContract.ITEM_MAP + itemId;
             byte[] bytes = Storage.Get(Storage.CurrentContext, key);
 
             if (bytes.Length <= 0)
@@ -70,6 +69,20 @@ namespace LordsContract
             }
 
             return 0;
+        }
+
+        public static byte[] GetByIntIndex(byte[][] arr, int arrLength, BigInteger index)
+        {
+            BigInteger passedIndex = 0;
+            for (int i = 0; i < arrLength; i++, passedIndex = passedIndex + 1)
+            {
+                if (index == passedIndex)
+                {
+                    return arr[i];
+                }
+            }
+
+            return new byte[0];
         }
 
     }

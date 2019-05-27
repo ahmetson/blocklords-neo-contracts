@@ -178,8 +178,8 @@ namespace LordsContract
         /// <summary>
         /// Game Owner's script hash
         /// </summary>
-        public static readonly byte[] GameOwner = "AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y".ToScriptHash();//"AML8hyTV4vXuomovxdcAH9pRC9ny618YmA".ToScriptHash();
-        //public static readonly byte[] GameOwner = "ARxEMtapvYPp6ACc5P86WHSZPeVzgoB18r".ToScriptHash();//"AML8hyTV4vXuomovxdcAH9pRC9ny618YmA".ToScriptHash();
+        //public static readonly byte[] GameOwner = "AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y".ToScriptHash();//"AML8hyTV4vXuomovxdcAH9pRC9ny618YmA".ToScriptHash();
+        public static readonly byte[] GameOwner = "ARxEMtapvYPp6ACc5P86WHSZPeVzgoB18r".ToScriptHash();//"AML8hyTV4vXuomovxdcAH9pRC9ny618YmA".ToScriptHash();
         public static readonly BigInteger CofferPayoutInterval = 25000;            // In Blocks. Each blocks generated in 20-30 seconds.
 
         /// <summary>
@@ -213,7 +213,7 @@ namespace LordsContract
             }
             else if (param.Equals("dropItems"))
             {
-                return Periodical.SimpleDropItems((BigInteger)args[0]);
+                return Periodical.SimpleDropItems((byte[])args[0]);
             }
             else if (param.Equals("putCity"))
             {
@@ -259,7 +259,7 @@ namespace LordsContract
                 //item.OWNER = ExecutionEngine.CallingScriptHash;
                 item.BATCH = (BigInteger)args[0];
 
-                Put.Item((BigInteger)args[1], item, false);
+                Put.Item((byte[])args[1], item, false);
             }
             else if (param.Equals("putHero"))
             {
@@ -368,25 +368,24 @@ namespace LordsContract
                 hero3.DEFENSE = stats[0];
                 hero3.StrongholsAmount = 0;
 
-                BigInteger[] equipments = (BigInteger[])args[5];
-                if (equipments.Length != 5)
-                {
-                    Runtime.Notify(4011);
-                    throw new Exception();
-                }
+                byte[] equipment1 = (byte[])args[5];
+                byte[] equipment2 = (byte[])args[6];
+                byte[] equipment3 = (byte[])args[7];
+                byte[] equipment4 = (byte[])args[8];
+                byte[] equipment5 = (byte[])args[9];
 
                 // Change Item Owners
-                Helper.ChangeItemOwner(equipments[0], heroId);
-                Helper.ChangeItemOwner(equipments[1], heroId);
-                Helper.ChangeItemOwner(equipments[2], heroId);
-                Helper.ChangeItemOwner(equipments[3], heroId);
-                Helper.ChangeItemOwner(equipments[4], heroId);
+                Helper.ChangeItemOwner(equipment1, heroId);
+                Helper.ChangeItemOwner(equipment2, heroId);
+                Helper.ChangeItemOwner(equipment3, heroId);
+                Helper.ChangeItemOwner(equipment4, heroId);
+                Helper.ChangeItemOwner(equipment5, heroId);
 
                 byte[] result = Put.Hero(heroId, hero3);
 
                 //heroCreation(heroId, scriptHash, stats, equipments);
 
-                Runtime.Notify(4000, scriptHash, heroId, refererHeroId, refererScriptHash, stats, equipments);
+                Runtime.Notify(4000, scriptHash, heroId, refererHeroId, refererScriptHash, stats, equipment1, equipment2, equipment3, equipment4, equipment5);
                 
                 return result;
             }
@@ -399,7 +398,7 @@ namespace LordsContract
                     return new BigInteger(0).AsByteArray();
                 }
 
-                BigInteger itemId = (BigInteger)args[0];
+                byte[] itemId = (byte[])args[0];
                 BigInteger price = (BigInteger)args[1];
                 BigInteger duration = (BigInteger)args[2];
                 BigInteger cityId = (BigInteger)args[3];
@@ -444,9 +443,7 @@ namespace LordsContract
                     throw new Exception();
                 }
 
-                byte[] itemIdBytes = itemId.AsByteArray();
-
-                string itemKey = ITEM_MAP + itemIdBytes;
+                string itemKey = ITEM_MAP + itemId;
                 byte[] itemBytes = Storage.Get(Storage.CurrentContext, itemKey);
 
                 if (itemBytes.Length <= 0)
@@ -478,7 +475,7 @@ namespace LordsContract
                     throw new Exception();
                 }
 
-                string marketItemKey = MARKET_MAP + itemId.AsByteArray();
+                string marketItemKey = MARKET_MAP + itemId;
                 byte[] marketItemBytes = Storage.Get(Storage.CurrentContext, marketItemKey);
                 if (marketItemBytes.Length > 0)
                 {
@@ -528,7 +525,7 @@ namespace LordsContract
             else if (param.Equals("marketBuyItem"))
             {
                 BigInteger heroId = (BigInteger)args[0];
-                BigInteger itemId = (BigInteger)args[1];
+                byte[] itemId = (byte[])args[1];
 
                 if (Runtime.CheckWitness(GameOwner))
                 {
@@ -536,9 +533,7 @@ namespace LordsContract
                     throw new Exception();
                 }
 
-                byte[] itemIdBytes = itemId.AsByteArray();
-
-                string itemKey = ITEM_MAP + itemIdBytes;
+                string itemKey = ITEM_MAP + itemId;
                 byte[] itemBytes = Storage.Get(Storage.CurrentContext, itemKey);
 
                 if (itemBytes.Length <= 0)
@@ -585,7 +580,7 @@ namespace LordsContract
                     throw new Exception();
                 }
 
-                string marketItemKey = MARKET_MAP + itemId.AsByteArray();
+                string marketItemKey = MARKET_MAP + itemId;
                 byte[] marketItemBytes = Storage.Get(Storage.CurrentContext, marketItemKey);
                 if (marketItemBytes.Length > 0)
                 {
@@ -601,59 +596,64 @@ namespace LordsContract
                         byte[] totalPricePercentsBytes = Storage.Get(Storage.CurrentContext, PERCENTS_PURCHACE);
                         BigInteger totalPricePercents = totalPricePercentsBytes.AsBigInteger();
 
-                        BigInteger pricePercent = BigInteger.Divide(marketItem.Price, 100);
-                        BigInteger totalPrice = BigInteger.Multiply(pricePercent, totalPricePercents);
-
-                        byte[] lordPercentsBytes = Storage.Get(Storage.CurrentContext, PERCENTS_LORD);
-                        BigInteger lordPercents = lordPercentsBytes.AsBigInteger();
+                        string cityKey = CITY_MAP + marketItem.City.AsByteArray();
+                        City city = (City)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, cityKey));
 
                         BigInteger gameOwnerExpectation = 0;
                         BigInteger lordExpectation = 0;
                         BigInteger sellerExpectation = marketItem.Price;
 
-                        string cityKey = CITY_MAP + marketItem.City.AsByteArray();
-                        City city = (City)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, cityKey));
-                        if (city.Hero > 0 && city.Hero == heroId)
+                        if (totalPricePercents > 0)
                         {
-                            sellerExpectation = 0;
-                            lordExpectation = BigInteger.Add(marketItem.Price, BigInteger.Multiply(pricePercent, lordPercents));
-                        }
-                        else if (city.Hero > 0)
-                        {
-                            lordExpectation = BigInteger.Multiply(pricePercent, lordPercents);
-                        }
 
-                        /// All additional GAS over original price goes to Game Owner
-                        gameOwnerExpectation = BigInteger.Subtract(totalPrice, marketItem.Price);
-                        if (city.Hero > 0)
-                        { 
-                            // City lord exists? Game owner can not pretend to lord's fee!
-                            gameOwnerExpectation = BigInteger.Subtract(gameOwnerExpectation, BigInteger.Multiply(pricePercent, lordPercents));
-                        }
+                            BigInteger pricePercent = BigInteger.Divide(marketItem.Price, 100);
+                            BigInteger totalPrice = BigInteger.Multiply(pricePercent, totalPricePercents);
 
-                        if (sellerExpectation > 0 && !AttachmentExist(sellerExpectation, hero.OWNER))
-                        {
-                            Runtime.Notify(2008);
-                            throw new Exception();
-                        }
+                            byte[] lordPercentsBytes = Storage.Get(Storage.CurrentContext, PERCENTS_LORD);
+                            BigInteger lordPercents = lordPercentsBytes.AsBigInteger();
 
-                        if (city.Hero > 0)
-                        {
-                            string cityLordKey = HERO_MAP + city.Hero.AsByteArray();
-                            Hero cityLord = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, cityLordKey));
-                            if (lordExpectation > 0 && !AttachmentExist(lordExpectation, cityLord.OWNER))
+                            if (city.Hero > 0 && city.Hero == heroId)
                             {
-                                Runtime.Notify(2009);
+                                sellerExpectation = 0;
+                                lordExpectation = BigInteger.Add(marketItem.Price, BigInteger.Multiply(pricePercent, lordPercents));
+                            }
+                            else if (city.Hero > 0)
+                            {
+                                lordExpectation = BigInteger.Multiply(pricePercent, lordPercents);
+                            }
+
+                            /// All additional GAS over original price goes to Game Owner
+                            gameOwnerExpectation = BigInteger.Subtract(totalPrice, marketItem.Price);
+                            if (city.Hero > 0)
+                            {
+                                // City lord exists? Game owner can not pretend to lord's fee!
+                                gameOwnerExpectation = BigInteger.Subtract(gameOwnerExpectation, BigInteger.Multiply(pricePercent, lordPercents));
+                            }
+
+                            if (sellerExpectation > 0 && !AttachmentExist(sellerExpectation, hero.OWNER))
+                            {
+                                Runtime.Notify(2008);
                                 throw new Exception();
                             }
-                        }
 
-                        if (gameOwnerExpectation > 0 && !AttachmentExist(gameOwnerExpectation, GameOwner))
-                        {
-                            Runtime.Notify(2010);
-                            throw new Exception();
-                        }
+                            if (city.Hero > 0)
+                            {
+                                string cityLordKey = HERO_MAP + city.Hero.AsByteArray();
+                                Hero cityLord = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, cityLordKey));
+                                if (lordExpectation > 0 && !AttachmentExist(lordExpectation, cityLord.OWNER))
+                                {
+                                    Runtime.Notify(2009);
+                                    throw new Exception();
+                                }
+                            }
 
+                            if (gameOwnerExpectation > 0 && !AttachmentExist(gameOwnerExpectation, GameOwner))
+                            {
+                                Runtime.Notify(2010);
+                                throw new Exception();
+                            }
+
+                        }
                         city.ItemsOnMarket = BigInteger.Subtract(city.ItemsOnMarket, 1);
                         Storage.Put(Storage.CurrentContext, cityKey, Neo.SmartContract.Framework.Helper.Serialize(city));
 
@@ -674,7 +674,7 @@ namespace LordsContract
             }
             else if (param.Equals("marketDeleteItem"))
             {
-                BigInteger itemId = (BigInteger)args[0];
+                byte[] itemId = (byte[])args[0];
 
                 if (Runtime.CheckWitness(GameOwner))
                 {
@@ -682,7 +682,7 @@ namespace LordsContract
                     throw new Exception();
                 }
 
-                string key = MARKET_MAP + itemId.AsByteArray();
+                string key = MARKET_MAP + itemId;
                 byte[] mBytes = Storage.Get(Storage.CurrentContext, key);
                 if (mBytes.Length <= 0)
                 {
@@ -776,6 +776,8 @@ namespace LordsContract
 
         public static bool AttachmentExist(BigInteger value, byte[] receivingScriptHash)
         {
+            if (value <= 0)
+                return true;
             Transaction TX = (Transaction)ExecutionEngine.ScriptContainer;
             TransactionOutput[] outputs = TX.GetOutputs();
 

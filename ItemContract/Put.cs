@@ -17,25 +17,21 @@ namespace LordsContract
         /// </summary>
         /// <param name="itemId">Id of Item that will be added onto storage</param>
         /// <param name="item">Item data in Structs.Item type</param>
-        public static byte[] Item(BigInteger itemId, Item item, bool isInner)
+        public static byte[] Item(byte[] itemId, Item item, bool isInner)
         {
-            if (itemId <= 0)
-            {
-                return new BigInteger(0).AsByteArray();
-            }
             // Invoker has permission to execute this function?
             if (!isInner && !Runtime.CheckWitness(GeneralContract.GameOwner))
             {
                 return new BigInteger(0).AsByteArray();
             }
             // Item should not exist.
-            byte[] idBytes = itemId.AsByteArray();
-            string key = GeneralContract.ITEM_MAP + idBytes;
+            string key = GeneralContract.ITEM_MAP + itemId;
             byte[] bytes = Storage.Get(Storage.CurrentContext, key);
 
             if (bytes.Length > 0)
             {
-                return new BigInteger(0).AsByteArray();
+                Runtime.Notify(8006);
+                throw new System.Exception();
             }
 
             // Put item managable data onto blockchain 
@@ -43,7 +39,7 @@ namespace LordsContract
             
             Storage.Put(Storage.CurrentContext, key, bytes);
 
-            return new BigInteger(1).AsByteArray();
+            return itemId;
         }
 
         /// <summary>

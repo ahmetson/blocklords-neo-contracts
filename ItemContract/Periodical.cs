@@ -9,7 +9,7 @@ namespace LordsContract
     {
        
 
-        public static byte[] SimpleDropItems(BigInteger itemId)
+        public static byte[] SimpleDropItems(byte[] itemId)
         {
             DropData strongholdReward = new DropData();
             strongholdReward.Block = 0;
@@ -40,7 +40,7 @@ namespace LordsContract
 
 
             // Check that Item has no owner and that is is on stronghold reward batch
-            string itemKey = GeneralContract.ITEM_MAP + itemId.AsByteArray();
+            string itemKey = GeneralContract.ITEM_MAP + itemId;
             bytes = Storage.Get(Storage.CurrentContext, itemKey);
             if (bytes.Length < 1)
             {
@@ -119,7 +119,7 @@ namespace LordsContract
          * 
          * Has 0 argument
          */
-        public static byte[] DropItems(BigInteger itemId)
+        public static byte[] DropItems(byte[] itemId)
         {
             // TODO check that item is in drop item list
             // Between each Item Drop as a reward should be generated atleast 120 Blocks
