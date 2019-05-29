@@ -101,7 +101,7 @@ namespace LordsContract
         /// <summary>
         /// Storage Key of stronghold reward interval in blocks
         /// </summary>
-        public static readonly string INTERVAL_STRONGHOLD_REWARD = "\x30";
+        public static readonly string INTERVAL_DROP = "\x30";
         /// <summary>
         /// Tracks strongholds amount on Contract
         /// </summary>
@@ -137,13 +137,18 @@ namespace LordsContract
         /// <summary>
         /// Latest Stronghold Reward
         /// </summary>
-        public static readonly string STRONGHOLD_REWARD = "\x39";
+        public static readonly string LAST_ITEM_DROP = "\x39";
+        /// <summary>
+        /// Range in Which coffer from transaction fee could go
+        /// </summary>
+        public static readonly BigInteger PERCENTS_PVC_COFFER_MAX = 70;
+        public static readonly BigInteger PERCENTS_PVC_COFFER_MIN = 0;
 
 
         /// <summary>
         /// Battle type
         /// </summary>
-        public static readonly BigInteger PVC = 0, PVP = 1, PVE = 2;
+        public static readonly BigInteger PVC = 1, PVP = 0, PVE = 2;
 
         /// <summary>
         /// Item batch type
@@ -178,9 +183,9 @@ namespace LordsContract
         /// <summary>
         /// Game Owner's script hash
         /// </summary>
-        //public static readonly byte[] GameOwner = "AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y".ToScriptHash();//"AML8hyTV4vXuomovxdcAH9pRC9ny618YmA".ToScriptHash();
-        public static readonly byte[] GameOwner = "ARxEMtapvYPp6ACc5P86WHSZPeVzgoB18r".ToScriptHash();//"AML8hyTV4vXuomovxdcAH9pRC9ny618YmA".ToScriptHash();
-        public static readonly BigInteger CofferPayoutInterval = 25000;            // In Blocks. Each blocks generated in 20-30 seconds.
+        public static readonly byte[] GameOwner = "AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y".ToScriptHash();//"AML8hyTV4vXuomovxdcAH9pRC9ny618YmA".ToScriptHash();
+        //public static readonly byte[] GameOwner = "ARxEMtapvYPp6ACc5P86WHSZPeVzgoB18r".ToScriptHash();//"AML8hyTV4vXuomovxdcAH9pRC9ny618YmA".ToScriptHash();
+        public static readonly byte[] GameOwnerPublicKey = "031a6c6fbbdf02ca351745fa86b9ba5a9452d785ac4f7fc2b7548ca2a46c4fcf4a".HexToBytes();//"AML8hyTV4vXuomovxdcAH9pRC9ny618YmA".ToScriptHash();
 
         /// <summary>
         /// City type
@@ -192,6 +197,7 @@ namespace LordsContract
         /// </summary>
         public static readonly BigInteger ATTACKER_WON = 1, ATTACKER_LOSE = 2;
 
+        /// Event Hero Creation
         //[DisplayName("heroCreation")]
         //public static event Action<BigInteger, byte[], BigInteger[], BigInteger[]> heroCreation;
 
@@ -243,6 +249,8 @@ namespace LordsContract
                     throw new Exception();
                 }
 
+                Runtime.Log("Item was upload");
+
                 // Item Parameters
                 Item item = new Item();
 
@@ -258,6 +266,8 @@ namespace LordsContract
                 //item.INITIAL = (BigInteger)args[7];         // 1
                 //item.OWNER = ExecutionEngine.CallingScriptHash;
                 item.BATCH = (BigInteger)args[0];
+
+                Runtime.Log("Item settings were set");
 
                 Put.Item((byte[])args[1], item, false);
             }
