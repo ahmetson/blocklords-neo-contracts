@@ -54,11 +54,11 @@ namespace LordsContract
     {
         public byte[] OWNER;                    // Wallet address of Player that owns Hero
         //public BigInteger TROOPS_CAP;           // Troops limit for this hero
-        public BigInteger LEADERSHIP;           // Leadership Stat value
-        public BigInteger INTELLIGENCE;         // Intelligence Stat value
-        public BigInteger STRENGTH;             // Strength Stat value
-        public BigInteger SPEED;                // Speed Stat value
-        public BigInteger DEFENSE;              // Defense Stat value
+        public byte[] LEADERSHIP;           // Leadership Stat value
+        public byte[] INTELLIGENCE;         // Intelligence Stat value
+        public byte[] STRENGTH;             // Strength Stat value
+        public byte[] SPEED;                // Speed Stat value
+        public byte[] DEFENSE;              // Defense Stat value
         //public BigInteger Banned;             // Whether hero is banned by Game Admin for Cheating or not
         public BigInteger ID;
         public BigInteger StrongholsAmount;
@@ -88,19 +88,19 @@ namespace LordsContract
     [Serializable]
     public class BattleLog
     {
-        public BigInteger BattleId;
+        public byte[] BattleId;
         public BigInteger BattleResult; // 0 - Attacker WON, 1 - Attacker Lose
         public BigInteger BattleType;   // 0 - City, 1 - Stronghold, 2 - Bandit Camp
-        public BigInteger Attacker;
+        public byte[] Attacker;
         public byte[] AttackerOwner;
         public BigInteger AttackerTroops;       // Attacker's troops amount that were involved in the battle
         public BigInteger AttackerRemained;     // Attacker's remained troops amount
-        public BigInteger AttackerItem1;        // Item IDs that were equipped by Attacker during battle.
-        public BigInteger AttackerItem2;
-        public BigInteger AttackerItem3;
-        public BigInteger AttackerItem4;
-        public BigInteger AttackerItem5;
-        public BigInteger DefenderObject;   // City|Stronghold|NPC ID based on battle type
+        public byte[] AttackerItem1;        // Item IDs that were equipped by Attacker during battle.
+        public byte[] AttackerItem2;
+        public byte[] AttackerItem3;
+        public byte[] AttackerItem4;
+        public byte[] AttackerItem5;
+        public byte[] DefenderObject;   // City|Stronghold|NPC ID based on battle type
 
         //public BigInteger Defender;         // City Owner ID|Stronghold Owner ID or NPC ID
         //public byte[] DefenderOwner;
