@@ -17,16 +17,18 @@ namespace LordsContract
         /// </summary>
         /// <param name="itemId">Id of Item that will be added onto storage</param>
         /// <param name="item">Item data in Structs.Item type</param>
-        public static byte[] Item(byte[] itemId, Item item, bool isInner)
+        public static void Item(byte[] itemId, Item item, bool isInner)
         {
             // Invoker has permission to execute this function?
             if (!isInner && !Runtime.CheckWitness(GeneralContract.GameOwner))
             {
-                return new BigInteger(0).AsByteArray();
+                throw new System.Exception();
             }
             // Item should not exist.
             string key = GeneralContract.ITEM_MAP + itemId;
             byte[] bytes = Storage.Get(Storage.CurrentContext, key);
+
+            Runtime.Log("Item was get");
 
             if (bytes.Length > 0)
             {
@@ -34,12 +36,12 @@ namespace LordsContract
                 throw new System.Exception();
             }
 
+            Runtime.Log("Item was checked");
+
             // Put item managable data onto blockchain 
             bytes = Neo.SmartContract.Framework.Helper.Serialize(item);
             
             Storage.Put(Storage.CurrentContext, key, bytes);
-
-            return itemId;
         }
 
         /// <summary>
@@ -48,15 +50,13 @@ namespace LordsContract
         /// <param name="heroId">Hero ID</param>
         /// <param name="hero">Her Data</param>
         /// <returns></returns>
-        public static byte[] Hero(BigInteger heroId, Hero hero)
+        public static void Hero(BigInteger heroId, Hero hero)
         {
 
             // Put Hero
-            string key = GeneralContract.HERO_MAP + heroId.AsByteArray();
+            string key = GeneralContract.HERO_MAP + heroId.ToByteArray();
             byte[] bytes = Neo.SmartContract.Framework.Helper.Serialize(hero);
             Storage.Put(Storage.CurrentContext, key, bytes);
-
-            return new BigInteger(1).AsByteArray();
         }
 
 
@@ -67,30 +67,30 @@ namespace LordsContract
         /// <param name="size">City Size</param>
         /// <param name="cap">City's market cap</param>
         /// <returns></returns>
-        public static byte[] City(BigInteger id, BigInteger size, BigInteger cap)
+        public static void City(BigInteger id, BigInteger size, BigInteger cap)
         {
             // Invoker has permission to execute this function?
             if (!Runtime.CheckWitness(GeneralContract.GameOwner))
             {
-                return new BigInteger(0).AsByteArray();
+                throw new System.Exception();
             }
 
             if (id <= 0)
             {
-                return new BigInteger(0).AsByteArray();
+                throw new System.Exception();
             }
             if (cap <= 0)
             {
-                return new BigInteger(0).AsByteArray();
+                throw new System.Exception();
             }
 
 
-            string key = GeneralContract.CITY_MAP + id.AsByteArray();
+            string key = GeneralContract.CITY_MAP + id.ToByteArray();
             byte[] cityBytes = Storage.Get(Storage.CurrentContext, key);
 
             if (cityBytes.Length > 0)
             {
-                return new BigInteger(0).AsByteArray();
+                throw new System.Exception();
             }
 
             City city = new City();
@@ -107,8 +107,6 @@ namespace LordsContract
             Storage.Put(Storage.CurrentContext, key, cityBytes);
 
             IncrementCityAmount();
-
-            return new BigInteger(1).AsByteArray();
         }
 
         /// <summary>
@@ -121,7 +119,7 @@ namespace LordsContract
             BigInteger amount = 0;
             if (amountBytes.Length > 0)
             {
-                amount = amountBytes.AsBigInteger();
+                amount = amountBytes.ToBigInteger();
             }
             else
             {
@@ -138,25 +136,25 @@ namespace LordsContract
         /// </summary>
         /// <param name="id">stronghold ID</param>
         /// <returns></returns>
-        public static byte[] Stronghold(BigInteger id)
+        public static void Stronghold(BigInteger id)
         {
             // Invoker has permission to execute this function?
             if (!Runtime.CheckWitness(GeneralContract.GameOwner))
             {
-                return new BigInteger(0).AsByteArray();
+                throw new System.Exception();
             }
 
             if (id <= 0)
             {
-                return new BigInteger(0).AsByteArray();
+                throw new System.Exception();
             }
 
-            string key = GeneralContract.STRONGHOLD_MAP + id.AsByteArray();
+            string key = GeneralContract.STRONGHOLD_MAP + id.ToByteArray();
             byte[] bytes = Storage.Get(Storage.CurrentContext, key);
 
             if (bytes.Length > 0)
             {
-                return new BigInteger(0).AsByteArray();
+                throw new System.Exception();
             }
 
             Stronghold stronghold = new Stronghold();
@@ -169,8 +167,6 @@ namespace LordsContract
             Storage.Put(Storage.CurrentContext, key, bytes);
 
             IncrementStrongholdAmount();
-
-            return new BigInteger(1).AsByteArray();
         }
 
         /// <summary>
@@ -183,7 +179,7 @@ namespace LordsContract
             BigInteger amount = 0;
             if (amountBytes.Length > 0)
             {
-                amount = amountBytes.AsBigInteger();
+                amount = amountBytes.ToBigInteger();
             }
             else
             {
@@ -200,32 +196,30 @@ namespace LordsContract
         /// </summary>
         /// <param name="id">stronghold ID</param>
         /// <returns></returns>
-        public static byte[] BanditCamp(BigInteger id)
+        public static void BanditCamp(BigInteger id)
         {
             // Invoker has permission to execute this function?
             if (!Runtime.CheckWitness(GeneralContract.GameOwner))
             {
-                return new BigInteger(0).AsByteArray();
+                throw new System.Exception();
             }
 
             if (id <= 0)
             {
-                return new BigInteger(0).AsByteArray();
+                throw new System.Exception();
             }
 
-            string key = GeneralContract.BANDIT_CAMP_MAP + id.AsByteArray();
+            string key = GeneralContract.BANDIT_CAMP_MAP + id.ToByteArray();
             byte[] bytes = Storage.Get(Storage.CurrentContext, key);
 
             if (bytes.Length > 0)
             {
-                return new BigInteger(0).AsByteArray();
+                throw new System.Exception();
             }
 
             Storage.Put(Storage.CurrentContext, key, 1);
 
             IncrementBanditCampAmount();
-
-            return new BigInteger(1).AsByteArray();
         }
 
         /// <summary>
@@ -238,7 +232,7 @@ namespace LordsContract
             BigInteger amount = 0;
             if (amountBytes.Length > 0)
             {
-                amount = amountBytes.AsBigInteger();
+                amount = amountBytes.ToBigInteger();
             }
             else
             {
