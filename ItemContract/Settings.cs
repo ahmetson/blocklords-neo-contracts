@@ -15,89 +15,71 @@ namespace LordsContract
         /// <param name="key">setting type</param>
         /// <param name="value">setting value</param>
         /// <returns></returns>
-        public static byte[] Set(string key, BigInteger value)
+        public static void Set(string key, byte[] value)
         {
             if (key.Equals(GeneralContract.FEE_HERO_CREATION))
             {
-                Storage.Put( Storage.CurrentContext, GeneralContract.FEE_HERO_CREATION, value);
+                Storage.Put(Storage.CurrentContext, GeneralContract.FEE_HERO_CREATION, value);
             }
             else if (key.Equals(GeneralContract.FEE_REFERAL))
             {
-                byte[] v = value.AsByteArray();
-                Storage.Put(Storage.CurrentContext, GeneralContract.FEE_REFERAL, v);
+                Storage.Put(Storage.CurrentContext, GeneralContract.FEE_REFERAL, value);
             }
             else if (key.Equals(GeneralContract.FEE_8_HOURS))
             {
-                byte[] v = value.AsByteArray();
-                Storage.Put(Storage.CurrentContext, GeneralContract.FEE_8_HOURS, v);
+                Storage.Put(Storage.CurrentContext, GeneralContract.FEE_8_HOURS, value);
             }
             else if (key.Equals(GeneralContract.FEE_12_HOURS))
             {
-                byte[] v = value.AsByteArray();
-                Storage.Put(Storage.CurrentContext, GeneralContract.FEE_12_HOURS, v);
+                Storage.Put(Storage.CurrentContext, GeneralContract.FEE_12_HOURS, value);
             }
             else if (key.Equals(GeneralContract.FEE_24_HOURS))
             {
-                byte[] v = value.AsByteArray();
-                Storage.Put(Storage.CurrentContext, GeneralContract.FEE_24_HOURS, v);
+                Storage.Put(Storage.CurrentContext, GeneralContract.FEE_24_HOURS, value);
             }
             else if (key.Equals(GeneralContract.FEE_PVC))
             {
-                byte[] v = value.AsByteArray();
-                Storage.Put(Storage.CurrentContext, GeneralContract.FEE_PVC, v);
+                Storage.Put(Storage.CurrentContext, GeneralContract.FEE_PVC, value);
             }
             else if (key.Equals(GeneralContract.FEE_PVE))
             {
-                byte[] v = value.AsByteArray();
-                Storage.Put(Storage.CurrentContext, GeneralContract.FEE_PVE, v);
+                Storage.Put(Storage.CurrentContext, GeneralContract.FEE_PVE, value);
             }
             else if (key.Equals(GeneralContract.FEE_PVP))
             {
-                byte[] v = value.AsByteArray();
-                Storage.Put(Storage.CurrentContext, GeneralContract.FEE_PVP, v);
+                Storage.Put(Storage.CurrentContext, GeneralContract.FEE_PVP, value);
             }
             else if (key.Equals(GeneralContract.PERCENTS_PURCHACE))
             {
-                byte[] v = value.AsByteArray();
-                Storage.Put(Storage.CurrentContext, GeneralContract.PERCENTS_PURCHACE, v);
+                Storage.Put(Storage.CurrentContext, GeneralContract.PERCENTS_PURCHACE, value);
             }
             else if (key.Equals(GeneralContract.PERCENTS_LORD))
             {
-                byte[] v = value.AsByteArray();
-                Storage.Put(Storage.CurrentContext, GeneralContract.PERCENTS_LORD, v);
+                Storage.Put(Storage.CurrentContext, GeneralContract.PERCENTS_LORD, value);
             }
             else if (key.Equals(GeneralContract.PERCENTS_SELLER_COFFER))
             {
-                byte[] v = value.AsByteArray();
-                Storage.Put(Storage.CurrentContext, GeneralContract.PERCENTS_SELLER_COFFER, v);
+                Storage.Put(Storage.CurrentContext, GeneralContract.PERCENTS_SELLER_COFFER, value);
             }
             else if (key.Equals(GeneralContract.PERCENTS_PVC_COFFER))
             {
-                byte[] v = value.AsByteArray();
-                Storage.Put(Storage.CurrentContext, GeneralContract.PERCENTS_PVC_COFFER, v);
+                BigInteger v = (BigInteger)Neo.SmartContract.Framework.Helper.Deserialize(value);
+                GeneralContract.RequireValidRange(v, GeneralContract.PERCENTS_PVC_COFFER_MIN, GeneralContract.PERCENTS_PVC_COFFER_MAX);
+                Storage.Put(Storage.CurrentContext, GeneralContract.PERCENTS_PVC_COFFER, value);
             }
             else if (key.Equals(GeneralContract.PERCENTS_COFFER_PAY))
             {
-                byte[] v = value.AsByteArray();
-                Storage.Put(Storage.CurrentContext, GeneralContract.PERCENTS_COFFER_PAY, v);
+                Storage.Put(Storage.CurrentContext, GeneralContract.PERCENTS_COFFER_PAY, value);
             }
 
             else if (key.Equals(GeneralContract.INTERVAL_COFFER))
             {
-                byte[] v = value.AsByteArray();
-                Storage.Put(Storage.CurrentContext, GeneralContract.INTERVAL_COFFER, v);
+                Storage.Put(Storage.CurrentContext, GeneralContract.INTERVAL_COFFER, value);
             }
-            else if (key.Equals(GeneralContract.INTERVAL_STRONGHOLD_REWARD))
+            else if (key.Equals(GeneralContract.INTERVAL_DROP))
             {
-                byte[] v = value.AsByteArray();
-                Storage.Put(Storage.CurrentContext, GeneralContract.INTERVAL_STRONGHOLD_REWARD, v);
+                Storage.Put(Storage.CurrentContext, GeneralContract.INTERVAL_DROP, value);
             }
-            else
-            {
-                return new BigInteger(0).AsByteArray();
-            }
-
-            return new BigInteger(1).AsByteArray();
         }
 
     }
