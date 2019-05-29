@@ -209,30 +209,94 @@ namespace LordsContract
         /// <returns>1 if success, 0 if failed</returns>
         public static byte[] Main(string param, object[] args)
         {
-            if (param.Equals("setSetting"))
+            if (param.Equals("testPutHeroSign"))
             {
-                return Settings.Set((string)args[0], (BigInteger)args[1]);
+                if (VerifySignature((byte[])args[0], (byte[])args[1], GameOwnerPublicKey))
+                {
+                    Runtime.Log("Signature is verified");
+                } else
+                {
+                    Runtime.Log("Signature is not verified!");
+                    Runtime.Notify((byte[])args[0], (byte[])args[1], GameOwnerPublicKey);
+                }
+            }
+            else if (param.Equals("testRandomGeneration"))
+            {
+                byte[][] upgradableItem = new byte[5][];
+                BigInteger upgradableAmount = 0;
+
+                int checkedIndex = 0;
+
+                byte[] id1 = (byte[])args[0];
+                byte[] id2 = (byte[])args[1];
+                byte[] id3 = (byte[])args[2];
+                byte[] id4 = (byte[])args[3];
+                byte[] id5 = (byte[])args[4];
+
+                if (id1.Length > 0)
+                {
+                    upgradableItem[checkedIndex] = id1; checkedIndex++;
+                    upgradableAmount = BigInteger.Add(upgradableAmount, 1);
+                }
+                if (id2.Length > 0)
+                {
+                    upgradableItem[checkedIndex] = id2; checkedIndex++;
+                    upgradableAmount = BigInteger.Add(upgradableAmount, 1);
+                }
+                if (id3.Length > 0)
+                {
+                    upgradableItem[checkedIndex] = id3; checkedIndex++;
+                    upgradableAmount = BigInteger.Add(upgradableAmount, 1);
+                }
+                if (id4.Length > 0)
+                {
+                    upgradableItem[checkedIndex] = id4; checkedIndex++;
+                    upgradableAmount = BigInteger.Add(upgradableAmount, 1);
+                }
+                if (id5.Length > 0)
+                {
+                    upgradableItem[checkedIndex] = id5; checkedIndex++;
+                    upgradableAmount = BigInteger.Add(upgradableAmount, 1);
+                }
+
+                if (upgradableAmount > 0)
+                {
+
+                    BigInteger randomUpgradableIndex = GetRandomNumber(0, upgradableAmount);
+
+                    byte[] itemId = Helper.GetIdByIndex(upgradableItem, upgradableAmount, randomUpgradableIndex);
+                    if (itemId.Length <= 0)
+                    {
+                        Runtime.Log("Random generated is 0");
+                    }
+                    Runtime.Notify(itemId, randomUpgradableIndex, upgradableAmount);
+                }
+            }
+            else if (param.Equals("setSetting"))
+            {
+                Runtime.Log("Set Settings");
+                Settings.Set((string)args[0], (byte[])args[1]);
             }
             else if (param.Equals("payoutCityCoffer"))
             {
-                return Periodical.PayCityCoffer((BigInteger)args[0]);
+                Periodical.PayCityCoffer((byte[])args[0]);
             }
-            else if (param.Equals("dropItems"))
+            else if (param.Equals("dropItem"))
             {
-                return Periodical.SimpleDropItems((byte[])args[0]);
+                Periodical.SimpleDropItem((byte[])args[0]);
             }
             else if (param.Equals("putCity"))
             {
-                return Put.City((BigInteger)args[0], (BigInteger)args[1], (BigInteger)args[2]);
+                Put.City((BigInteger)args[0], (BigInteger)args[1], (BigInteger)args[2]);
             }
             else if (param.Equals("putStronghold"))
             {
                
-                return Put.Stronghold((BigInteger)args[0]);
+                Put.Stronghold((BigInteger)args[0]);
             }
             else if (param.Equals("putBanditCamp"))
             {
-                return Put.BanditCamp((BigInteger)args[0]);
+                Put.BanditCamp((BigInteger)args[0]);
             }
             else if (param.Equals("putItem"))
             {
