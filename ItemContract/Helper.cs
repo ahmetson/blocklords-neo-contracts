@@ -15,7 +15,7 @@ namespace LordsContract
                 return true;
             }
 
-            byte[] idBytes = itemId.AsByteArray();
+            byte[] idBytes = itemId.ToByteArray();
             string key = GeneralContract.ITEM_MAP + idBytes;
 
             // If Item's are not exist, exit
@@ -71,7 +71,7 @@ namespace LordsContract
             return 0;
         }
 
-        public static byte[] GetByIntIndex(byte[][] arr, int arrLength, BigInteger index)
+        public static byte[] GetIdByIndex(byte[][] arr, BigInteger arrLength, BigInteger index)
         {
             BigInteger passedIndex = 0;
             for (int i = 0; i < arrLength; i++, passedIndex = passedIndex + 1)
