@@ -1,4 +1,4 @@
-using Neo.SmartContract.Framework;
+﻿using Neo.SmartContract.Framework;
 using Neo.SmartContract.Framework.Services.Neo;
 using Neo.SmartContract.Framework.Services.System;
 using System.Numerics;
@@ -22,8 +22,6 @@ namespace LordsContract
                 throw new System.Exception();
             }
 
-            Runtime.Log("Battle Init");
-
             // Prepare log
             BattleLog log = new BattleLog();
 
@@ -37,8 +35,6 @@ namespace LordsContract
             log.DefenderTroops = (BigInteger)args[7];
             log.DefenderRemained = (BigInteger)args[8];
 
-            Runtime.Log("Retreive data");
-
             string battleIdKey = GeneralContract.BATTLE_LOG_MAP + log.BattleId;
             byte[] battleLogBytes = Storage.Get(Storage.CurrentContext, battleIdKey);
             if (battleLogBytes.Length > 0)
@@ -46,8 +42,6 @@ namespace LordsContract
                 Runtime.Notify(7002);
                 throw new System.Exception();
             }
-
-            Runtime.Log("Battle Log is not exist");
 
             // Get Hero
             string heroKey = GeneralContract.HERO_MAP + log.Attacker;
@@ -58,8 +52,6 @@ namespace LordsContract
                 throw new System.Exception();
             }
 
-            Runtime.Log("attacker on blockchain");
-
             Hero hero = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(heroBytes);
             if (!Runtime.CheckWitness(hero.OWNER))
             {
@@ -67,23 +59,17 @@ namespace LordsContract
                 throw new System.Exception();
             }
 
-            Runtime.Log("Attacker owning wallet calls");
-
             log.AttackerItem1 = (byte[])args[9];
             log.AttackerItem2 = (byte[])args[10];
             log.AttackerItem3 = (byte[])args[11];
             log.AttackerItem4 = (byte[])args[12];
             log.AttackerItem5 = (byte[])args[13];
 
-            Runtime.Log("Get Items");
-
             CheckItemOwnership(log.AttackerItem1, log.Attacker);
             CheckItemOwnership(log.AttackerItem2, log.Attacker);
             CheckItemOwnership(log.AttackerItem3, log.Attacker);
             CheckItemOwnership(log.AttackerItem4, log.Attacker);
             CheckItemOwnership(log.AttackerItem5, log.Attacker);
-
-            Runtime.Log("Items owned by player");
 
             byte[] attackerId = log.Attacker;
             BigInteger attackerNum = (BigInteger)args[3];
@@ -108,7 +94,6 @@ namespace LordsContract
                 }
                 else
                 {
-                    Runtime.Log("City Exists");
                     City city = (City)Neo.SmartContract.Framework.Helper.Deserialize(bytes);
 
                     if (city.Hero > 0 && city.Hero == attackerNum)
@@ -118,7 +103,6 @@ namespace LordsContract
                     }
                     else
                     {
-                        Runtime.Log("Hero is attacking to someones city");
                         byte[] feeBytes = Storage.Get(Storage.CurrentContext, GeneralContract.FEE_PVC);
 
                         BigInteger fee = feeBytes.AsBigInteger();
@@ -158,7 +142,6 @@ namespace LordsContract
             }
             else if (log.BattleType == GeneralContract.PVP)
             {
-                Runtime.Log("PVP battle");
                 key = GeneralContract.STRONGHOLD_MAP + log.DefenderObject;
                 bytes = Storage.Get(Storage.CurrentContext, key);
 
