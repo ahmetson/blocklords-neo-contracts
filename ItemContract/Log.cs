@@ -1,4 +1,4 @@
-﻿using Neo.SmartContract.Framework;
+using Neo.SmartContract.Framework;
 using Neo.SmartContract.Framework.Services.Neo;
 using Neo.SmartContract.Framework.Services.System;
 using System.Numerics;
@@ -390,7 +390,7 @@ namespace LordsContract
             Storage.Put(Storage.CurrentContext, key, bytes);
 
             Runtime.Log("Item exp increased");
-            Runtime.Notify(7019, itemId, battleId, exp);
+            Runtime.Notify(7019, itemId, battleId, exp, item.LEVEL, item.STAT_VALUE, item.XP);
         }
 
         public static void CheckItemOwnership(byte[] itemId, byte[] itemOwner)
