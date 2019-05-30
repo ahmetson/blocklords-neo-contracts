@@ -1,4 +1,4 @@
-using Neo.SmartContract.Framework;
+﻿using Neo.SmartContract.Framework;
 using Neo.SmartContract.Framework.Services.Neo;
 using System.Numerics;
 
@@ -61,8 +61,9 @@ namespace LordsContract
             if (bytes.Length <= 0)
             {
                 // Delete Item
-                Storage.Delete(Storage.CurrentContext, itemKey);
+                //Storage.Delete(Storage.CurrentContext, itemKey);
                 Runtime.Notify(5003, itemId, random, 0, Blockchain.GetHeight());
+                throw new System.Exception();
             }
             else
             {
@@ -73,7 +74,6 @@ namespace LordsContract
                 {
                     // Delete Item
                     Storage.Delete(Storage.CurrentContext, itemKey);
-
                     Runtime.Notify(5004, itemId, random, 0, Blockchain.GetHeight());
                 }
                 else
