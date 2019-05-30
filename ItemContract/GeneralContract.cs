@@ -209,16 +209,41 @@ namespace LordsContract
         /// <returns>1 if success, 0 if failed</returns>
         public static byte[] Main(string param, object[] args)
         {
-            if (param.Equals("testPutHeroSign"))
+            if (param.Equals("testConversion"))
             {
-                if (VerifySignature((byte[])args[0], (byte[])args[1], GameOwnerPublicKey))
+                byte[] pvcCofferPercentsBytes = Storage.Get(Storage.CurrentContext, PERCENTS_PVC_COFFER);
+                BigInteger pvcCofferPercents = pvcCofferPercentsBytes.AsBigInteger();
+                if (pvcCofferPercents == 0)
                 {
-                    Runtime.Log("Signature is verified");
-                } else
-                {
-                    Runtime.Log("Signature is not verified!");
-                    Runtime.Notify((byte[])args[0], (byte[])args[1], GameOwnerPublicKey);
+                    Runtime.Log("Coffer Percents 0");
                 }
+                else
+                {
+                    Runtime.Log("Coffer is not 0");
+                }
+
+
+                byte[] bytes = new byte[] { 1, 2, 3, 4, 5 };
+                BigInteger big = bytes.AsBigInteger();
+                if (big == 0)
+                {
+                    Runtime.Log("Big number is 0");
+                }
+                Runtime.Notify(big, pvcCofferPercentsBytes, pvcCofferPercents);
+
+            }
+            else if (param.Equals("testPutHeroSign"))
+            {
+                Runtime.Log("Failed");
+                //if (VerifySignature((byte[])args[0], (byte[])args[1], GameOwnerPublicKey))
+                //{
+                //    Runtime.Log("Signature is verified");
+                //}
+                //else
+                //{
+                //    Runtime.Log("Signature is not verified!");
+                //    Runtime.Notify((byte[])args[0], (byte[])args[1], GameOwnerPublicKey);
+                //}
             }
             else if (param.Equals("testRandomGeneration"))
             {
@@ -404,10 +429,10 @@ namespace LordsContract
                     }
 
                     byte[] feeBytes = Storage.Get(Storage.CurrentContext, FEE_HERO_CREATION);
-                    BigInteger fee = feeBytes.ToBigInteger();
+                    BigInteger fee = feeBytes.AsBigInteger();
 
                     byte[] refererBytes = Storage.Get(Storage.CurrentContext, FEE_REFERAL);
-                    BigInteger refererFee = refererBytes.ToBigInteger();
+                    BigInteger refererFee = refererBytes.AsBigInteger();
 
                     // Game owner's fee is less, if we have a referer
                     fee = BigInteger.Subtract(fee, refererFee);
@@ -432,7 +457,7 @@ namespace LordsContract
 
                     Runtime.Log("Fee is returned");
 
-                    BigInteger fee = feeBytes.ToBigInteger();
+                    BigInteger fee = feeBytes.AsBigInteger();
 
                     Runtime.Log("Fee convereted to number");
 
@@ -510,14 +535,14 @@ namespace LordsContract
 
                 Runtime.Log("Message converted");
 
-                if (!VerifySignature(signMessage, signature, GameOwnerPublicKey))
-                {
-                    Runtime.Notify(2);
-                    Runtime.Notify(signMessage);
-                    Runtime.Notify(signature);
-                    Runtime.Log("Signature Verification Failed");
-                    throw new Exception();
-                }
+                //if (!VerifySignature(signMessage, signature, GameOwnerPublicKey))
+                //{
+                //    Runtime.Notify(2);
+                //    Runtime.Notify(signMessage);
+                //    Runtime.Notify(signature);
+                //    Runtime.Log("Signature Verification Failed");
+                //    throw new Exception();
+                //}
 
                 Runtime.Log("Verified successuly");
 
@@ -657,7 +682,7 @@ namespace LordsContract
 
                 Runtime.Log("Market item duration not expired");
 
-                BigInteger durationFee = durationFeeBytes.ToBigInteger();
+                BigInteger durationFee = durationFeeBytes.AsBigInteger();
                 if (!AttachmentExist(durationFee, GameOwner))
                 {
                     Runtime.Notify(1010);
@@ -680,7 +705,7 @@ namespace LordsContract
 
                 // Increase coffer
                 byte[] purchaseCofferPercentsBytes = Storage.Get(Storage.CurrentContext, PERCENTS_SELLER_COFFER);
-                BigInteger purchaseCofferPercents = purchaseCofferPercentsBytes.ToBigInteger();
+                BigInteger purchaseCofferPercents = purchaseCofferPercentsBytes.AsBigInteger();
                 BigInteger sellFeePercents = BigInteger.Divide(durationFee, 100);
                 BigInteger purchaseCoffer = BigInteger.Multiply(purchaseCofferPercents, sellFeePercents);
                 city.Coffer = BigInteger.Add(city.Coffer, purchaseCoffer);
@@ -782,7 +807,7 @@ namespace LordsContract
                         Runtime.Log("Market item duration not expired");
                         // original price based sum of money that buyer should attach to tx.
                         byte[] totalPricePercentsBytes = Storage.Get(Storage.CurrentContext, PERCENTS_PURCHACE);
-                        BigInteger totalPricePercents = totalPricePercentsBytes.ToBigInteger();
+                        BigInteger totalPricePercents = totalPricePercentsBytes.AsBigInteger();
 
                         BigInteger marketCityId = marketItem.City;
                         string cityKey = CITY_MAP + marketCityId.ToByteArray();
@@ -801,7 +826,7 @@ namespace LordsContract
                             BigInteger totalPrice = BigInteger.Multiply(pricePercent, totalPricePercents);
 
                             byte[] lordPercentsBytes = Storage.Get(Storage.CurrentContext, PERCENTS_LORD);
-                            BigInteger lordPercents = lordPercentsBytes.ToBigInteger();
+                            BigInteger lordPercents = lordPercentsBytes.AsBigInteger();
 
                             Runtime.Log("Lord percent fee");
 
@@ -935,7 +960,7 @@ namespace LordsContract
             //byte[] salt = Gen();
             //byte[] rand = Ran(salt, 6);
             //Runtime.Notify(rand);
-            //BigInteger randBig = rand.ToBigInteger();
+            //BigInteger randBig = rand.AsBigInteger();
             //Runtime.Notify(randBig);
             //return randBig % max;
 
@@ -960,7 +985,7 @@ namespace LordsContract
             Header bl = Blockchain.GetHeader(Blockchain.GetHeight());
             byte[] hash = Hash256(bl.Hash.Concat(tx.Hash));
             byte[] rand = hash.Range(0, size_in_bytes);
-            BigInteger res= rand.ToBigInteger();
+            BigInteger res= rand.AsBigInteger();
             return res;
         }
 
@@ -991,7 +1016,7 @@ namespace LordsContract
             foreach (var output in outputs)
             {
                 // Game Developers got their fee?
-                if (output.ScriptHash.ToBigInteger() == GeneralContract.GameOwner.ToBigInteger())
+                if (output.ScriptHash.AsBigInteger() == GeneralContract.GameOwner.AsBigInteger())
                 {
 
                     if (output.Value == value)
@@ -1014,7 +1039,7 @@ namespace LordsContract
             foreach (var output in outputs)
             {
                 // Game Developers got their fee?
-                if (output.ScriptHash.ToBigInteger() == receivingScriptHash.ToBigInteger())
+                if (output.ScriptHash.AsBigInteger() == receivingScriptHash.AsBigInteger())
                 {
                     if (output.Value == value)
                     {

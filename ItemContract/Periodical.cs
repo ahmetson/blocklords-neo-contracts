@@ -21,7 +21,7 @@ namespace LordsContract
             }
 
             byte[] dropIntervalBytes = Storage.Get(Storage.CurrentContext, GeneralContract.INTERVAL_DROP);
-            BigInteger dropInterval = dropIntervalBytes.ToBigInteger();
+            BigInteger dropInterval = dropIntervalBytes.AsBigInteger();
 
             if (Blockchain.GetHeight() <= dropInterval + lastDrop.Block)
             {
@@ -30,7 +30,7 @@ namespace LordsContract
             }
 
             byte[] strongholdsAmountBytes = Storage.Get(Storage.CurrentContext, GeneralContract.AMOUNT_STRONGHOLDS);
-            BigInteger strongholdsAmount = strongholdsAmountBytes.ToBigInteger();
+            BigInteger strongholdsAmount = strongholdsAmountBytes.AsBigInteger();
 
             string key;
             Stronghold stronghold;
@@ -133,10 +133,10 @@ namespace LordsContract
             session.AmountPaidCity = 0;
 
             byte[] amountCityBytes = Storage.Get(Storage.CurrentContext, GeneralContract.AMOUNT_CITIES);
-            BigInteger amountCity = amountCityBytes.ToBigInteger();
+            BigInteger amountCity = amountCityBytes.AsBigInteger();
 
             byte[] paymentIntervalBytes = Storage.Get(Storage.CurrentContext, GeneralContract.INTERVAL_COFFER);
-            BigInteger paymentInterval = paymentIntervalBytes.ToBigInteger();
+            BigInteger paymentInterval = paymentIntervalBytes.AsBigInteger();
 
             byte[] lastCofferSession = Storage.Get(Storage.CurrentContext, GeneralContract.COFFER_PAYMENT_SESSION);
             if (lastCofferSession.Length > 0)
@@ -218,7 +218,7 @@ namespace LordsContract
                 BigInteger percent = BigInteger.Divide(city.Coffer, 100);
 
                 byte[] cofferPercentsBytes = Storage.Get(Storage.CurrentContext, GeneralContract.PERCENTS_COFFER_PAY);
-                BigInteger cofferPercents = cofferPercentsBytes.ToBigInteger();
+                BigInteger cofferPercents = cofferPercentsBytes.AsBigInteger();
 
                 BigInteger cofferPaymentSize = BigInteger.Multiply(percent, cofferPercents);
 
@@ -384,7 +384,7 @@ namespace LordsContract
         //        DropData dropped = new DropData();
         //        dropped.Block = Blockchain.GetHeight();
         //        dropped.HeroId = stronghold.Hero;
-        //        dropped.ItemId = nextRewardItem.ToBigInteger();
+        //        dropped.ItemId = nextRewardItem.AsBigInteger();
         //        dropped.StrongholdId = stronghold.ID;
 
         //        byte[] bytes = Neo.SmartContract.Framework.Helper.Serialize(dropped);

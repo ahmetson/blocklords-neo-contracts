@@ -63,8 +63,8 @@ namespace LordsContract
             }
             else if (key.Equals(GeneralContract.PERCENTS_PVC_COFFER))
             {
-                BigInteger v = (BigInteger)Neo.SmartContract.Framework.Helper.Deserialize(value);
-                GeneralContract.RequireValidRange(v, GeneralContract.PERCENTS_PVC_COFFER_MIN, GeneralContract.PERCENTS_PVC_COFFER_MAX);
+                //BigInteger v = (BigInteger)Neo.SmartContract.Framework.Helper.Deserialize(value);
+                //GeneralContract.RequireValidRange(v, GeneralContract.PERCENTS_PVC_COFFER_MIN, GeneralContract.PERCENTS_PVC_COFFER_MAX);
                 Storage.Put(Storage.CurrentContext, GeneralContract.PERCENTS_PVC_COFFER, value);
             }
             else if (key.Equals(GeneralContract.PERCENTS_COFFER_PAY))

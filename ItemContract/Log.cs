@@ -41,7 +41,6 @@ namespace LordsContract
 
             string battleIdKey = GeneralContract.BATTLE_LOG_MAP + log.BattleId;
             byte[] battleLogBytes = Storage.Get(Storage.CurrentContext, battleIdKey);
-
             if (battleLogBytes.Length > 0)
             {
                 Runtime.Notify(7002);
@@ -126,15 +125,7 @@ namespace LordsContract
                             Runtime.Log("Fee is empty!!!!");
                         }
 
-                        BigInteger fee = (BigInteger)Neo.SmartContract.Framework.Helper.Deserialize(feeBytes);
-
-                        if (fee == 0)
-                        {
-                            Runtime.Log("Fee converted to empty one");
-                        }
-
-                        Runtime.Notify(fee, feeBytes);
-                        Runtime.Log("Fee is included");
+                        BigInteger fee = feeBytes.AsBigInteger();
 
                         if (!GeneralContract.AttachmentExistAB(feeBytes, GeneralContract.GameOwner))
                         {
@@ -142,21 +133,13 @@ namespace LordsContract
                             throw new System.Exception();
                         }
 
-                        Runtime.Log("attack fee included");
-
                         // Increase city coffer
                         byte[] pvcCofferPercentsBytes = Storage.Get(Storage.CurrentContext, GeneralContract.PERCENTS_PVC_COFFER);
-                        BigInteger pvcCofferPercents = (BigInteger)Neo.SmartContract.Framework.Helper.Deserialize(pvcCofferPercentsBytes);
-                        GeneralContract.RequireValidRange(pvcCofferPercents, GeneralContract.PERCENTS_PVC_COFFER_MIN, GeneralContract.PERCENTS_PVC_COFFER_MAX);
-
+                        BigInteger pvcCofferPercents = pvcCofferPercentsBytes.AsBigInteger();
                         BigInteger percent = BigInteger.Divide(fee, 100);
                         BigInteger pvcCoffer = BigInteger.Multiply(pvcCofferPercents, percent);
 
                         city.Coffer = BigInteger.Add(city.Coffer, pvcCoffer);
-
-                        Runtime.Notify("Coffer change", city.Coffer, pvcCoffer);
-
-                        Runtime.Log("City coffer calculated");
 
                         if (log.BattleResult == GeneralContract.ATTACKER_WON)
                         {
@@ -212,7 +195,7 @@ namespace LordsContract
                     {
                         Runtime.Log("Stronghold is not owned by player");
                         byte[] feeBytes = Storage.Get(Storage.CurrentContext, GeneralContract.FEE_PVP);
-                        BigInteger fee = feeBytes.ToBigInteger();
+                        BigInteger fee = feeBytes.AsBigInteger();
 
                         if (!GeneralContract.AttachmentExist(fee, GeneralContract.GameOwner))
                         {
@@ -264,7 +247,7 @@ namespace LordsContract
                 {
                     Runtime.Log("Bandit camp on blockchain");
                     byte[] feeBytes = Storage.Get(Storage.CurrentContext, GeneralContract.FEE_PVE);
-                    BigInteger fee = feeBytes.ToBigInteger();
+                    BigInteger fee = feeBytes.AsBigInteger();
 
                     if (!GeneralContract.AttachmentExist(fee, GeneralContract.GameOwner))
                     {
@@ -424,7 +407,7 @@ namespace LordsContract
             Runtime.Log("Check item");
             string itemKey = GeneralContract.ITEM_MAP + itemId;
             byte[] itemBytes = Storage.Get(Storage.CurrentContext, itemKey);
-            BigInteger itemOwnerNum = itemOwner.ToBigInteger();
+            BigInteger itemOwnerNum = itemOwner.AsBigInteger();
             Runtime.Log("Item prepared");
             if (itemBytes.Length > 0)
             {
