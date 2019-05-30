@@ -1,4 +1,4 @@
-﻿using Neo.SmartContract.Framework;
+using Neo.SmartContract.Framework;
 using Neo.SmartContract.Framework.Services.Neo;
 using System.Numerics;
 
@@ -184,7 +184,7 @@ namespace LordsContract
             if (city.Hero > 0)
             {
                 BigInteger cityLordId = city.Hero;
-                string heroKey = GeneralContract.HERO_MAP + cityLordId.ToByteArray();
+                string heroKey = GeneralContract.HERO_MAP + cityLordId.AsByteArray();
                 byte[] heroBytes = Storage.Get(Storage.CurrentContext, heroKey);
 
                 Hero hero = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(heroBytes);
