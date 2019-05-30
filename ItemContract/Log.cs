@@ -120,10 +120,6 @@ namespace LordsContract
                     {
                         Runtime.Log("Hero is attacking to someones city");
                         byte[] feeBytes = Storage.Get(Storage.CurrentContext, GeneralContract.FEE_PVC);
-                        if (feeBytes.Length == 0)
-                        {
-                            Runtime.Log("Fee is empty!!!!");
-                        }
 
                         BigInteger fee = feeBytes.AsBigInteger();
 
@@ -144,8 +140,6 @@ namespace LordsContract
                         if (log.BattleResult == GeneralContract.ATTACKER_WON)
                         {
                             // change city owner
-                            Runtime.Log("City hero changed");
-                            Runtime.Notify(city.Hero, attackerNum);
                             city.Hero = attackerNum;
                         }
                         else if (log.BattleResult != GeneralContract.ATTACKER_LOSE)
@@ -154,13 +148,10 @@ namespace LordsContract
                             throw new System.Exception();
                         }
 
-                        Runtime.Log("City Data prepared");
 
                         key = GeneralContract.CITY_MAP + log.DefenderObject;
                         bytes = Neo.SmartContract.Framework.Helper.Serialize(city);
                         Storage.Put(Storage.CurrentContext, key, bytes);
-
-                        Runtime.Log("City data inserted");
                     }
                 }
 
