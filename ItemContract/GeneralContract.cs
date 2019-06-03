@@ -138,6 +138,12 @@ namespace LordsContract
         /// </summary>
         public static readonly BigInteger PERCENTS_PVC_COFFER_MAX = 70;
         public static readonly BigInteger PERCENTS_PVC_COFFER_MIN = 0;
+        /// <summary>
+        /// Storage Key of GAS in percents that city coffer will get for every added market item.
+        /// </summary>
+        public static readonly string MARKET_COFFER_ADDITION_8_HOURS = "\x26";
+        public static readonly string MARKET_COFFER_ADDITION_12_HOURS = "\x40";
+        public static readonly string MARKET_COFFER_ADDITION_24_HOURS = "\x41";
 
 
         /// <summary>
@@ -180,6 +186,7 @@ namespace LordsContract
         /// </summary>
         public static readonly byte[] GameOwner = "AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y".ToScriptHash();//"AML8hyTV4vXuomovxdcAH9pRC9ny618YmA".ToScriptHash();
         public static readonly byte[] GameOwnerPublicKey = "031a6c6fbbdf02ca351745fa86b9ba5a9452d785ac4f7fc2b7548ca2a46c4fcf4a".HexToBytes();//"AML8hyTV4vXuomovxdcAH9pRC9ny618YmA".ToScriptHash();
+
         //public static readonly byte[] GameOwner = "ARxEMtapvYPp6ACc5P86WHSZPeVzgoB18r".ToScriptHash();//"AML8hyTV4vXuomovxdcAH9pRC9ny618YmA".ToScriptHash();
         //public static readonly byte[] GameOwnerPublicKey = "021c2ca353f94e810b315180ba46a3c6140c1804a63066a36007f2b46b01d67261".HexToBytes();//"AML8hyTV4vXuomovxdcAH9pRC9ny618YmA".ToScriptHash();
 
@@ -207,8 +214,8 @@ namespace LordsContract
         {
             if (param.Equals("testConversion"))
             {
-                byte[] pvcCofferPercentsBytes = Storage.Get(Storage.CurrentContext, PERCENTS_PVC_COFFER);
-                BigInteger pvcCofferPercents = pvcCofferPercentsBytes.AsBigInteger();
+                byte[] pvcCofferPercentsBytes = Storage.Get(Storage.CurrentContext, PVC_COFFER_ADDITION_AMOUNT);
+                BigInteger pvcCofferPercents = pvcCofferPercentsBytes.ToBigInteger();
                 if (pvcCofferPercents == 0)
                 {
                     Runtime.Log("Coffer Percents 0");
@@ -219,7 +226,7 @@ namespace LordsContract
                 }
 
                 byte[] bytes = new byte[] { 1, 2, 3, 4, 5 };
-                BigInteger big = bytes.AsBigInteger();
+                BigInteger big = bytes.ToBigInteger();
                 if (big == 0)
                 {
                     Runtime.Log("Big number is 0");
@@ -423,16 +430,37 @@ namespace LordsContract
                         throw new Exception();
                     }
 
-                    byte[] feeBytes = Storage.Get(Storage.CurrentContext, FEE_HERO_CREATION);
-                    BigInteger fee = feeBytes.AsBigInteger();
+                    byte[] feeSettingBytes = Storage.Get(Storage.CurrentContext, FEE_HERO_CREATION);
+                    byte[] feeBytes = (byte[])args[11];
 
-                    byte[] refererBytes = Storage.Get(Storage.CurrentContext, FEE_REFERAL);
-                    BigInteger refererFee = refererBytes.AsBigInteger();
+                    if (feeSettingBytes.Length > 0)
+                    {
+                        if (!feeBytes.Equals(feeSettingBytes))
+                        {
+                            Runtime.Notify(4013, feeBytes, feeSettingBytes);
+                            throw new Exception();
+                        }
+                    }
+
+                    byte[] refererFeeSettingBytes = Storage.Get(Storage.CurrentContext, FEE_REFERAL);
+                    byte[] refererFeeBytes = (byte[])args[12];
+
+                    if (refererFeeSettingBytes.Length > 0)
+                    {
+                        if (!refererFeeBytes.Equals(refererFeeSettingBytes))
+                        {
+                            Runtime.Notify(4014, refererFeeBytes, refererFeeSettingBytes);
+                            throw new Exception();
+                        }
+                    }
+
+                    BigInteger fee = (BigInteger)args[11];
+                    BigInteger refererFee = (BigInteger)args[12];
 
                     // Game owner's fee is less, if we have a referer
                     fee = BigInteger.Subtract(fee, refererFee);
 
-                    if (!AttachmentExist(refererFee, refererHero.OWNER))
+                    if (!AttachmentExistAB(refererFeeBytes, refererHero.OWNER))
                     {
                         Runtime.Notify(4008);
                         throw new Exception();
@@ -452,7 +480,7 @@ namespace LordsContract
 
                     Runtime.Log("Fee is returned");
 
-                    BigInteger fee = feeBytes.AsBigInteger();
+                    BigInteger fee = feeBytes.ToBigInteger();
 
                     Runtime.Log("Fee convereted to number");
 
@@ -560,7 +588,7 @@ namespace LordsContract
             else if (param.Equals("marketAddItem"))
             {
                 // 1: Hero Id, 2: Item Id, 3: Price, 4: Duration in seconds, 5: City ID
-                if (args.Length != 4)
+                if (args.Length != 5)
                 {
                     Runtime.Notify(1001);
                     throw new Exception();
@@ -572,6 +600,7 @@ namespace LordsContract
                 BigInteger price = (BigInteger)args[1];
                 BigInteger duration = (BigInteger)args[2];
                 BigInteger cityId = (BigInteger)args[3];
+                byte[] cofferAdditionAmountBytes = (byte[])args[4];
 
                 Runtime.Log("Item data retrieved");
 
@@ -583,18 +612,23 @@ namespace LordsContract
 
                 Runtime.Log("Data is not called by player");
 
-                byte[] durationFeeBytes = new byte[0] { };
+                byte[] durationFeeSettingBytes = new byte[0] { };
+                // Increase coffer
+                byte[] marketCofferAdditionSettingBytes = new byte[0] { };
                 if (duration == duration8Hours)
                 {
-                    durationFeeBytes = Storage.Get(Storage.CurrentContext, FEE_8_HOURS);
+                    durationFeeSettingBytes = Storage.Get(Storage.CurrentContext, FEE_8_HOURS);
+                    marketCofferAdditionSettingBytes = Storage.Get(Storage.CurrentContext, MARKET_COFFER_ADDITION_8_HOURS);
                 }
                 else if (duration == duration12Hours)
                 {
-                    durationFeeBytes = Storage.Get(Storage.CurrentContext, FEE_12_HOURS);
+                    durationFeeSettingBytes = Storage.Get(Storage.CurrentContext, FEE_12_HOURS);
+                    marketCofferAdditionSettingBytes = Storage.Get(Storage.CurrentContext, MARKET_COFFER_ADDITION_12_HOURS);
                 }
                 else if (duration == duration24Hours)
                 {
-                    durationFeeBytes = Storage.Get(Storage.CurrentContext, FEE_24_HOURS);
+                    durationFeeSettingBytes = Storage.Get(Storage.CurrentContext, FEE_24_HOURS);
+                    marketCofferAdditionSettingBytes = Storage.Get(Storage.CurrentContext, MARKET_COFFER_ADDITION_24_HOURS);
                 }
                 else
                 {
@@ -678,14 +712,22 @@ namespace LordsContract
 
                 Runtime.Log("Market item duration not expired");
 
-                BigInteger durationFee = durationFeeBytes.AsBigInteger();
-                if (!AttachmentExist(durationFee, GameOwner))
+                if (!AttachmentExistAB(durationFeeSettingBytes, GameOwner))
                 {
                     Runtime.Notify(1010);
                     throw new Exception();
                 }
 
                 Runtime.Log("Fee attached");
+
+                if (marketCofferAdditionSettingBytes.Length > 0)
+                {
+                    if (!marketCofferAdditionSettingBytes.Equals(cofferAdditionAmountBytes))
+                    {
+                        Runtime.Notify(1011, marketCofferAdditionSettingBytes, cofferAdditionAmountBytes);
+                        throw new Exception();
+                    }
+                }
 
                 MarketItemData marketItem = new MarketItemData();
                 marketItem.Duration = duration;
@@ -696,18 +738,14 @@ namespace LordsContract
 
                 marketItemBytes = Neo.SmartContract.Framework.Helper.Serialize(marketItem);
 
-                // Save on Storage!!!
-                Storage.Put(Storage.CurrentContext, marketItemKey, marketItemBytes);
-
-                // Increase coffer
-                byte[] purchaseCofferPercentsBytes = Storage.Get(Storage.CurrentContext, PERCENTS_SELLER_COFFER);
-                BigInteger purchaseCofferPercents = purchaseCofferPercentsBytes.AsBigInteger();
-                BigInteger sellFeePercents = BigInteger.Divide(durationFee, 100);
-                BigInteger purchaseCoffer = BigInteger.Multiply(purchaseCofferPercents, sellFeePercents);
-                city.Coffer = BigInteger.Add(city.Coffer, purchaseCoffer);
+                BigInteger cofferAdditionNum = (BigInteger)args[4];
+                city.Coffer = BigInteger.Add(city.Coffer, cofferAdditionNum);
                 city.ItemsOnMarket = BigInteger.Add(city.ItemsOnMarket, 1);
 
                 Runtime.Log("City data update");
+
+                // Save on Storage!!!
+                Storage.Put(Storage.CurrentContext, marketItemKey, marketItemBytes);
 
                 //// Update City
                 cityBytes = Neo.SmartContract.Framework.Helper.Serialize(city);
@@ -802,8 +840,8 @@ namespace LordsContract
                     {
                         Runtime.Log("Market item duration not expired");
                         // original price based sum of money that buyer should attach to tx.
-                        byte[] totalPricePercentsBytes = Storage.Get(Storage.CurrentContext, PERCENTS_PURCHACE);
-                        BigInteger totalPricePercents = totalPricePercentsBytes.AsBigInteger();
+                        byte[] lordFeeSettingBytes = Storage.Get(Storage.CurrentContext, PERCENTS_LORD);
+                        byte[] gameOwnerSettingBytes = Storage.Get(Storage.CurrentContext, PERCENTS_GAME_OWNER);
 
                         BigInteger marketCityId = marketItem.City;
                         string cityKey = CITY_MAP + marketCityId.ToByteArray();
@@ -815,35 +853,51 @@ namespace LordsContract
                         BigInteger lordExpectation = 0;
                         BigInteger sellerExpectation = marketItem.Price;
 
-                        if (totalPricePercents > 0)
+                        if (gameOwnerSettingBytes.Length > 0)
                         {
+                            byte[] lordFeeBytes = (byte[])args[2];
+                            if (!lordFeeBytes.Equals(lordFeeSettingBytes))
+                            {
+                                Runtime.Notify(2012, lordFeeSettingBytes, lordFeeBytes);
+                                throw new Exception();
+                            }
+
+                            byte[] gameOwnerFeeBytes = (byte[])args[3];
+                            if (!gameOwnerFeeBytes.Equals(gameOwnerSettingBytes))
+                            {
+                                Runtime.Notify(2013, gameOwnerSettingBytes, gameOwnerFeeBytes);
+                                throw new Exception();
+                            }
+
                             Runtime.Log("Pay correct fee");
                             BigInteger pricePercent = BigInteger.Divide(marketItem.Price, 100);
-                            BigInteger totalPrice = BigInteger.Multiply(pricePercent, totalPricePercents);
 
-                            byte[] lordPercentsBytes = Storage.Get(Storage.CurrentContext, PERCENTS_LORD);
-                            BigInteger lordPercents = lordPercentsBytes.AsBigInteger();
+                            BigInteger lordFeePercents = (BigInteger)args[2];
+                            BigInteger gameOwnerPercents = (BigInteger)args[3];
+
+                            BigInteger lordFee = BigInteger.Multiply(pricePercent, lordFeePercents);
+                            BigInteger gameOwnerFee = BigInteger.Multiply(pricePercent, gameOwnerPercents);
 
                             Runtime.Log("Lord percent fee");
 
                             if (city.Hero > 0 && city.Hero == heroId)
                             {
                                 sellerExpectation = 0;
-                                lordExpectation = BigInteger.Add(marketItem.Price, BigInteger.Multiply(pricePercent, lordPercents));
+                                lordExpectation = BigInteger.Add(marketItem.Price, gameOwnerFee);
                             }
                             else if (city.Hero > 0)
                             {
-                                lordExpectation = BigInteger.Multiply(pricePercent, lordPercents);
+                                lordExpectation = lordFee;
                             }
 
                             Runtime.Log("Lord expectation is increased");
 
                             /// All additional GAS over original price goes to Game Owner
-                            gameOwnerExpectation = BigInteger.Subtract(totalPrice, marketItem.Price);
+                            gameOwnerExpectation = BigInteger.Add(gameOwnerFee, lordFee);
                             if (city.Hero > 0)
                             {
                                 // City lord exists? Game owner can not pretend to lord's fee!
-                                gameOwnerExpectation = BigInteger.Subtract(gameOwnerExpectation, BigInteger.Multiply(pricePercent, lordPercents));
+                                gameOwnerExpectation = gameOwnerFee;
                             }
 
                             Runtime.Log("Game owner expectation set");
@@ -1072,7 +1126,7 @@ namespace LordsContract
             Header bl = Blockchain.GetHeader(Blockchain.GetHeight());
             byte[] hash = Hash256(bl.Hash.Concat(tx.Hash));
             byte[] rand = hash.Range(0, size_in_bytes);
-            BigInteger res= rand.AsBigInteger();
+            BigInteger res= rand.ToBigInteger();
             return res;
         }
 
@@ -1103,7 +1157,7 @@ namespace LordsContract
             foreach (var output in outputs)
             {
                 // Game Developers got their fee?
-                if (output.ScriptHash.AsBigInteger() == GeneralContract.GameOwner.AsBigInteger())
+                if (output.ScriptHash.ToBigInteger() == GameOwner.ToBigInteger())
                 {
 
                     if (output.Value == value)
@@ -1126,7 +1180,7 @@ namespace LordsContract
             foreach (var output in outputs)
             {
                 // Game Developers got their fee?
-                if (output.ScriptHash.AsBigInteger() == receivingScriptHash.AsBigInteger())
+                if (output.ScriptHash.ToBigInteger() == receivingScriptHash.ToBigInteger())
                 {
                     if (output.Value == value)
                     {
