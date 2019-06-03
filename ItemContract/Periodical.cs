@@ -74,6 +74,17 @@ namespace LordsContract
                 {
                     // Delete Item
                     Storage.Delete(Storage.CurrentContext, itemKey);
+
+                    // Record the match
+                    lastDrop.Block = Blockchain.GetHeight();
+                    lastDrop.HeroId = 0;
+                    lastDrop.ItemId = itemId;
+                    lastDrop.StrongholdId = random;
+
+                    lastDropBytes = Neo.SmartContract.Framework.Helper.Serialize(lastDrop);
+
+                    Storage.Put(Storage.CurrentContext, GeneralContract.LAST_ITEM_DROP, lastDropBytes);
+
                     Runtime.Notify(5004, itemId, random, 0, Blockchain.GetHeight());
                 }
                 else
