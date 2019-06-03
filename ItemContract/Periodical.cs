@@ -1,4 +1,4 @@
-﻿using Neo.SmartContract.Framework;
+using Neo.SmartContract.Framework;
 using Neo.SmartContract.Framework.Services.Neo;
 using System.Numerics;
 
@@ -21,7 +21,7 @@ namespace LordsContract
             }
 
             byte[] dropIntervalBytes = Storage.Get(Storage.CurrentContext, GeneralContract.INTERVAL_DROP);
-            BigInteger dropInterval = dropIntervalBytes.AsBigInteger();
+            BigInteger dropInterval = dropIntervalBytes.ToBigInteger();
 
             if (Blockchain.GetHeight() <= dropInterval + lastDrop.Block)
             {
@@ -30,7 +30,7 @@ namespace LordsContract
             }
 
             byte[] strongholdsAmountBytes = Storage.Get(Storage.CurrentContext, GeneralContract.AMOUNT_STRONGHOLDS);
-            BigInteger strongholdsAmount = strongholdsAmountBytes.AsBigInteger();
+            BigInteger strongholdsAmount = strongholdsAmountBytes.ToBigInteger();
 
             string key;
             Stronghold stronghold;
@@ -62,7 +62,7 @@ namespace LordsContract
             {
                 // Delete Item
                 //Storage.Delete(Storage.CurrentContext, itemKey);
-                Runtime.Notify(5003, itemId, random, 0, Blockchain.GetHeight());
+                Runtime.Notify(5003);//, itemId, random, 0, Blockchain.GetHeight());
                 throw new System.Exception();
             }
             else
@@ -133,10 +133,10 @@ namespace LordsContract
             session.AmountPaidCity = 0;
 
             byte[] amountCityBytes = Storage.Get(Storage.CurrentContext, GeneralContract.AMOUNT_CITIES);
-            BigInteger amountCity = amountCityBytes.AsBigInteger();
+            BigInteger amountCity = amountCityBytes.ToBigInteger();
 
             byte[] paymentIntervalBytes = Storage.Get(Storage.CurrentContext, GeneralContract.INTERVAL_COFFER);
-            BigInteger paymentInterval = paymentIntervalBytes.AsBigInteger();
+            BigInteger paymentInterval = paymentIntervalBytes.ToBigInteger();
 
             byte[] lastCofferSession = Storage.Get(Storage.CurrentContext, GeneralContract.COFFER_PAYMENT_SESSION);
             if (lastCofferSession.Length > 0)
@@ -218,7 +218,7 @@ namespace LordsContract
                 BigInteger percent = BigInteger.Divide(city.Coffer, 100);
 
                 byte[] cofferPercentsBytes = Storage.Get(Storage.CurrentContext, GeneralContract.PERCENTS_COFFER_PAY);
-                BigInteger cofferPercents = cofferPercentsBytes.AsBigInteger();
+                BigInteger cofferPercents = cofferPercentsBytes.ToBigInteger();
 
                 BigInteger cofferPaymentSize = BigInteger.Multiply(percent, cofferPercents);
 
@@ -384,7 +384,7 @@ namespace LordsContract
         //        DropData dropped = new DropData();
         //        dropped.Block = Blockchain.GetHeight();
         //        dropped.HeroId = stronghold.Hero;
-        //        dropped.ItemId = nextRewardItem.AsBigInteger();
+        //        dropped.ItemId = nextRewardItem.ToBigInteger();
         //        dropped.StrongholdId = stronghold.ID;
 
         //        byte[] bytes = Neo.SmartContract.Framework.Helper.Serialize(dropped);
