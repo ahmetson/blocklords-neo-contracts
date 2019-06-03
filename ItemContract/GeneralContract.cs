@@ -531,14 +531,14 @@ namespace LordsContract
 
                 Runtime.Log("Message converted");
 
-                //if (!VerifySignature(signMessage, signature, GameOwnerPublicKey))
-                //{
-                //    Runtime.Notify(2);
-                //    Runtime.Notify(signMessage);
-                //    Runtime.Notify(signature);
-                //    Runtime.Log("Signature Verification Failed");
-                //    throw new Exception();
-                //}
+                if (!VerifySignature(signMessage, signature, GameOwnerPublicKey))
+                {
+                    Runtime.Notify(2);
+                    Runtime.Notify(signMessage);
+                    Runtime.Notify(signature);
+                    Runtime.Log("Signature Verification Failed");
+                    throw new Exception();
+                }
 
                 Runtime.Log("Verified successuly");
 
@@ -938,7 +938,98 @@ namespace LordsContract
             }
             else if (param.Equals("logBattle"))
             {
-                Log.Battle(args);
+                if (Runtime.CheckWitness(GeneralContract.GameOwner))
+                {
+                    Runtime.Notify(1);
+                    throw new Exception();
+                }
+
+                // Prepare log
+                BattleLog log = new BattleLog();
+
+                log.BattleId = (byte[])args[0];
+                log.BattleResult = (BigInteger)args[1]; // 0 - Attacker WON, 1 - Attacker Lose
+                log.BattleType = (BigInteger)args[2];   // 0 - City, 1 - Stronghold, 2 - Bandit Camp
+                log.Attacker = (byte[])args[3]; // Hero
+                log.AttackerTroops = (BigInteger)args[4];
+                log.AttackerRemained = (BigInteger)args[5];
+                log.DefenderObject = (byte[])args[6];   // City|Stronghold|Bandit Camp ID
+                log.DefenderTroops = (BigInteger)args[7];
+                log.DefenderRemained = (BigInteger)args[8];
+
+                string battleIdKey = BATTLE_LOG_MAP + log.BattleId;
+                byte[] battleLogBytes = Storage.Get(Storage.CurrentContext, battleIdKey);
+                if (battleLogBytes.Length > 0)
+                {
+                    Runtime.Notify(7002);
+                    throw new Exception();
+                }
+
+                // Get Hero
+                string heroKey = HERO_MAP + log.Attacker;
+                byte[] heroBytes = Storage.Get(Storage.CurrentContext, heroKey);
+                if (heroBytes.Length <= 0)
+                {
+                    Runtime.Notify(7003);
+                    throw new Exception();
+                }
+
+                Hero hero = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(heroBytes);
+                if (!Runtime.CheckWitness(hero.OWNER))
+                {
+                    Runtime.Notify(7004);
+                    throw new Exception();
+                }
+
+                log.AttackerItem1 = (byte[])args[9];
+                log.AttackerItem2 = (byte[])args[10];
+                log.AttackerItem3 = (byte[])args[11];
+                log.AttackerItem4 = (byte[])args[12];
+                log.AttackerItem5 = (byte[])args[13];
+
+                Log.CheckItemOwnership(log.AttackerItem1, log.Attacker);
+                Log.CheckItemOwnership(log.AttackerItem2, log.Attacker);
+                Log.CheckItemOwnership(log.AttackerItem3, log.Attacker);
+                Log.CheckItemOwnership(log.AttackerItem4, log.Attacker);
+                Log.CheckItemOwnership(log.AttackerItem5, log.Attacker);
+
+                BigInteger attackerNum = (BigInteger)args[3];
+                if (attackerNum == 0)
+                {
+                    Runtime.Log("Hero Number is 0");
+                }
+
+                // Check Signature
+                byte[] signature = (byte[])args[14];
+
+                byte[] battleResultBytes = (byte[])args[1];
+                byte[] battleTypeBytes = (byte[])args[2];
+                byte[] signMessage = Neo.SmartContract.Framework.Helper.Concat(log.BattleId, battleResultBytes);
+
+                Runtime.Log("Concatination of Defense was succ");
+
+                signMessage = Neo.SmartContract.Framework.Helper.Concat(signMessage, battleTypeBytes);
+                signMessage = Neo.SmartContract.Framework.Helper.Concat(signMessage, log.Attacker);
+                signMessage = Neo.SmartContract.Framework.Helper.Concat(signMessage, log.DefenderObject);
+                signMessage = Neo.SmartContract.Framework.Helper.Concat(signMessage, log.AttackerItem1);
+                signMessage = Neo.SmartContract.Framework.Helper.Concat(signMessage, log.AttackerItem2);
+                signMessage = Neo.SmartContract.Framework.Helper.Concat(signMessage, log.AttackerItem3);
+                signMessage = Neo.SmartContract.Framework.Helper.Concat(signMessage, log.AttackerItem4);
+                signMessage = Neo.SmartContract.Framework.Helper.Concat(signMessage, log.AttackerItem5);
+
+                Runtime.Log("Concatted message data");
+
+                Runtime.Log("Message converted");
+
+                if (!VerifySignature(signMessage, signature, GameOwnerPublicKey))
+                {
+                    Runtime.Notify(2);
+                    Runtime.Notify(signMessage);
+                    Runtime.Notify(signature);
+                    Runtime.Log("Signature Verification Failed");
+                    throw new Exception();
+                }
+                Log.Battle(log, hero, attackerNum, args[15]);
             }
 
             byte[] res = new byte[1] { 0 };
@@ -956,7 +1047,7 @@ namespace LordsContract
             //byte[] salt = Gen();
             //byte[] rand = Ran(salt, 6);
             //Runtime.Notify(rand);
-            //BigInteger randBig = rand.AsBigInteger();
+            //BigInteger randBig = rand.ToBigInteger();
             //Runtime.Notify(randBig);
             //return randBig % max;
 
