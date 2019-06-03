@@ -49,23 +49,31 @@ namespace LordsContract
             {
                 Storage.Put(Storage.CurrentContext, GeneralContract.FEE_PVP, value);
             }
-            else if (key.Equals(GeneralContract.PERCENTS_PURCHACE))
+            else if (key.Equals(GeneralContract.PERCENTS_GAME_OWNER))
             {
-                Storage.Put(Storage.CurrentContext, GeneralContract.PERCENTS_PURCHACE, value);
+                Storage.Put(Storage.CurrentContext, GeneralContract.PERCENTS_GAME_OWNER, value);
             }
             else if (key.Equals(GeneralContract.PERCENTS_LORD))
             {
                 Storage.Put(Storage.CurrentContext, GeneralContract.PERCENTS_LORD, value);
             }
-            else if (key.Equals(GeneralContract.PERCENTS_SELLER_COFFER))
+            else if (key.Equals(GeneralContract.MARKET_COFFER_ADDITION_8_HOURS))
             {
-                Storage.Put(Storage.CurrentContext, GeneralContract.PERCENTS_SELLER_COFFER, value);
+                Storage.Put(Storage.CurrentContext, GeneralContract.MARKET_COFFER_ADDITION_8_HOURS, value);
             }
-            else if (key.Equals(GeneralContract.PERCENTS_PVC_COFFER))
+            else if (key.Equals(GeneralContract.MARKET_COFFER_ADDITION_12_HOURS))
+            {
+                Storage.Put(Storage.CurrentContext, GeneralContract.MARKET_COFFER_ADDITION_12_HOURS, value);
+            }
+            else if (key.Equals(GeneralContract.MARKET_COFFER_ADDITION_24_HOURS))
+            {
+                Storage.Put(Storage.CurrentContext, GeneralContract.MARKET_COFFER_ADDITION_24_HOURS, value);
+            }
+            else if (key.Equals(GeneralContract.PVC_COFFER_ADDITION_AMOUNT))
             {
                 //BigInteger v = (BigInteger)Neo.SmartContract.Framework.Helper.Deserialize(value);
                 //GeneralContract.RequireValidRange(v, GeneralContract.PERCENTS_PVC_COFFER_MIN, GeneralContract.PERCENTS_PVC_COFFER_MAX);
-                Storage.Put(Storage.CurrentContext, GeneralContract.PERCENTS_PVC_COFFER, value);
+                Storage.Put(Storage.CurrentContext, GeneralContract.PVC_COFFER_ADDITION_AMOUNT, value);
             }
             else if (key.Equals(GeneralContract.PERCENTS_COFFER_PAY))
             {

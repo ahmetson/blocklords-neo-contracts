@@ -119,7 +119,7 @@ namespace LordsContract
             BigInteger amount = 0;
             if (amountBytes.Length > 0)
             {
-                amount = amountBytes.AsBigInteger();
+                amount = amountBytes.ToBigInteger();
             }
             else
             {
@@ -179,7 +179,7 @@ namespace LordsContract
             BigInteger amount = 0;
             if (amountBytes.Length > 0)
             {
-                amount = amountBytes.AsBigInteger();
+                amount = amountBytes.ToBigInteger();
             }
             else
             {
@@ -232,7 +232,7 @@ namespace LordsContract
             BigInteger amount = 0;
             if (amountBytes.Length > 0)
             {
-                amount = amountBytes.AsBigInteger();
+                amount = amountBytes.ToBigInteger();
             }
             else
             {
