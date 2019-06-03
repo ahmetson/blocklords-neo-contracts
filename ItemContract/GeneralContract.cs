@@ -2,7 +2,6 @@ using Neo.SmartContract.Framework;
 using Neo.SmartContract.Framework.Services.Neo;
 using Neo.SmartContract.Framework.Services.System;
 using System;
-using System.ComponentModel;
 using System.Numerics;
 
 namespace LordsContract
@@ -75,21 +74,17 @@ namespace LordsContract
         /// Storage Key of GAS in percents that buyer should attach to buy item.
         /// As a base sum for calculation of GAS in percents is used the market item price.
         /// </summary>
-        public static readonly string PERCENTS_PURCHACE = "\x24";
+        public static readonly string PERCENTS_GAME_OWNER = "\x24";
         /// <summary>
         /// Storage Key of GAS in percents that lord of a city should get from buyer.
         /// As a base sum for calculation of GAS in percents that lord of a city should get is used market item price
         /// </summary>
         public static readonly string PERCENTS_LORD = "\x25";
         /// <summary>
-        /// Storage Key of GAS in percents that city coffer will get for every added market item.
-        /// </summary>
-        public static readonly string PERCENTS_SELLER_COFFER = "\x26";
-        /// <summary>
         /// Storage Key of GAS attachments in percents of City Attacks,
         /// that will be transfered to city coffer  
         /// </summary>
-        public static readonly string PERCENTS_PVC_COFFER = "\x27";
+        public static readonly string PVC_COFFER_ADDITION_AMOUNT = "\x27";
         /// <summary>
         /// Storage Key of GAS in percents that will be sent transferred to player.
         /// </summary>
@@ -181,11 +176,11 @@ namespace LordsContract
         // The Smartcontract Owner's Wallet Address. Used to receive some Gas as a transaction fee.
 
         /// <summary>
-        /// Game Owner's script hash
+        /// Game Owner's script hash: 1. Privatenet included in Neo-local, 2. Testnet 3. mainnet
         /// </summary>
         public static readonly byte[] GameOwner = "AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y".ToScriptHash();//"AML8hyTV4vXuomovxdcAH9pRC9ny618YmA".ToScriptHash();
-        //public static readonly byte[] GameOwner = "ARxEMtapvYPp6ACc5P86WHSZPeVzgoB18r".ToScriptHash();//"AML8hyTV4vXuomovxdcAH9pRC9ny618YmA".ToScriptHash();
         public static readonly byte[] GameOwnerPublicKey = "031a6c6fbbdf02ca351745fa86b9ba5a9452d785ac4f7fc2b7548ca2a46c4fcf4a".HexToBytes();//"AML8hyTV4vXuomovxdcAH9pRC9ny618YmA".ToScriptHash();
+        //public static readonly byte[] GameOwner = "ARxEMtapvYPp6ACc5P86WHSZPeVzgoB18r".ToScriptHash();//"AML8hyTV4vXuomovxdcAH9pRC9ny618YmA".ToScriptHash();
         //public static readonly byte[] GameOwnerPublicKey = "021c2ca353f94e810b315180ba46a3c6140c1804a63066a36007f2b46b01d67261".HexToBytes();//"AML8hyTV4vXuomovxdcAH9pRC9ny618YmA".ToScriptHash();
 
         /// <summary>
