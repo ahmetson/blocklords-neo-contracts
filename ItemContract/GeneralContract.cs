@@ -490,6 +490,7 @@ namespace LordsContract
                 hero.LEADERSHIP = stats[1];
                 hero.DEFENSE = stats[0];
                 hero.StrongholsAmount = 0;
+                hero.ID = heroId;
 
                 Runtime.Log("Hero Data set");
 
