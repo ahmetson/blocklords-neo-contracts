@@ -1,6 +1,7 @@
 ﻿using Neo.SmartContract.Framework;
 using Neo.SmartContract.Framework.Services.Neo;
 using Neo.SmartContract.Framework.Services.System;
+using System;
 using System.Numerics;
 
 namespace LordsContract
@@ -14,69 +15,9 @@ namespace LordsContract
         //
         //------------------------------------------------------------------------------------
 
-        public static void Battle(object[] args)
+        public static void Battle(BattleLog log, Hero hero, BigInteger attackerNum, object cofferSize)
         {
-            if (Runtime.CheckWitness(GeneralContract.GameOwner))
-            {
-                Runtime.Notify(1);
-                throw new System.Exception();
-            }
-
-            // Prepare log
-            BattleLog log = new BattleLog();
-
-            log.BattleId = (byte[])args[0];
-            log.BattleResult = (BigInteger)args[1]; // 0 - Attacker WON, 1 - Attacker Lose
-            log.BattleType = (BigInteger)args[2];   // 0 - City, 1 - Stronghold, 2 - Bandit Camp
-            log.Attacker = (byte[])args[3]; // Hero
-            log.AttackerTroops = (BigInteger)args[4];
-            log.AttackerRemained = (BigInteger)args[5];
-            log.DefenderObject = (byte[])args[6];   // City|Stronghold|Bandit Camp ID
-            log.DefenderTroops = (BigInteger)args[7];
-            log.DefenderRemained = (BigInteger)args[8];
-
-            string battleIdKey = GeneralContract.BATTLE_LOG_MAP + log.BattleId;
-            byte[] battleLogBytes = Storage.Get(Storage.CurrentContext, battleIdKey);
-            if (battleLogBytes.Length > 0)
-            {
-                Runtime.Notify(7002);
-                throw new System.Exception();
-            }
-
-            // Get Hero
-            string heroKey = GeneralContract.HERO_MAP + log.Attacker;
-            byte[] heroBytes = Storage.Get(Storage.CurrentContext, heroKey);
-            if (heroBytes.Length <= 0)
-            {
-                Runtime.Notify(7003);
-                throw new System.Exception();
-            }
-
-            Hero hero = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(heroBytes);
-            if (!Runtime.CheckWitness(hero.OWNER))
-            {
-                Runtime.Notify(7004);
-                throw new System.Exception();
-            }
-
-            log.AttackerItem1 = (byte[])args[9];
-            log.AttackerItem2 = (byte[])args[10];
-            log.AttackerItem3 = (byte[])args[11];
-            log.AttackerItem4 = (byte[])args[12];
-            log.AttackerItem5 = (byte[])args[13];
-
-            CheckItemOwnership(log.AttackerItem1, log.Attacker);
-            CheckItemOwnership(log.AttackerItem2, log.Attacker);
-            CheckItemOwnership(log.AttackerItem3, log.Attacker);
-            CheckItemOwnership(log.AttackerItem4, log.Attacker);
-            CheckItemOwnership(log.AttackerItem5, log.Attacker);
-
-            byte[] attackerId = log.Attacker;
-            BigInteger attackerNum = (BigInteger)args[3];
-            if (attackerNum == 0)
-            {
-                Runtime.Log("Hero Number is 0");
-            }
+            
 
             // Get Hero of Defender
             string key;
@@ -105,21 +46,29 @@ namespace LordsContract
                     {
                         byte[] feeBytes = Storage.Get(Storage.CurrentContext, GeneralContract.FEE_PVC);
 
-                        BigInteger fee = feeBytes.AsBigInteger();
-
                         if (!GeneralContract.AttachmentExistAB(feeBytes, GeneralContract.GameOwner))
                         {
                             Runtime.Notify(7007);
                             throw new System.Exception();
                         }
 
-                        // Increase city coffer
-                        byte[] pvcCofferPercentsBytes = Storage.Get(Storage.CurrentContext, GeneralContract.PERCENTS_PVC_COFFER);
-                        BigInteger pvcCofferPercents = pvcCofferPercentsBytes.AsBigInteger();
-                        BigInteger percent = BigInteger.Divide(fee, 100);
-                        BigInteger pvcCoffer = BigInteger.Multiply(pvcCofferPercents, percent);
 
-                        city.Coffer = BigInteger.Add(city.Coffer, pvcCoffer);
+
+                        // Increase city coffer
+                        byte[] pvcCofferPercentsBytes = Storage.Get(Storage.CurrentContext, GeneralContract.PVC_COFFER_ADDITION_AMOUNT);
+
+                        byte[] cofferSizeBytes = (byte[])cofferSize;
+                        if (pvcCofferPercentsBytes.Length > 0)
+                        {
+                            if (!pvcCofferPercentsBytes.Equals(cofferSizeBytes))
+                            {
+                                Runtime.Notify(7020, cofferSizeBytes, pvcCofferPercentsBytes);
+                                throw new Exception();
+                            }
+                        }
+
+                        BigInteger cofferSizeNum = (BigInteger)cofferSize;
+                        city.Coffer = BigInteger.Add(city.Coffer, cofferSizeNum);
 
                         if (log.BattleResult == GeneralContract.ATTACKER_WON)
                         {
@@ -129,7 +78,7 @@ namespace LordsContract
                         else if (log.BattleResult != GeneralContract.ATTACKER_LOSE)
                         {
                             Runtime.Notify(7008);
-                            throw new System.Exception();
+                            throw new Exception();
                         }
 
 
@@ -169,7 +118,7 @@ namespace LordsContract
                     {
                         Runtime.Log("Stronghold is not owned by player");
                         byte[] feeBytes = Storage.Get(Storage.CurrentContext, GeneralContract.FEE_PVP);
-                        BigInteger fee = feeBytes.AsBigInteger();
+                        BigInteger fee = feeBytes.ToBigInteger();
 
                         if (!GeneralContract.AttachmentExist(fee, GeneralContract.GameOwner))
                         {
@@ -187,7 +136,8 @@ namespace LordsContract
 
                             hero.StrongholsAmount = 1;
 
-                            heroBytes = Neo.SmartContract.Framework.Helper.Serialize(hero);
+                            string heroKey = GeneralContract.HERO_MAP + log.Attacker;
+                            byte[] heroBytes = Neo.SmartContract.Framework.Helper.Serialize(hero);
                             Storage.Put(Storage.CurrentContext, heroKey, heroBytes);
                         }
                         else if (log.BattleResult != GeneralContract.ATTACKER_LOSE)
@@ -221,7 +171,7 @@ namespace LordsContract
                 {
                     Runtime.Log("Bandit camp on blockchain");
                     byte[] feeBytes = Storage.Get(Storage.CurrentContext, GeneralContract.FEE_PVE);
-                    BigInteger fee = feeBytes.AsBigInteger();
+                    BigInteger fee = feeBytes.ToBigInteger();
 
                     if (!GeneralContract.AttachmentExist(fee, GeneralContract.GameOwner))
                     {
@@ -258,6 +208,8 @@ namespace LordsContract
 
             Runtime.Log("Battle data returned");
 
+            string battleIdKey = GeneralContract.BATTLE_LOG_MAP + log.BattleId;
+            byte[] battleLogBytes = Storage.Get(Storage.CurrentContext, battleIdKey);
             battleLogBytes = Neo.SmartContract.Framework.Helper.Serialize(log);
             Storage.Put(Storage.CurrentContext, battleIdKey, battleLogBytes);
 
@@ -381,7 +333,7 @@ namespace LordsContract
             Runtime.Log("Check item");
             string itemKey = GeneralContract.ITEM_MAP + itemId;
             byte[] itemBytes = Storage.Get(Storage.CurrentContext, itemKey);
-            BigInteger itemOwnerNum = itemOwner.AsBigInteger();
+            BigInteger itemOwnerNum = itemOwner.ToBigInteger();
             Runtime.Log("Item prepared");
             if (itemBytes.Length > 0)
             {
