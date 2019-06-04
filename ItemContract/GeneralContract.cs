@@ -211,106 +211,19 @@ namespace LordsContract
         /// <param name="args">method arguments array</param>
         /// <returns>1 if success, 0 if failed</returns>
         public static byte[] Main(string param, object[] args)
-        {
-            if (param.Equals("testConversion"))
-            {
-                byte[] pvcCofferPercentsBytes = Storage.Get(Storage.CurrentContext, PVC_COFFER_ADDITION_AMOUNT);
-                BigInteger pvcCofferPercents = pvcCofferPercentsBytes.ToBigInteger();
-                if (pvcCofferPercents == 0)
-                {
-                    Runtime.Log("Coffer Percents 0");
-                }
-                else
-                {
-                    Runtime.Log("Coffer is not 0");
-                }
-
-                byte[] bytes = new byte[] { 1, 2, 3, 4, 5 };
-                BigInteger big = bytes.ToBigInteger();
-                if (big == 0)
-                {
-                    Runtime.Log("Big number is 0");
-                }
-                Runtime.Notify(big, pvcCofferPercentsBytes, pvcCofferPercents);
-
-            }
-            else if (param.Equals("testPutHeroSign"))
-            {
-                Runtime.Log("Failed");
-                //if (VerifySignature((byte[])args[0], (byte[])args[1], GameOwnerPublicKey))
-                //{
-                //    Runtime.Log("Signature is verified");
-                //}
-                //else
-                //{
-                //    Runtime.Log("Signature is not verified!");
-                //    Runtime.Notify((byte[])args[0], (byte[])args[1], GameOwnerPublicKey);
-                //}
-            }
-            else if (param.Equals("testRandomGeneration"))
-            {
-                byte[][] upgradableItem = new byte[5][];
-                BigInteger upgradableAmount = 0;
-
-                int checkedIndex = 0;
-
-                byte[] id1 = (byte[])args[0];
-                byte[] id2 = (byte[])args[1];
-                byte[] id3 = (byte[])args[2];
-                byte[] id4 = (byte[])args[3];
-                byte[] id5 = (byte[])args[4];
-
-                if (id1.Length > 0)
-                {
-                    upgradableItem[checkedIndex] = id1; checkedIndex++;
-                    upgradableAmount = BigInteger.Add(upgradableAmount, 1);
-                }
-                if (id2.Length > 0)
-                {
-                    upgradableItem[checkedIndex] = id2; checkedIndex++;
-                    upgradableAmount = BigInteger.Add(upgradableAmount, 1);
-                }
-                if (id3.Length > 0)
-                {
-                    upgradableItem[checkedIndex] = id3; checkedIndex++;
-                    upgradableAmount = BigInteger.Add(upgradableAmount, 1);
-                }
-                if (id4.Length > 0)
-                {
-                    upgradableItem[checkedIndex] = id4; checkedIndex++;
-                    upgradableAmount = BigInteger.Add(upgradableAmount, 1);
-                }
-                if (id5.Length > 0)
-                {
-                    upgradableItem[checkedIndex] = id5; checkedIndex++;
-                    upgradableAmount = BigInteger.Add(upgradableAmount, 1);
-                }
-
-                if (upgradableAmount > 0)
-                {
-
-                    BigInteger randomUpgradableIndex = GetRandomNumber(0, upgradableAmount);
-
-                    byte[] itemId = Helper.GetIdByIndex(upgradableItem, upgradableAmount, randomUpgradableIndex);
-                    if (itemId.Length <= 0)
-                    {
-                        Runtime.Log("Random generated is 0");
-                    }
-                    Runtime.Notify(itemId, randomUpgradableIndex, upgradableAmount);
-                }
-            }
-            else if (param.Equals("setSetting"))
+        { 
+            if (param.Equals("setSetting"))
             {
                 Runtime.Log("Set Settings");
                 Settings.Set((string)args[0], (byte[])args[1]);
             }
             else if (param.Equals("payoutCityCoffer"))
             {
-                Periodical.PayCityCoffer((byte[])args[0]);
+                Periodical.PayCityCoffer((byte[])args[0], args[1], args[2]);
             }
             else if (param.Equals("dropItem"))
             {
-                Periodical.SimpleDropItem((byte[])args[0]);
+                Periodical.SimpleDropItem((byte[])args[0], args[1], args[2]);
             }
             else if (param.Equals("putCity"))
             {
@@ -1104,19 +1017,6 @@ namespace LordsContract
         /// <returns>generated number</returns>
         public static BigInteger GetRandomNumber(BigInteger min, BigInteger max)
         {
-            //byte[] salt = Gen();
-            //byte[] rand = Ran(salt, 6);
-            //Runtime.Notify(rand);
-            //BigInteger randBig = rand.ToBigInteger();
-            //Runtime.Notify(randBig);
-            //return randBig % max;
-
-            //Runtime.Notify(max, min);
-            //BigInteger delta = max - min;
-            //BigInteger newValue = GetRandomNumberBytes(8) % delta;
-            //Runtime.Notify(delta, newValue);
-            //return min + newValue;
-
             long numberOfTickets = (long)max;
             Header header = Blockchain.GetHeader(Blockchain.GetHeight());
             long randomNumber = (long)(header.ConsensusData >> 32);
@@ -1124,30 +1024,6 @@ namespace LordsContract
             //Runtime.Notify("The winning ticket is:", winningTicket);
             BigInteger ret = winningTicket;
             return ret;
-        }
-
-        private static BigInteger GetRandomNumberBytes(int size_in_bytes)
-        {
-            Transaction tx = (Transaction)ExecutionEngine.ScriptContainer;
-            Header bl = Blockchain.GetHeader(Blockchain.GetHeight());
-            byte[] hash = Hash256(bl.Hash.Concat(tx.Hash));
-            byte[] rand = hash.Range(0, size_in_bytes);
-            BigInteger res= rand.ToBigInteger();
-            return res;
-        }
-
-
-        public static byte[] Ran(byte[] salt, int size = 6)
-        {
-            Transaction tx = (Transaction)ExecutionEngine.ScriptContainer;
-            Header bl = Blockchain.GetHeader(Blockchain.GetHeight());
-            return Hash256(bl.Hash.Concat(tx.Hash).Concat(salt)).Range(0, size);
-        }
-
-        public static byte[] Gen(int size = 5)
-        {
-            byte[] zero = new byte[5];
-            return Ran(zero, size);
         }
 
         public static bool AttachmentExist(BigInteger value, byte[] receivingScriptHash)
