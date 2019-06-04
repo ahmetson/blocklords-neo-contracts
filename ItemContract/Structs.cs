@@ -59,7 +59,6 @@ namespace LordsContract
         public byte[] STRENGTH;             // Strength Stat value
         public byte[] SPEED;                // Speed Stat value
         public byte[] DEFENSE;              // Defense Stat value
-        //public BigInteger Banned;             // Whether hero is banned by Game Admin for Cheating or not
         public BigInteger ID;
         public BigInteger StrongholdsAmount;
     }
@@ -103,28 +102,10 @@ namespace LordsContract
         public byte[] AttackerItem4;
         public byte[] AttackerItem5;
         public byte[] DefenderObject;   // City|Stronghold|NPC ID based on battle type
-
-        //public BigInteger Defender;         // City Owner ID|Stronghold Owner ID or NPC ID
-        //public byte[] DefenderOwner;
         public BigInteger DefenderTroops;
         public BigInteger DefenderRemained; // Remained amount of troops
-        //public BigInteger DefenderItem1;
-        //public BigInteger DefenderItem2;
-        //public BigInteger DefenderItem3;
-        //public BigInteger DefenderItem4;
-        //public BigInteger DefenderItem5;
-
         public BigInteger Time;             // Unix Timestamp in seconds. Time, when battle happened 
-        //public byte[] TX;                   // Transaction where Battle Log was recorded.
     }
-
-    // Serialize manually, since it is used for out-of-blockchain use with a getStorage method
-    //[Serializable]
-    //public class UpdatedItem
-    //{
-    //    public BigInteger ItemId;                   // Item ID
-    //    public BigInteger IncreaseValue;
-    //}
 
     //[Serializable]
     public class CofferPayment

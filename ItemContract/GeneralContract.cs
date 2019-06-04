@@ -156,30 +156,7 @@ namespace LordsContract
         /// </summary>
         public static readonly byte HERO_CREATION_BATCH = 1, STRONGHOLD_REWARD_BATCH = 0, NO_BATCH = 2;
 
-        /**
-         * 1 GAS === 100_000_000
-         * 0.1GAS == 10_000_000
-         * 
-         * Neo Blockchain's Virtual Machine, where Smartcontracts are executed doesn't support Float numbers.
-         * So all incoming Float numbers are converted and used in multiplication of 100_000_000.
-         * 
-         * Basically 0.1 means 10000000 (10_000_000) during Execution of Smartcontract.
-         */
-        //public static readonly decimal auction8HoursFee = 10_000_000,              // 0.1 GAS
-        //                               auction12HoursFee = 20_000_000,          // 0.2 GAS
-        //                               auction24HoursFee = 30_000_000,          // 0.3 GAS
-        //                               heroCreationFee = 500_000_000,           // 5.0 GAS
-        //                               cityAttackFee = 200_000_000,             // 2.0 GAS
-        //    strongholdAttackFee = 100_000_000,                                       // 1.0 GAS
-        //    banditCampAttackFee = 50_000_000,                                       // 0.5 GAS
-        //    bigCityCoffer = 100_000_000,                                      // 1.0 GAS
-        //    mediumCityCoffer = 88_000_000,                                       // 0.8 GAS
-        //    smallCityCoffer = 50_000_000                                       // 0.5 GAS
-        //    ;
-
         public static readonly BigInteger duration8Hours = 28800, duration12Hours = 43200, duration24Hours = 86400;                 // 86_400 Seconds are 24 hours
-
-        // The Smartcontract Owner's Wallet Address. Used to receive some Gas as a transaction fee.
 
         /// <summary>
         /// Game Owner's script hash: 1. Privatenet included in Neo-local, 2. Testnet 3. mainnet
@@ -1041,28 +1018,6 @@ namespace LordsContract
             return ret;
         }
 
-        public static bool AttachmentExist(BigInteger value, byte[] receivingScriptHash)
-        {
-            if (value <= 0)
-                return true;
-            Transaction TX = (Transaction)ExecutionEngine.ScriptContainer;
-            TransactionOutput[] outputs = TX.GetOutputs();
-
-            foreach (var output in outputs)
-            {
-                // Game Developers got their fee?
-                if (output.ScriptHash.ToBigInteger() == receivingScriptHash.ToBigInteger())
-                {
-                    if (output.Value == value)
-                    {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
-        }
-
         public static bool AttachmentExistAB(byte[] value, byte[] receivingScriptHash)
         {
             if (value.Length <= 0)
@@ -1091,20 +1046,6 @@ namespace LordsContract
             }
 
             return false;
-        }
-
-        public static void RequireValidRange(BigInteger val, BigInteger min, BigInteger max)
-        {
-            if (val < min)
-            {
-                Runtime.Notify(2);
-                throw new Exception();
-            }
-            else if (val > max)
-            {
-                Runtime.Notify(3);
-                throw new Exception();
-            }
         }
     }
 }

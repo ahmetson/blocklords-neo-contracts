@@ -1,6 +1,4 @@
-﻿using Neo.SmartContract.Framework;
-using Neo.SmartContract.Framework.Services.Neo;
-using Neo.SmartContract.Framework.Services.System;
+﻿using Neo.SmartContract.Framework.Services.Neo;
 using System;
 using System.Numerics;
 
@@ -8,16 +6,9 @@ namespace LordsContract
 {
     public static class Log
     {
-        //------------------------------------------------------------------------------------
-        //
-        // functions for:
-        // BATTLE LOG
-        //
-        //------------------------------------------------------------------------------------
 
         public static void Battle(BattleLog log, Hero hero, BigInteger attackerNum, object cofferSize)
         {
-            
 
             // Get Hero of Defender
             string key;

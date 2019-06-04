@@ -1,6 +1,4 @@
-﻿using Neo.SmartContract.Framework;
-using Neo.SmartContract.Framework.Services.Neo;
-using System.Numerics;
+﻿using Neo.SmartContract.Framework.Services.Neo;
 
 namespace LordsContract
 {
@@ -71,8 +69,6 @@ namespace LordsContract
             }
             else if (key.Equals(GeneralContract.PVC_COFFER_ADDITION_AMOUNT))
             {
-                //BigInteger v = (BigInteger)Neo.SmartContract.Framework.Helper.Deserialize(value);
-                //GeneralContract.RequireValidRange(v, GeneralContract.PERCENTS_PVC_COFFER_MIN, GeneralContract.PERCENTS_PVC_COFFER_MAX);
                 Storage.Put(Storage.CurrentContext, GeneralContract.PVC_COFFER_ADDITION_AMOUNT, value);
             }
             else if (key.Equals(GeneralContract.PERCENTS_COFFER_PAY))

@@ -1,5 +1,4 @@
-﻿using Neo.SmartContract.Framework;
-using Neo.SmartContract.Framework.Services.Neo;
+﻿using Neo.SmartContract.Framework.Services.Neo;
 using System.Numerics;
 
 namespace LordsContract
