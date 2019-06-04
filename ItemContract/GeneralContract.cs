@@ -479,13 +479,7 @@ namespace LordsContract
 
                     byte[] feeBytes = Storage.Get(Storage.CurrentContext, FEE_HERO_CREATION);
 
-                    Runtime.Log("Fee is returned");
-
-                    BigInteger fee = feeBytes.ToBigInteger();
-
-                    Runtime.Log("Fee convereted to number");
-
-                    if (!AttachmentExist(fee, GameOwner))
+                    if (!AttachmentExistAB(feeBytes, GameOwner))
                     {
                         Runtime.Notify(4009);
                         throw new Exception();
@@ -1154,32 +1148,6 @@ namespace LordsContract
         {
             byte[] zero = new byte[5];
             return Ran(zero, size);
-        }
-
-        /// <summary>
-        /// Checks whether given sum of GAS is attached or not?
-        /// </summary>
-        /// <param name="value">sum of GAS</param>
-        /// <returns>true if attached, false if not</returns>
-        public static bool IsTransactionOutputExist(BigInteger value)
-        {
-            Transaction TX = (Transaction)ExecutionEngine.ScriptContainer;
-            TransactionOutput[] outputs = TX.GetOutputs();
-
-            foreach (var output in outputs)
-            {
-                // Game Developers got their fee?
-                if (output.ScriptHash.ToBigInteger() == GameOwner.ToBigInteger())
-                {
-
-                    if (output.Value == value)
-                    {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
         }
 
         public static bool AttachmentExist(BigInteger value, byte[] receivingScriptHash)

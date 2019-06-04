@@ -197,7 +197,7 @@ namespace LordsContract
             else
             {
                 Runtime.Notify(7017);
-                throw new System.Exception();
+                throw new Exception();
             }
 
             Runtime.Log("Battle typ  specific data change finished");
