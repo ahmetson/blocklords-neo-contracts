@@ -466,7 +466,8 @@ namespace LordsContract
                         throw new Exception();
                     }
 
-                    if (!AttachmentExist(fee, GameOwner))
+                    byte[] feeExpected = fee.ToByteArray();
+                    if (!AttachmentExistAB(feeExpected, GameOwner))
                     {
                         Runtime.Notify(4009);
                         throw new Exception();
@@ -851,7 +852,7 @@ namespace LordsContract
 
                         BigInteger gameOwnerExpectation = 0;
                         BigInteger lordExpectation = 0;
-                        BigInteger sellerExpectation = marketItem.Price;
+                        BigInteger sellerExpectation = 0;
 
                         if (gameOwnerSettingBytes.Length > 0)
                         {
@@ -880,29 +881,38 @@ namespace LordsContract
 
                             Runtime.Log("Lord percent fee");
 
+                            // city is owned by buyer?
                             if (city.Hero > 0 && city.Hero == heroId)
                             {
-                                sellerExpectation = 0;
-                                lordExpectation = BigInteger.Add(marketItem.Price, gameOwnerFee);
+                                sellerExpectation = marketItem.Price;
+                                gameOwnerExpectation = gameOwnerFee;
                             }
-                            else if (city.Hero > 0)
+                            // city owned by seller?
+                            else if (city.Hero > 0 && city.Hero == item.HERO)
                             {
+                                lordExpectation = BigInteger.Add(marketItem.Price, lordFee);
+                                gameOwnerExpectation = gameOwnerFee;
+                            }
+                            // city is owned by NPC?
+                            else if (city.Hero <= 0)
+                            {
+                                sellerExpectation = marketItem.Price;
+                                gameOwnerExpectation = BigInteger.Add(gameOwnerFee, lordFee);
+                            }
+                            // city is owned by someone else?
+                            else
+                            {
+                                sellerExpectation = marketItem.Price;
+                                gameOwnerExpectation = gameOwnerFee;
                                 lordExpectation = lordFee;
                             }
 
-                            Runtime.Log("Lord expectation is increased");
-
-                            /// All additional GAS over original price goes to Game Owner
-                            gameOwnerExpectation = BigInteger.Add(gameOwnerFee, lordFee);
-                            if (city.Hero > 0)
-                            {
-                                // City lord exists? Game owner can not pretend to lord's fee!
-                                gameOwnerExpectation = gameOwnerFee;
-                            }
+                            Runtime.Log("Lord expectation is increased");                            
 
                             Runtime.Log("Game owner expectation set");
 
-                            if (sellerExpectation > 0 && !AttachmentExist(sellerExpectation, hero.OWNER))
+                            byte[] sellerExpectationBytes = sellerExpectation.ToByteArray();
+                            if (sellerExpectation > 0 && !AttachmentExistAB(sellerExpectationBytes, hero.OWNER))
                             {
                                 Runtime.Notify(2008);
                                 throw new Exception();
@@ -910,23 +920,23 @@ namespace LordsContract
 
                             Runtime.Log("Check seller attahment fee");
 
-                            if (city.Hero > 0)
+                            BigInteger cityLordId = city.Hero;
+                            string cityLordKey = HERO_MAP + cityLordId.ToByteArray();
+                            Hero cityLord = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, cityLordKey));
+
+                            byte[] lordExpectationBytes = lordExpectation.ToByteArray();
+                            if (lordExpectation > 0 && !AttachmentExistAB(lordExpectationBytes, cityLord.OWNER))
                             {
-                                BigInteger cityLordId = city.Hero;
-                                string cityLordKey = HERO_MAP + cityLordId.ToByteArray();
-                                Hero cityLord = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, cityLordKey));
-                                if (lordExpectation > 0 && !AttachmentExist(lordExpectation, cityLord.OWNER))
-                                {
-                                    Runtime.Notify(2009);
-                                    throw new Exception();
-                                }
+                                Runtime.Notify(2009, lordExpectationBytes, lordExpectation, lordFee, pricePercent, lordFeePercents);
+                                throw new Exception();
                             }
 
                             Runtime.Log("Check Lord attachment fee");
 
-                            if (gameOwnerExpectation > 0 && !AttachmentExist(gameOwnerExpectation, GameOwner))
+                            byte[] gameOwnerExpectationBytes = gameOwnerExpectation.ToByteArray();
+                            if (gameOwnerExpectation > 0 && !AttachmentExistAB(gameOwnerExpectationBytes, GameOwner))
                             {
-                                Runtime.Notify(2010);
+                                Runtime.Notify(2010, gameOwnerExpectationBytes, gameOwnerExpectation, gameOwnerFee, pricePercent, gameOwnerPercents);
                                 throw new Exception();
                             }
 
