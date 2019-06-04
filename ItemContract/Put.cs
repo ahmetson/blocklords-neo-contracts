@@ -104,31 +104,32 @@ namespace LordsContract
 
             cityBytes = Neo.SmartContract.Framework.Helper.Serialize(city);
 
-            Storage.Put(Storage.CurrentContext, key, cityBytes);
+            IncrementCityAmount(id);
 
-            IncrementCityAmount();
+            Storage.Put(Storage.CurrentContext, key, cityBytes);
         }
 
         /// <summary>
         /// Updates amount of cities on Blockchain. This method should be called after every city putting on Blockchain
         /// </summary>
         /// <returns></returns>
-        public static void IncrementCityAmount()
+        public static void IncrementCityAmount(BigInteger cityId)
         {
+            BigInteger prevCityId = BigInteger.Subtract(cityId, 1);
+            byte[] expectedAmountBytes = prevCityId.ToByteArray();
+
             byte[] amountBytes = Storage.Get(Storage.CurrentContext, GeneralContract.AMOUNT_CITIES);
-            BigInteger amount = 0;
             if (amountBytes.Length > 0)
             {
-                amount = amountBytes.ToBigInteger();
-            }
-            else
-            {
-                amount = 0;
-            }
+                if (!expectedAmountBytes.Equals(amountBytes))
+                {
+                    Runtime.Notify(4);
+                    throw new System.Exception();
+                }
 
-            amount = BigInteger.Add(amount, 1);
-
-            Storage.Put(Storage.CurrentContext, GeneralContract.AMOUNT_CITIES, amount);
+                
+            }
+            Storage.Put(Storage.CurrentContext, GeneralContract.AMOUNT_CITIES, cityId);
         }
 
         /// <summary>
@@ -166,29 +167,29 @@ namespace LordsContract
 
             Storage.Put(Storage.CurrentContext, key, bytes);
 
-            IncrementStrongholdAmount();
+            IncrementStrongholdAmount(id);
         }
 
         /// <summary>
         /// Updates amount of strongholds on Blockchain. This method should be called after every stronghold putting on Blockchain
         /// </summary>
         /// <returns></returns>
-        public static void IncrementStrongholdAmount()
+        public static void IncrementStrongholdAmount(BigInteger id)
         {
+            BigInteger prevId = BigInteger.Subtract(id, 1);
+            byte[] expectedAmountBytes = prevId.ToByteArray();
+
             byte[] amountBytes = Storage.Get(Storage.CurrentContext, GeneralContract.AMOUNT_STRONGHOLDS);
-            BigInteger amount = 0;
             if (amountBytes.Length > 0)
             {
-                amount = amountBytes.ToBigInteger();
-            }
-            else
-            {
-                amount = 0;
+                if (!expectedAmountBytes.Equals(amountBytes))
+                {
+                    Runtime.Notify(5);
+                    throw new System.Exception();
+                }
             }
 
-            amount = BigInteger.Add(amount, 1);
-
-            Storage.Put(Storage.CurrentContext, GeneralContract.AMOUNT_STRONGHOLDS, amount);
+            Storage.Put(Storage.CurrentContext, GeneralContract.AMOUNT_STRONGHOLDS, id);
         }
 
         /// <summary>
@@ -219,29 +220,29 @@ namespace LordsContract
 
             Storage.Put(Storage.CurrentContext, key, 1);
 
-            IncrementBanditCampAmount();
+            IncrementBanditCampAmount(id);
         }
 
         /// <summary>
         /// Updates amount of bandit camps on Blockchain. This method should be called after every bandit camp putting on Blockchain
         /// </summary>
         /// <returns></returns>
-        public static void IncrementBanditCampAmount()
+        public static void IncrementBanditCampAmount(BigInteger id)
         {
+            BigInteger prevId = BigInteger.Subtract(id, 1);
+            byte[] expectedAmountBytes = prevId.ToByteArray();
+
             byte[] amountBytes = Storage.Get(Storage.CurrentContext, GeneralContract.AMOUNT_BATTLE_CAMP);
-            BigInteger amount = 0;
             if (amountBytes.Length > 0)
             {
-                amount = amountBytes.ToBigInteger();
-            }
-            else
-            {
-                amount = 0;
+                if (!expectedAmountBytes.Equals(amountBytes))
+                {
+                    Runtime.Notify(5);
+                    throw new System.Exception();
+                }
             }
 
-            amount = BigInteger.Add(amount, 1);
-
-            Storage.Put(Storage.CurrentContext, GeneralContract.AMOUNT_BATTLE_CAMP, amount);
+            Storage.Put(Storage.CurrentContext, GeneralContract.AMOUNT_BATTLE_CAMP, id);
         }
     }
 }
