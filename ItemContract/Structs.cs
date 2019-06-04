@@ -61,7 +61,7 @@ namespace LordsContract
         public byte[] DEFENSE;              // Defense Stat value
         //public BigInteger Banned;             // Whether hero is banned by Game Admin for Cheating or not
         public BigInteger ID;
-        public BigInteger StrongholsAmount;
+        public BigInteger StrongholdsAmount;
     }
 
     [Serializable]

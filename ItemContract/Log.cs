@@ -97,22 +97,22 @@ namespace LordsContract
                 if (bytes.Length <= 0)
                 {
                     Runtime.Notify(7009);
-                    throw new System.Exception();
+                    throw new Exception();
                 }
                 else
                 {
                     Runtime.Log("Stronghold is on blockchain");
-                    if (hero.StrongholsAmount > 0)
+                    if (hero.StrongholdsAmount > 0)
                     {
                         Runtime.Notify(7010);
-                        throw new System.Exception();
+                        throw new Exception();
                     }
 
                     Stronghold stronghold = (Stronghold)Neo.SmartContract.Framework.Helper.Deserialize(bytes);
                     if (stronghold.Hero > 0 && stronghold.Hero == attackerNum)
                     {
                         Runtime.Notify(7010);
-                        throw new System.Exception();
+                        throw new Exception();
                     }
                     else
                     {
@@ -122,7 +122,7 @@ namespace LordsContract
                         if (!GeneralContract.AttachmentExistAB(feeBytes, GeneralContract.GameOwner))
                         {
                             Runtime.Notify(7012);
-                            throw new System.Exception();
+                            throw new Exception();
                         }
 
                         Runtime.Log("Attachment is included");
@@ -133,7 +133,7 @@ namespace LordsContract
                             stronghold.Hero = attackerNum;
                             stronghold.CreatedBlock = Blockchain.GetHeight();
 
-                            hero.StrongholsAmount = 1;
+                            hero.StrongholdsAmount = 1;
 
                             string heroKey = GeneralContract.HERO_MAP + log.Attacker;
                             byte[] heroBytes = Neo.SmartContract.Framework.Helper.Serialize(hero);
@@ -142,7 +142,7 @@ namespace LordsContract
                         else if (log.BattleResult != GeneralContract.ATTACKER_LOSE)
                         {
                             Runtime.Notify(7013);
-                            throw new System.Exception();
+                            throw new Exception();
                         }
 
                         Runtime.Log("Stronghold attack data prepared");
