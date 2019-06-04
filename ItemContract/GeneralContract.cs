@@ -219,7 +219,7 @@ namespace LordsContract
             }
             else if (param.Equals("payoutCityCoffer"))
             {
-                Periodical.PayCityCoffer((byte[])args[0], args[1], args[2]);
+                Periodical.PayCityCoffer((byte[])args[0], args[1], args[2], args[3]);
             }
             else if (param.Equals("dropItem"))
             {
@@ -1004,6 +1004,21 @@ namespace LordsContract
                 }
                 Log.Battle(log, hero, attackerNum, args[15]);
             }
+            //else if (param.Equals("changeMarketFee"))
+            //{
+            //    // Available ranges are:
+            //    BigInteger min = 0;
+            //    BigInteger max = 70;
+
+            //    // If city is owned by a player, then should be called by a player
+            //    // If city is owned by NPC, then should be called by game owner
+            //}
+            //else if (param.Equals("changeCofferPercents"))
+            //{
+            //    // Should be called by game owner
+            //    BigInteger min = 10;
+            //    BigInteger max = 70;
+            //}
 
             byte[] res = new byte[1] { 0 };
             return res;
