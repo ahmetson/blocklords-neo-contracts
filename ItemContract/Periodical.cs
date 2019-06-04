@@ -98,7 +98,7 @@ namespace LordsContract
                     item.BATCH = GeneralContract.NO_BATCH;
                     byte[] itemBytes = Neo.SmartContract.Framework.Helper.Serialize(item);
 
-                    // Save Item
+                    // Save Item after change of ownership
                     Storage.Put(Storage.CurrentContext, itemKey, itemBytes);
 
                     // Delete Stronghold owner. (It means "kicking out from Stronghold"). According to rule, if stronghold owner got item, he should be kicked out from stronghold
@@ -112,6 +112,11 @@ namespace LordsContract
                     lastDropBytes = Neo.SmartContract.Framework.Helper.Serialize(lastDrop);
 
                     Storage.Put(Storage.CurrentContext, GeneralContract.LAST_ITEM_DROP, lastDropBytes);
+
+                    // Save hero with the mark that he lost his stronghold
+                    hero.StrongholdsAmount = BigInteger.Subtract(hero.StrongholdsAmount, 1);
+                    byte[] heroBytes = Neo.SmartContract.Framework.Helper.Serialize(hero);
+                    Storage.Put(heroKey, heroBytes);
 
                     Runtime.Notify(5000, itemId, lastDrop.StrongholdId, lastDrop.HeroId, lastDrop.Block);
                 }
