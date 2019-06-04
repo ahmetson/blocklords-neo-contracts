@@ -1,4 +1,4 @@
-﻿using Neo.SmartContract.Framework;
+using Neo.SmartContract.Framework;
 using Neo.SmartContract.Framework.Services.Neo;
 using System.Numerics;
 
@@ -6,9 +6,15 @@ namespace LordsContract
 {
     public static class Periodical
     {
-       
 
-        public static void SimpleDropItem(byte[] itemId)
+        /**
+         * Function records item drop
+         * 
+         * Function drops item in every 120 blocks. Usually called by Server Side of Blocklords.
+         * 
+         * Has 0 argument
+         */
+        public static void SimpleDropItem(byte[] itemId, object strongholdAmountObj, object dropIntervalObj)
         {
             DropData lastDrop = new DropData();
             lastDrop.Block = 0;
@@ -20,8 +26,19 @@ namespace LordsContract
                 lastDrop = (DropData)Neo.SmartContract.Framework.Helper.Deserialize(lastDropBytes);
             }
 
-            byte[] dropIntervalBytes = Storage.Get(Storage.CurrentContext, GeneralContract.INTERVAL_DROP);
-            BigInteger dropInterval = dropIntervalBytes.ToBigInteger();
+            byte[] dropIntervalSettingBytes = Storage.Get(Storage.CurrentContext, GeneralContract.INTERVAL_DROP);
+            byte[] dropIntervalBytes = (byte[])dropIntervalObj;
+
+            if (dropIntervalSettingBytes.Length > 0)
+            {
+                if (!dropIntervalSettingBytes.Equals(dropIntervalBytes))
+                {
+                    Runtime.Notify(7);
+                    throw new System.Exception();
+                }
+            }
+
+            BigInteger dropInterval = (BigInteger)dropIntervalObj;
 
             if (Blockchain.GetHeight() <= dropInterval + lastDrop.Block)
             {
@@ -29,8 +46,16 @@ namespace LordsContract
                 throw new System.Exception();
             }
 
-            byte[] strongholdsAmountBytes = Storage.Get(Storage.CurrentContext, GeneralContract.AMOUNT_STRONGHOLDS);
-            BigInteger strongholdsAmount = strongholdsAmountBytes.ToBigInteger();
+            byte[] strongholdsAmountSettingBytes = Storage.Get(Storage.CurrentContext, GeneralContract.AMOUNT_STRONGHOLDS);
+            byte[] strongholdsAmountBytes = (byte[])strongholdAmountObj;
+
+            if (!strongholdsAmountSettingBytes.Equals(strongholdsAmountBytes))
+            {
+                Runtime.Notify(8);
+                throw new System.Exception();
+            }
+
+            BigInteger strongholdsAmount = (BigInteger)strongholdAmountObj;
 
             string key;
             Stronghold stronghold;
@@ -122,24 +147,8 @@ namespace LordsContract
                 }
             }
         }
-
-        /**
-         * Function records item drop
-         * 
-         * Function drops item in every 120 blocks. Usually called by Server Side of Blocklords.
-         * 
-         * Has 0 argument
-         */
-        public static void DropItems(byte[] itemId)
-        {
-            // TODO check that item is in drop item list
-            // Between each Item Drop as a reward should be generated atleast 120 Blocks
-            SimpleDropItem(itemId);
-        }
-
-
    
-        public static byte[] PayCityCoffer(byte[] cityId)
+        public static byte[] PayCityCoffer(byte[] cityId, object cityAmountObj, object paymentIntervalObj)
         {
             /// Define new payment parameters if there were not any coffer payments before
             CofferPayment session = new CofferPayment();
