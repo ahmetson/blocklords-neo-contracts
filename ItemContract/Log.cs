@@ -118,9 +118,8 @@ namespace LordsContract
                     {
                         Runtime.Log("Stronghold is not owned by player");
                         byte[] feeBytes = Storage.Get(Storage.CurrentContext, GeneralContract.FEE_PVP);
-                        BigInteger fee = feeBytes.ToBigInteger();
 
-                        if (!GeneralContract.AttachmentExist(fee, GeneralContract.GameOwner))
+                        if (!GeneralContract.AttachmentExistAB(feeBytes, GeneralContract.GameOwner))
                         {
                             Runtime.Notify(7012);
                             throw new System.Exception();
@@ -171,9 +170,8 @@ namespace LordsContract
                 {
                     Runtime.Log("Bandit camp on blockchain");
                     byte[] feeBytes = Storage.Get(Storage.CurrentContext, GeneralContract.FEE_PVE);
-                    BigInteger fee = feeBytes.ToBigInteger();
 
-                    if (!GeneralContract.AttachmentExist(fee, GeneralContract.GameOwner))
+                    if (!GeneralContract.AttachmentExistAB(feeBytes, GeneralContract.GameOwner))
                     {
                         Runtime.Notify(7015);
                         throw new System.Exception();
@@ -333,19 +331,24 @@ namespace LordsContract
             Runtime.Log("Check item");
             string itemKey = GeneralContract.ITEM_MAP + itemId;
             byte[] itemBytes = Storage.Get(Storage.CurrentContext, itemKey);
-            BigInteger itemOwnerNum = itemOwner.ToBigInteger();
-            Runtime.Log("Item prepared");
+ 
             if (itemBytes.Length > 0)
             {
                 Item item = (Item)Neo.SmartContract.Framework.Helper.Deserialize(itemBytes);
-                if (itemOwnerNum == 0)
-                    Runtime.Log("Check ownership item not exist");
-                else
-                    Runtime.Log("Item checked not 0");
-                if (item.HERO != itemOwnerNum && item.BATCH != GeneralContract.NO_BATCH)
+                
+                if (item.BATCH != GeneralContract.NO_BATCH)
                 {
                     Runtime.Notify(8002);
-                    throw new System.Exception();
+                    throw new Exception();
+                }
+
+                BigInteger itemHero = item.HERO;
+                byte[] itemHeroBytes = itemHero.ToByteArray();
+
+                if (!itemHeroBytes.Equals(itemOwner))
+                {
+                    Runtime.Notify(8002);
+                    throw new Exception();
                 }
             }
         }
