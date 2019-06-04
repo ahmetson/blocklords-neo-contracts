@@ -920,15 +920,18 @@ namespace LordsContract
 
                             Runtime.Log("Check seller attahment fee");
 
-                            BigInteger cityLordId = city.Hero;
-                            string cityLordKey = HERO_MAP + cityLordId.ToByteArray();
-                            Hero cityLord = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, cityLordKey));
-
-                            byte[] lordExpectationBytes = lordExpectation.ToByteArray();
-                            if (lordExpectation > 0 && !AttachmentExistAB(lordExpectationBytes, cityLord.OWNER))
+                            if (city.Hero > 0)
                             {
-                                Runtime.Notify(2009, lordExpectationBytes, lordExpectation, lordFee, pricePercent, lordFeePercents);
-                                throw new Exception();
+                                BigInteger cityLordId = city.Hero;
+                                string cityLordKey = HERO_MAP + cityLordId.ToByteArray();
+                                Hero cityLord = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(Storage.Get(Storage.CurrentContext, cityLordKey));
+
+                                byte[] lordExpectationBytes = lordExpectation.ToByteArray();
+                                if (lordExpectation > 0 && !AttachmentExistAB(lordExpectationBytes, cityLord.OWNER))
+                                {
+                                    Runtime.Notify(2009, lordExpectationBytes, lordExpectation, lordFee, pricePercent, lordFeePercents);
+                                    throw new Exception();
+                                }
                             }
 
                             Runtime.Log("Check Lord attachment fee");
