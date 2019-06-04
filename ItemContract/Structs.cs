@@ -83,7 +83,7 @@ namespace LordsContract
         public BigInteger ItemsCap;
         public BigInteger CofferPayoutSession;
         public BigInteger CofferPayoutPercents;
-        public BigInteger LordMarketFee;
+        public BigInteger MarketFee;
     }
 
     // Serialize manually, since it is used for out-of-blockchain use with a getStorage method
