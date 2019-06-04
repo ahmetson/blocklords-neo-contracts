@@ -82,6 +82,8 @@ namespace LordsContract
         public BigInteger ItemsOnMarket;        // Current amount of items on city market
         public BigInteger ItemsCap;
         public BigInteger CofferPayoutSession;
+        public BigInteger CofferPayoutPercents;
+        public BigInteger LordMarketFee;
     }
 
     // Serialize manually, since it is used for out-of-blockchain use with a getStorage method
