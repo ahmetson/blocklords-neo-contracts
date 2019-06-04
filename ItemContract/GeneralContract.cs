@@ -578,7 +578,6 @@ namespace LordsContract
                 Helper.ChangeItemOwner(equipment4, heroId);
                 Helper.ChangeItemOwner(equipment5, heroId);
 
-                
 
                 Put.Hero(heroId, hero);
 
