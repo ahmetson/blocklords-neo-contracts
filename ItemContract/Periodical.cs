@@ -148,7 +148,7 @@ namespace LordsContract
             }
         }
    
-        public static byte[] PayCityCoffer(byte[] cityId, object cityAmountObj, object paymentIntervalObj)
+        public static void PayCityCoffer(byte[] cityId, object cityAmountObj, object paymentIntervalObj, object cofferPercentsObj)
         {
             /// Define new payment parameters if there were not any coffer payments before
             CofferPayment session = new CofferPayment();
@@ -157,17 +157,32 @@ namespace LordsContract
             session.Session = 1;
             session.AmountPaidCity = 0;
 
-            byte[] amountCityBytes = Storage.Get(Storage.CurrentContext, GeneralContract.AMOUNT_CITIES);
-            BigInteger amountCity = amountCityBytes.ToBigInteger();
+            byte[] amountCitySettingBytes = Storage.Get(Storage.CurrentContext, GeneralContract.AMOUNT_CITIES);
+            byte[] cityAmountBytes = (byte[])cityAmountObj;
 
-            byte[] paymentIntervalBytes = Storage.Get(Storage.CurrentContext, GeneralContract.INTERVAL_COFFER);
-            BigInteger paymentInterval = paymentIntervalBytes.ToBigInteger();
+            if (!amountCitySettingBytes.Equals(cityAmountBytes))
+            {
+                Runtime.Notify(9);
+                throw new System.Exception();
+            }
+
+            BigInteger amountCity = (BigInteger)cityAmountObj;
+
+            byte[] paymentIntervalSettingBytes = Storage.Get(Storage.CurrentContext, GeneralContract.INTERVAL_COFFER);
+            byte[] paymentIntervalBytes = (byte[])paymentIntervalObj;
+
+            if (!paymentIntervalSettingBytes.Equals(paymentIntervalBytes))
+            {
+                Runtime.Notify(10);
+                throw new System.Exception();
+            }
+
+            BigInteger paymentInterval = (BigInteger)paymentIntervalObj;
 
             byte[] lastCofferSession = Storage.Get(Storage.CurrentContext, GeneralContract.COFFER_PAYMENT_SESSION);
             if (lastCofferSession.Length > 0)
             {
                 session = (CofferPayment)Neo.SmartContract.Framework.Helper.Deserialize(lastCofferSession);
-                
             }
 
             /// Last Session is fully payed out
@@ -240,21 +255,31 @@ namespace LordsContract
             }
             else
             {
+                byte[] cofferPercentsSettingBytes = Storage.Get(Storage.CurrentContext, GeneralContract.PERCENTS_COFFER_PAY);
+                byte[] cofferPercentsBytes = (byte[])cofferPercentsObj;
+
+                if (!cofferPercentsSettingBytes.Equals(cofferPercentsBytes))
+                {
+                    Runtime.Notify(11);
+                    throw new System.Exception();
+                }
+
                 BigInteger percent = BigInteger.Divide(city.Coffer, 100);
 
-                byte[] cofferPercentsBytes = Storage.Get(Storage.CurrentContext, GeneralContract.PERCENTS_COFFER_PAY);
-                BigInteger cofferPercents = cofferPercentsBytes.ToBigInteger();
+                BigInteger payoutPercents = (BigInteger)cofferPercentsObj;
 
-                BigInteger cofferPaymentSize = BigInteger.Multiply(percent, cofferPercents);
+                BigInteger payoutAmount = BigInteger.Multiply(percent, payoutPercents);
 
-                if (!GeneralContract.AttachmentExist(cofferPaymentSize, lord))
+                byte[] payoutAmountBytes = payoutAmount.ToByteArray();
+
+                if (!GeneralContract.AttachmentExistAB(payoutAmountBytes, lord))
                 {
                     Runtime.Notify(6004);
                     throw new System.Exception();
                 }
                 else
                 {
-                    city.Coffer = BigInteger.Subtract(city.Coffer, cofferPaymentSize);
+                    city.Coffer = BigInteger.Subtract(city.Coffer, payoutAmount);
                     city.CofferPayoutSession = session.Session;
 
                     cityBytes = Neo.SmartContract.Framework.Helper.Serialize(city);
@@ -278,9 +303,6 @@ namespace LordsContract
 
                 Runtime.Notify(6000, cityId, session.Session, session.AmountPaidCity, amountCity);
             }
-
-            byte[] res = new byte[1] { 0 };
-            return res;
         }
 
         //------------------------------------------------------------------------------------
