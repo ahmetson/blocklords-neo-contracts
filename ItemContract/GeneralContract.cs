@@ -471,7 +471,7 @@ namespace LordsContract
             }
             else if (param.Equals("marketAddItem"))
             {
-                // 1: Hero Id, 2: Item Id, 3: Price, 4: Duration in seconds, 5: City ID
+                // 1: Item Id, 2: Price, 3: Duration in seconds, 4: City ID, 5: coffer addition amount
                 if (args.Length != 5)
                 {
                     Runtime.Notify(1001);
