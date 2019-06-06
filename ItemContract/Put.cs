@@ -71,15 +71,18 @@ namespace LordsContract
             // Invoker has permission to execute this function?
             if (!Runtime.CheckWitness(GeneralContract.GameOwner))
             {
+                Runtime.Notify(1);
                 throw new System.Exception();
             }
 
             if (id <= 0)
             {
+                Runtime.Notify(13);
                 throw new System.Exception();
             }
             if (cap <= 0)
             {
+                Runtime.Notify(13);
                 throw new System.Exception();
             }
 
@@ -89,6 +92,7 @@ namespace LordsContract
 
             if (cityBytes.Length > 0)
             {
+                Runtime.Notify(14);
                 throw new System.Exception();
             }
 
@@ -127,6 +131,11 @@ namespace LordsContract
                 }
 
                 
+            }
+            else if (cityId != 1)
+            {
+                Runtime.Notify(4);
+                throw new System.Exception();
             }
             Storage.Put(Storage.CurrentContext, GeneralContract.AMOUNT_CITIES, cityId);
         }
@@ -187,6 +196,11 @@ namespace LordsContract
                     throw new System.Exception();
                 }
             }
+            else if (id != 1)
+            {
+                Runtime.Notify(5);
+                throw new System.Exception();
+            }
 
             Storage.Put(Storage.CurrentContext, GeneralContract.AMOUNT_STRONGHOLDS, id);
         }
@@ -236,9 +250,14 @@ namespace LordsContract
             {
                 if (!expectedAmountBytes.Equals(amountBytes))
                 {
-                    Runtime.Notify(5);
+                    Runtime.Notify(6);
                     throw new System.Exception();
                 }
+            }
+            else if (id != 1)
+            {
+                Runtime.Notify(6);
+                throw new System.Exception();
             }
 
             Storage.Put(Storage.CurrentContext, GeneralContract.AMOUNT_BATTLE_CAMP, id);
