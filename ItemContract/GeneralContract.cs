@@ -842,7 +842,7 @@ namespace LordsContract
                 }
                 else
                 {
-                    Runtime.Notify(2000);
+                    Runtime.Notify(2014);
                     throw new Exception();
                 }
             }
