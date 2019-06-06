@@ -126,8 +126,11 @@ namespace LordsContract
                     // Save Item after change of ownership
                     Storage.Put(Storage.CurrentContext, itemKey, itemBytes);
 
-                    // Delete Stronghold owner. (It means "kicking out from Stronghold"). According to rule, if stronghold owner got item, he should be kicked out from stronghold
-                    Storage.Delete(Storage.CurrentContext, key);
+                    // Kick out a lord from stronghold. 
+                    stronghold.Hero = 0;
+                    stronghold.CreatedBlock = Blockchain.GetHeight();
+                    byte[] strongholdBytes = Neo.SmartContract.Framework.Helper.Serialize(stronghold);
+                    Storage.Put(Storage.CurrentContext, key, strongholdBytes);
 
                     lastDrop.Block = Blockchain.GetHeight();
                     lastDrop.HeroId = hero.ID;
