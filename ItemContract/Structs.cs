@@ -76,7 +76,6 @@ namespace LordsContract
     {
         public BigInteger ID;                   // Stronghold ID
         public BigInteger Hero;                 // Hero ID, that occupies City on map
-        public BigInteger Coffer;               // City Coffer
         public BigInteger Size;
         public BigInteger ItemsOnMarket;        // Current amount of items on city market
         public BigInteger ItemsCap;
