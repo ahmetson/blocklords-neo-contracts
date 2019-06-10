@@ -118,6 +118,12 @@ namespace LordsContract
         /// <returns></returns>
         public static void IncrementCityAmount(BigInteger cityId)
         {
+            if (cityId >= GeneralContract.MAX_CITY_AMOUNT)
+            {
+                Runtime.Notify(13);
+                throw new System.Exception();
+            }
+
             BigInteger prevCityId = BigInteger.Subtract(cityId, 1);
             byte[] expectedAmountBytes = prevCityId.ToByteArray();
 
@@ -129,7 +135,6 @@ namespace LordsContract
                     Runtime.Notify(4);
                     throw new System.Exception();
                 }
-
                 
             }
             else if (cityId != 1)
