@@ -1,4 +1,4 @@
-﻿using Neo.SmartContract.Framework.Services.Neo;
+using Neo.SmartContract.Framework.Services.Neo;
 using System;
 using System.Numerics;
 
@@ -46,14 +46,14 @@ namespace LordsContract
 
 
                         // Increase city coffer
-                        byte[] pvcCofferPercentsBytes = Storage.Get(Storage.CurrentContext, GeneralContract.PVC_COFFER_ADDITION_AMOUNT);
+                        byte[] pvcCofferAdditionBytes = Storage.Get(Storage.CurrentContext, GeneralContract.PVC_COFFER_ADDITION_AMOUNT);
 
                         byte[] cofferSizeBytes = (byte[])cofferSize;
-                        if (pvcCofferPercentsBytes.Length > 0)
+                        if (pvcCofferAdditionBytes.Length > 0)
                         {
-                            if (!pvcCofferPercentsBytes.Equals(cofferSizeBytes))
+                            if (!pvcCofferAdditionBytes.Equals(cofferSizeBytes))
                             {
-                                Runtime.Notify(7020, cofferSizeBytes, pvcCofferPercentsBytes);
+                                Runtime.Notify(7020, cofferSizeBytes, pvcCofferAdditionBytes);
                                 throw new Exception();
                             }
                         }
