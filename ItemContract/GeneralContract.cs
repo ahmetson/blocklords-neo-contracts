@@ -339,7 +339,7 @@ namespace LordsContract
                     }
                     else
                     {
-                        coffers[id] = payoutAmount;
+                        coffers[id] = BigInteger.Subtract(coffers[id], payoutAmount);
                     }
                 }
 
