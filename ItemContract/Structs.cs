@@ -109,10 +109,7 @@ namespace LordsContract
     //[Serializable]
     public class CofferPayment
     {
-        public BigInteger BlockStart;                   // Session Begin
-        public BigInteger BlockEnd;                   // Session End
-        public BigInteger Session;
-        public BigInteger AmountPaidCity;
+        public BigInteger Block;                   // Session End
     }
 }
 
