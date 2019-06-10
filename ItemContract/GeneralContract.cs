@@ -201,6 +201,12 @@ namespace LordsContract
                 int maxCityAmount = (int)MAX_CITY_AMOUNT;
                 BigInteger[] coffersList = new BigInteger[maxCityAmount];
 
+                int i = 0;
+                for (; i<maxCityAmount; i++)
+                {
+                    coffersList[i] = 0;
+                }
+
                 byte[] coffers = Neo.SmartContract.Framework.Helper.Serialize(coffersList);
                 Storage.Put(CITY_COFFERS_KEY, coffers);
             }
