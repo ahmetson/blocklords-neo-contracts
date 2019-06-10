@@ -276,7 +276,7 @@ namespace LordsContract
                 BigInteger[] coffers = Helper.GetCoffers();
 
                 BigInteger cityId = 1;
-                for (var id = 1; id < cityAmountInt; id++, cityId = BigInteger.Add(cityId, 1))
+                for (var id = 1; id <= cityAmountInt; id++, cityId = BigInteger.Add(cityId, 1))
                 {
                     BigInteger coffer = coffers[id];
                     if (coffer <= 0)
