@@ -45,6 +45,38 @@ namespace LordsContract
             return new byte[0];
         }
 
+        public static BigInteger GetCoffer(BigInteger cityId)
+        {
+            byte[] coffersBytes = Storage.Get(GeneralContract.CITY_COFFERS_KEY);
+            if (coffersBytes.Length <= 0)
+            {
+                Runtime.Notify(14);
+                throw new System.Exception();
+            }
+
+            BigInteger[] coffers = (BigInteger[])Neo.SmartContract.Framework.Helper.Deserialize(coffersBytes);
+
+            int index = (int)cityId;
+            return coffers[index];
+        }
+
+        public static void SetCoffer(BigInteger cityId, BigInteger cofferSize)
+        {
+            byte[] coffersBytes = Storage.Get(GeneralContract.CITY_COFFERS_KEY);
+            if (coffersBytes.Length <= 0)
+            {
+                Runtime.Notify(14);
+                throw new System.Exception();
+            }
+
+            BigInteger[] coffers = (BigInteger[])Neo.SmartContract.Framework.Helper.Deserialize(coffersBytes);
+
+            int index = (int)cityId;
+            coffers[index] = cofferSize;
+
+            coffersBytes = Neo.SmartContract.Framework.Helper.Serialize(coffers);
+            Storage.Put(GeneralContract.CITY_COFFERS_KEY, coffersBytes);
+        }
     }
 }
 

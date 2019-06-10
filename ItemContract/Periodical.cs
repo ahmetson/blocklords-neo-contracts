@@ -151,7 +151,7 @@ namespace LordsContract
             }
         }
 
-        public static void PayCityCoffer(byte[] cityId, object cityAmountObj, object paymentIntervalObj, object cofferPercentsObj)
+        public static void PayCityCoffer(object cityId, object cityAmountObj, object paymentIntervalObj, object cofferPercentsObj)
         {
             /// Define new payment parameters if there were not any coffer payments before
             CofferPayment session = new CofferPayment();
@@ -234,7 +234,9 @@ namespace LordsContract
                 lord = hero.OWNER;
             }
 
-            if (city.Coffer <= 0)
+            BigInteger cityIdInt = (BigInteger)cityId;
+            BigInteger cityCoffer = Helper.GetCoffer(cityIdInt);
+            if (cityCoffer <= 0)
             {
                 city.CofferPayoutSession = session.Session;
                 cityBytes = Neo.SmartContract.Framework.Helper.Serialize(city);
@@ -267,7 +269,7 @@ namespace LordsContract
                     throw new System.Exception();
                 }
 
-                BigInteger percent = BigInteger.Divide(city.Coffer, 100);
+                BigInteger percent = BigInteger.Divide(cityCoffer, 100);
 
                 BigInteger payoutPercents = (BigInteger)cofferPercentsObj;
 
@@ -282,7 +284,7 @@ namespace LordsContract
                 }
                 else
                 {
-                    city.Coffer = BigInteger.Subtract(city.Coffer, payoutAmount);
+                    cityCoffer = BigInteger.Subtract(cityCoffer, payoutAmount);
                     city.CofferPayoutSession = session.Session;
 
                     cityBytes = Neo.SmartContract.Framework.Helper.Serialize(city);

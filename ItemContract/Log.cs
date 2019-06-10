@@ -7,7 +7,7 @@ namespace LordsContract
     public static class Log
     {
 
-        public static void Battle(BattleLog log, Hero hero, BigInteger attackerNum, object cofferSize)
+        public static void Battle(BattleLog log, Hero hero, BigInteger attackerNum, object cofferSize, BigInteger defenderObject)
         {
 
             // Get Hero of Defender
@@ -22,7 +22,7 @@ namespace LordsContract
                 if (bytes.Length <= 0)
                 {
                     Runtime.Notify(7005);
-                    throw new System.Exception();
+                    throw new Exception();
                 }
                 else
                 {
@@ -59,7 +59,8 @@ namespace LordsContract
                         }
 
                         BigInteger cofferSizeNum = (BigInteger)cofferSize;
-                        city.Coffer = BigInteger.Add(city.Coffer, cofferSizeNum);
+                        BigInteger cityCoffer = Helper.GetCoffer(defenderObject);
+                        cityCoffer = BigInteger.Add(cityCoffer, cofferSizeNum);
 
                         if (log.BattleResult == GeneralContract.ATTACKER_WON)
                         {
@@ -72,6 +73,7 @@ namespace LordsContract
                             throw new Exception();
                         }
 
+                        Helper.SetCoffer(defenderObject, cityCoffer);
 
                         key = GeneralContract.CITY_MAP + log.DefenderObject;
                         bytes = Neo.SmartContract.Framework.Helper.Serialize(city);

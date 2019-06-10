@@ -216,7 +216,7 @@ namespace LordsContract
             }
             else if (param.Equals("payoutCityCoffer"))
             {
-                Periodical.PayCityCoffer((byte[])args[0], args[1], args[2], args[3]);
+                Periodical.PayCityCoffer(args[0], args[1], args[2], args[3]);
             }
             else if (param.Equals("dropItem"))
             {
@@ -643,7 +643,9 @@ namespace LordsContract
                 marketItemBytes = Neo.SmartContract.Framework.Helper.Serialize(marketItem);
 
                 BigInteger cofferAdditionNum = (BigInteger)args[4];
-                city.Coffer = BigInteger.Add(city.Coffer, cofferAdditionNum);
+                BigInteger cityCoffer = Helper.GetCoffer(cityId);
+                cityCoffer = BigInteger.Add(cityCoffer, cofferAdditionNum);
+                Helper.SetCoffer(cityId, cityCoffer);
                 city.ItemsOnMarket = BigInteger.Add(city.ItemsOnMarket, 1);
 
                 Runtime.Log("City data update");
@@ -999,7 +1001,9 @@ namespace LordsContract
                     Runtime.Log("Signature Verification Failed");
                     throw new Exception();
                 }
-                Log.Battle(log, hero, attackerNum, args[15]);
+                BigInteger defenderObject = (BigInteger)args[6];
+
+                Log.Battle(log, hero, attackerNum, args[15], defenderObject);
             }
             //else if (param.Equals("changeMarketFee"))
             //{
