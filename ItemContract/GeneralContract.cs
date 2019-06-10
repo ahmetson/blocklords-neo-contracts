@@ -236,7 +236,6 @@ namespace LordsContract
                     throw new Exception();
                 }
 
-
                 // Get latest coffer payout
                 CofferPayment session = new CofferPayment();
                 session.Block = 1;// Blockchain.GetHeight();
@@ -274,10 +273,12 @@ namespace LordsContract
                 Transaction TX = (Transaction)ExecutionEngine.ScriptContainer;
                 TransactionOutput[] outputs = TX.GetOutputs();
 
+                BigInteger[] coffers = Helper.GetCoffers();
+
                 BigInteger cityId = 1;
                 for (var id = 1; id < cityAmountInt; id++, cityId = BigInteger.Add(cityId, 1))
                 {
-                    BigInteger coffer = Helper.GetCoffer(cityId);
+                    BigInteger coffer = coffers[id];
                     if (coffer <= 0)
                         continue;
 
@@ -328,7 +329,7 @@ namespace LordsContract
                                 outputIndex[found] = i;
                                 found++;
                                 outputValid = true;
-                                Helper.SetCoffer(cityId, payoutAmount);
+                                coffers[id] = payoutAmount;
                             }
                         }
                         if (!outputValid)
@@ -338,10 +339,11 @@ namespace LordsContract
                     }
                     else
                     {
-                        Helper.SetCoffer(cityId, payoutAmount);
+                        coffers[id] = payoutAmount;
                     }
                 }
 
+                Helper.SetCoffers(coffers);
                 lastCofferSession = Neo.SmartContract.Framework.Helper.Serialize(session);
                 Storage.Put(Storage.CurrentContext, COFFER_PAYMENT_SESSION, lastCofferSession);
                 Runtime.Notify(6000);

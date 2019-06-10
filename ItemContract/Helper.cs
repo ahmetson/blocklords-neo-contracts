@@ -47,20 +47,13 @@ namespace LordsContract
 
         public static BigInteger GetCoffer(BigInteger cityId)
         {
-            byte[] coffersBytes = Storage.Get(GeneralContract.CITY_COFFERS_KEY);
-            if (coffersBytes.Length <= 0)
-            {
-                Runtime.Notify(14);
-                throw new System.Exception();
-            }
-
-            BigInteger[] coffers = (BigInteger[])Neo.SmartContract.Framework.Helper.Deserialize(coffersBytes);
+            BigInteger[] coffers = GetCoffers();
 
             int index = (int)cityId;
             return coffers[index];
         }
 
-        public static void SetCoffer(BigInteger cityId, BigInteger cofferSize)
+        public static BigInteger[] GetCoffers()
         {
             byte[] coffersBytes = Storage.Get(GeneralContract.CITY_COFFERS_KEY);
             if (coffersBytes.Length <= 0)
@@ -71,10 +64,23 @@ namespace LordsContract
 
             BigInteger[] coffers = (BigInteger[])Neo.SmartContract.Framework.Helper.Deserialize(coffersBytes);
 
+            return coffers;
+        }
+
+        public static void SetCoffer(BigInteger cityId, BigInteger cofferSize)
+        {
+            BigInteger[] coffers = GetCoffers();
+
             int index = (int)cityId;
             coffers[index] = cofferSize;
 
-            coffersBytes = Neo.SmartContract.Framework.Helper.Serialize(coffers);
+            SetCoffers(coffers);
+            
+        }
+
+        public static void SetCoffers(BigInteger[] coffers)
+        {
+            byte[] coffersBytes = Neo.SmartContract.Framework.Helper.Serialize(coffers);
             Storage.Put(GeneralContract.CITY_COFFERS_KEY, coffersBytes);
         }
     }
