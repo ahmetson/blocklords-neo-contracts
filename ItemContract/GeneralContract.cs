@@ -144,7 +144,14 @@ namespace LordsContract
         public static readonly string MARKET_COFFER_ADDITION_8_HOURS = "\x26";
         public static readonly string MARKET_COFFER_ADDITION_12_HOURS = "\x40";
         public static readonly string MARKET_COFFER_ADDITION_24_HOURS = "\x41";
-
+        /// <summary>
+        /// Storage key for City coffers
+        /// </summary>
+        public static readonly string CITY_COFFERS_KEY = "\x42";
+        /// <summary>
+        /// Max amount of cities
+        /// </summary>
+        public static readonly BigInteger MAX_CITY_AMOUNT = 101;    // Substract 1 from Max amount.
 
         /// <summary>
         /// Battle type
@@ -189,9 +196,16 @@ namespace LordsContract
         /// <returns>1 if success, 0 if failed</returns>
         public static byte[] Main(string param, object[] args)
         { 
-            if (param.Equals("setSetting"))
+            if (param.Equals("initializeCoffers"))
             {
-                Runtime.Log("Set Settings");
+                int maxCityAmount = (int)MAX_CITY_AMOUNT;
+                BigInteger[] coffersList = new BigInteger[maxCityAmount];
+
+                byte[] coffers = Neo.SmartContract.Framework.Helper.Serialize(coffersList);
+                Storage.Put(CITY_COFFERS_KEY, coffers);
+            }
+            else if (param.Equals("setSetting"))
+            {
                 Settings.Set((string)args[0], (byte[])args[1]);
             }
             else if (param.Equals("payoutCityCoffer"))
