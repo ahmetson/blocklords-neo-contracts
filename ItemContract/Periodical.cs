@@ -1,4 +1,4 @@
-﻿using Neo.SmartContract.Framework;
+using Neo.SmartContract.Framework;
 using Neo.SmartContract.Framework.Services.Neo;
 using System.Numerics;
 
@@ -151,10 +151,6 @@ namespace LordsContract
             }
         }
 
-        public static void PayCityCoffer(object cityId, object cityAmountObj, object paymentIntervalObj, object cofferPercentsObj)
-        {
-            
-        }
     }
 }
 

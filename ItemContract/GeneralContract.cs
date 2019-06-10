@@ -349,10 +349,6 @@ namespace LordsContract
                 Storage.Put(Storage.CurrentContext, COFFER_PAYMENT_SESSION, lastCofferSession);
                 Runtime.Notify(6000);
             }
-            else if (param.Equals("payoutCityCoffer"))
-            {
-                Periodical.PayCityCoffer(args[0], args[1], args[2], args[3]);
-            }
             else if (param.Equals("dropItem"))
             {
                 Periodical.SimpleDropItem((byte[])args[0], args[1], args[2]);
