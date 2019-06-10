@@ -344,6 +344,7 @@ namespace LordsContract
                 }
 
                 Helper.SetCoffers(coffers);
+                session.Block = Blockchain.GetHeight();
                 lastCofferSession = Neo.SmartContract.Framework.Helper.Serialize(session);
                 Storage.Put(Storage.CurrentContext, COFFER_PAYMENT_SESSION, lastCofferSession);
                 Runtime.Notify(6000);
