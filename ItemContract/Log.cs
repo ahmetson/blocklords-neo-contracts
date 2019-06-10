@@ -40,7 +40,7 @@ namespace LordsContract
                         if (!GeneralContract.AttachmentExistAB(feeBytes, GeneralContract.GameOwner))
                         {
                             Runtime.Notify(7007);
-                            throw new System.Exception();
+                            throw new Exception();
                         }
 
 

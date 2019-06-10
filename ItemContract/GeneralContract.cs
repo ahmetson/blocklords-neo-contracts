@@ -313,7 +313,7 @@ namespace LordsContract
                             bool outputUsed = false;
                             for (int j = 0; j < found; j++)
                             {
-                                if (outputIndex[j] == i)
+                                if (outputIndex[j] == i + 1)
                                 {
                                     outputUsed = true;
                                     break;
@@ -323,13 +323,13 @@ namespace LordsContract
                                 continue;
 
                             // Check output
-                            long outputVal = outputs[0].Value;
+                            long outputVal = outputs[i].Value;
                             if (outputs[i].ScriptHash.Equals(lord) && outputVal == payoutAmount)
                             {
-                                outputIndex[found] = i;
+                                outputIndex[found] = i + 1;
                                 found++;
                                 outputValid = true;
-                                coffers[id] = payoutAmount;
+                                coffers[id] = BigInteger.Subtract(coffers[id], payoutAmount);
                             }
                         }
                         if (!outputValid)
