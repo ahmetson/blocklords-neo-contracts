@@ -1019,10 +1019,14 @@ namespace LordsContract
 
                 MarketItemData mItem = (MarketItemData)Neo.SmartContract.Framework.Helper.Deserialize(mBytes);
 
-                if (!Runtime.CheckWitness(mItem.Seller))
+                // Item can be removed from Blockchain before expiration, only by Item owner
+                if (Blockchain.GetBlock(Blockchain.GetHeight()).Timestamp < mItem.Duration + mItem.CreatedTime)
                 {
-                    Runtime.Notify(3002);
-                    throw new Exception();
+                    if (!Runtime.CheckWitness(mItem.Seller))
+                    {
+                        Runtime.Notify(3002);
+                        throw new Exception();
+                    }
                 }
 
                 BigInteger marketCityId = mItem.City;
