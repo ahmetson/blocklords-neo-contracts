@@ -7,6 +7,14 @@ namespace LordsContract
     public static class Log
     {
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="log"></param>
+        /// <param name="hero"></param>
+        /// <param name="attackerNum"></param>
+        /// <param name="cofferSize"></param>
+        /// <param name="defenderObject"></param>
         public static void Battle(BattleLog log, Hero hero, BigInteger attackerNum, object cofferSize, BigInteger defenderObject)
         {
 
@@ -43,8 +51,6 @@ namespace LordsContract
                             throw new Exception();
                         }
 
-
-
                         // Increase city coffer
                         byte[] pvcCofferAdditionBytes = Storage.Get(Storage.CurrentContext, GeneralContract.PVC_COFFER_ADDITION_AMOUNT);
 
@@ -72,6 +78,7 @@ namespace LordsContract
                             Runtime.Notify(7008);
                             throw new Exception();
                         }
+
 
                         Helper.SetCoffer(defenderObject, cityCoffer);
 
@@ -170,15 +177,17 @@ namespace LordsContract
                         throw new System.Exception();
                     }
 
+                    BigInteger exp = (BigInteger)cofferSize;
+
                     if (log.BattleResult == GeneralContract.ATTACKER_WON)
                     {
                         Runtime.Log("Bandit camp attacker won");
-                        UpdateItemStats(log.AttackerItem1, log.AttackerItem2, log.AttackerItem3, log.AttackerItem4, log.AttackerItem5, log.BattleId, 2);
+                        UpdateItemStats(log.AttackerItem1, log.AttackerItem2, log.AttackerItem3, log.AttackerItem4, log.AttackerItem5, log.BattleId, exp);
                     }
                     else if (log.BattleResult == GeneralContract.ATTACKER_LOSE)
                     {
                         Runtime.Log("Bandit camp attacker Lose");
-                        UpdateItemStats(log.AttackerItem1, log.AttackerItem2, log.AttackerItem3, log.AttackerItem4, log.AttackerItem5, log.BattleId, 1);
+                        UpdateItemStats(log.AttackerItem1, log.AttackerItem2, log.AttackerItem3, log.AttackerItem4, log.AttackerItem5, log.BattleId, exp);
                     }
                     else
                     {
