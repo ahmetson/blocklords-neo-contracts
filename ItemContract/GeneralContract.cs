@@ -226,6 +226,17 @@ namespace LordsContract
                     throw new Exception();
                 }
 
+                BigInteger payoutMin = 1;
+                BigInteger payoutMax = 99;
+                if (payoutPercents > 5)
+                {
+                    payoutMin = BigInteger.Subtract(payoutPercents, 5);
+                }
+                if (payoutPercents < 95)
+                {
+                    payoutMax = BigInteger.Add(payoutPercents, 5);
+                }
+
                 // Check that payment interval parameter is matching with setting value
                 byte[] paymentIntervalSettingBytes = Storage.Get(Storage.CurrentContext, GeneralContract.INTERVAL_COFFER);
                 byte[] paymentIntervalBytes = (byte[])args[2];
@@ -279,11 +290,17 @@ namespace LordsContract
                 for (var id = 1; id <= cityAmountInt; id++, cityId = BigInteger.Add(cityId, 1))
                 {
                     BigInteger coffer = coffers[id];
-                    if (coffer <= 0)
+                    // Skip from paying out if number is less than 0.01 GAS
+                    if (coffer <= 1000000)
+                    {
                         continue;
+                    }
 
                     BigInteger percent = BigInteger.Divide(coffer, 100);
                     BigInteger payoutAmount = BigInteger.Multiply(percent, payoutPercents);
+
+                    BigInteger payoutMinAmount = BigInteger.Multiply(percent, payoutMin);
+                    BigInteger payoutMaxAmount = BigInteger.Multiply(percent, payoutMax);
 
                     //    get cityData
                     byte[] cityIdBytes = cityId.ToByteArray();
@@ -324,12 +341,17 @@ namespace LordsContract
 
                             // Check output
                             long outputVal = outputs[i].Value;
-                            if (outputs[i].ScriptHash.Equals(lord) && outputVal == payoutAmount)
+                            if (outputs[i].ScriptHash.Equals(lord))
                             {
-                                outputIndex[found] = i + 1;
-                                found++;
-                                outputValid = true;
-                                coffers[id] = BigInteger.Subtract(coffers[id], payoutAmount);
+                                if (outputVal >= payoutMinAmount && outputVal <= payoutMaxAmount)
+                                {
+                                    outputIndex[found] = i + 1;
+                                    found++;
+                                    outputValid = true;
+                                    coffers[id] = BigInteger.Subtract(coffers[id], outputVal);
+                                }
+                                
+
                             }
                         }
                         if (!outputValid)
