@@ -499,13 +499,12 @@ namespace LordsContract
 
                 byte[] feeBytes = Storage.Get(Storage.CurrentContext, FEE_HERO_CREATION);
 
-                    if (!AttachmentExistAB(feeBytes, GameOwner))
-                    {
-                        Runtime.Notify(4009);
-                        throw new Exception();
-                    }
-                    Runtime.Log("Hero creation fee is attached");
+                if (!AttachmentExistAB(feeBytes, GameOwner))
+                {
+                    Runtime.Notify(4009);
+                    throw new Exception();
                 }
+                Runtime.Log("Hero creation fee is attached");
 
 
                 byte[][] stats = (byte[][])args[4];
