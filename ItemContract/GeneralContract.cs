@@ -42,10 +42,10 @@ namespace LordsContract
         /// Storage Key of Hero Creation Fee
         /// </summary>
         public static readonly string FEE_HERO_CREATION = "\x16";
-        /// <summary>
-        /// Storage Key of Refering Fee
-        /// </summary>
-        public static readonly string FEE_REFERAL = "\x17";
+        ///// <summary>
+        ///// Storage Key of Refering Fee
+        ///// </summary>
+        //public static readonly string FEE_REFERAL = "\x17";
         /// <summary>
         /// Storage Key of fee for 8 hours of item appearance on market
         /// </summary>
@@ -492,55 +492,12 @@ namespace LordsContract
                         Runtime.Notify(4007);
                         throw new Exception();
                     }
-
-                    byte[] feeSettingBytes = Storage.Get(Storage.CurrentContext, FEE_HERO_CREATION);
-                    byte[] feeBytes = (byte[])args[11];
-
-                    if (feeSettingBytes.Length > 0)
-                    {
-                        if (!feeBytes.Equals(feeSettingBytes))
-                        {
-                            Runtime.Notify(4013, feeBytes, feeSettingBytes);
-                            throw new Exception();
-                        }
-                    }
-
-                    byte[] refererFeeSettingBytes = Storage.Get(Storage.CurrentContext, FEE_REFERAL);
-                    byte[] refererFeeBytes = (byte[])args[12];
-
-                    if (refererFeeSettingBytes.Length > 0)
-                    {
-                        if (!refererFeeBytes.Equals(refererFeeSettingBytes))
-                        {
-                            Runtime.Notify(4014, refererFeeBytes, refererFeeSettingBytes);
-                            throw new Exception();
-                        }
-                    }
-
-                    BigInteger fee = (BigInteger)args[11];
-                    BigInteger refererFee = (BigInteger)args[12];
-
-                    // Game owner's fee is less, if we have a referer
-                    fee = BigInteger.Subtract(fee, refererFee);
-
-                    if (!AttachmentExistAB(refererFeeBytes, refererHero.OWNER))
-                    {
-                        Runtime.Notify(4008);
-                        throw new Exception();
-                    }
-
-                    byte[] feeExpected = fee.ToByteArray();
-                    if (!AttachmentExistAB(feeExpected, GameOwner))
-                    {
-                        Runtime.Notify(4009);
-                        throw new Exception();
-                    }
                 }
-                else
-                {
-                    Runtime.Log("Referer is not exist");
+                
+                
+                Runtime.Log("Referer is not exist");
 
-                    byte[] feeBytes = Storage.Get(Storage.CurrentContext, FEE_HERO_CREATION);
+                byte[] feeBytes = Storage.Get(Storage.CurrentContext, FEE_HERO_CREATION);
 
                     if (!AttachmentExistAB(feeBytes, GameOwner))
                     {

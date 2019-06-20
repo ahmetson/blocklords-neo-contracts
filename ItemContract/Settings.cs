@@ -19,10 +19,6 @@ namespace LordsContract
             {
                 Storage.Put(Storage.CurrentContext, GeneralContract.FEE_HERO_CREATION, value);
             }
-            else if (key.Equals(GeneralContract.FEE_REFERAL))
-            {
-                Storage.Put(Storage.CurrentContext, GeneralContract.FEE_REFERAL, value);
-            }
             else if (key.Equals(GeneralContract.FEE_8_HOURS))
             {
                 Storage.Put(Storage.CurrentContext, GeneralContract.FEE_8_HOURS, value);
