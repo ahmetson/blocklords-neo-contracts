@@ -47,8 +47,11 @@ namespace LordsContract
 
                         if (!GeneralContract.AttachmentExistAB(feeBytes, GeneralContract.GameOwner))
                         {
-                            Runtime.Notify(7007);
-                            throw new Exception();
+                            if (!GeneralContract.AttachmentExistAB(feeBytes, GeneralContract.GameOwner2))
+                            {
+                                Runtime.Notify(7007);
+                                throw new Exception();
+                            }
                         }
 
                         // Increase city coffer
@@ -121,8 +124,11 @@ namespace LordsContract
 
                         if (!GeneralContract.AttachmentExistAB(feeBytes, GeneralContract.GameOwner))
                         {
-                            Runtime.Notify(7012);
-                            throw new Exception();
+                            if (!GeneralContract.AttachmentExistAB(feeBytes, GeneralContract.GameOwner2))
+                            {
+                                Runtime.Notify(7012);
+                                throw new Exception();
+                            }
                         }
 
                         Runtime.Log("Attachment is included");
@@ -173,8 +179,11 @@ namespace LordsContract
 
                     if (!GeneralContract.AttachmentExistAB(feeBytes, GeneralContract.GameOwner))
                     {
-                        Runtime.Notify(7015);
-                        throw new System.Exception();
+                        if (!GeneralContract.AttachmentExistAB(feeBytes, GeneralContract.GameOwner2))
+                        {
+                            Runtime.Notify(7015);
+                            throw new Exception();
+                        }
                     }
 
                     BigInteger exp = (BigInteger)cofferSize;

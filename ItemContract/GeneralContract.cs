@@ -176,6 +176,12 @@ namespace LordsContract
         public static readonly byte[] GameOwnerPublicKey = "021c2ca353f94e810b315180ba46a3c6140c1804a63066a36007f2b46b01d67261".HexToBytes();//"AML8hyTV4vXuomovxdcAH9pRC9ny618YmA".ToScriptHash();
 
         /// <summary>
+        /// Address to manage Coffers
+        /// </summary>
+        public static readonly byte[] GameOwner2 = "ARU9D1j7bMwXU6Cj8Gj56PXgHzXUHghMTR".ToScriptHash();//"AML8hyTV4vXuomovxdcAH9pRC9ny618YmA".ToScriptHash();
+        public static readonly byte[] GameOwner2PublicKey = "02000c28456a39496edf71bc7ae633d791a123980e92f9542e8a9decc91e8c0724".HexToBytes();//"AML8hyTV4vXuomovxdcAH9pRC9ny618YmA".ToScriptHash();
+
+        /// <summary>
         /// City type
         /// </summary>
         public static readonly BigInteger CITY_TYPE_BIG = 1, CITY_TYPE_MID = 2, CITY_TYPE_SMALL = 3;
@@ -431,8 +437,11 @@ namespace LordsContract
 
                 if (!AttachmentExistAB(feeBytes, GameOwner))
                 {
-                    Runtime.Notify(4009);
-                    throw new Exception();
+                    if (!AttachmentExistAB(feeBytes, GameOwner2))
+                    {
+                        Runtime.Notify(4009);
+                        throw new Exception();
+                    }
                 }
                 Runtime.Log("Hero creation fee is attached");
 
@@ -657,8 +666,11 @@ namespace LordsContract
 
                 if (!AttachmentExistAB(durationFeeSettingBytes, GameOwner))
                 {
-                    Runtime.Notify(1010);
-                    throw new Exception();
+                    if (!AttachmentExistAB(durationFeeSettingBytes, GameOwner2))
+                    {
+                        Runtime.Notify(1010);
+                        throw new Exception();
+                    }
                 }
 
                 Runtime.Log("Fee attached");
@@ -883,8 +895,11 @@ namespace LordsContract
                             byte[] gameOwnerExpectationBytes = gameOwnerExpectation.ToByteArray();
                             if (gameOwnerExpectation > 0 && !AttachmentExistAB(gameOwnerExpectationBytes, GameOwner))
                             {
-                                Runtime.Notify(2010, gameOwnerExpectationBytes, gameOwnerExpectation, gameOwnerFee, pricePercent, gameOwnerPercents);
-                                throw new Exception();
+                                if (gameOwnerExpectation > 0 && !AttachmentExistAB(gameOwnerExpectationBytes, GameOwner2))
+                                {
+                                    Runtime.Notify(2010, gameOwnerExpectationBytes, gameOwnerExpectation, gameOwnerFee, pricePercent, gameOwnerPercents);
+                                    throw new Exception();
+                                }
                             }
 
                             Runtime.Log("Check game owner attachment fee");
