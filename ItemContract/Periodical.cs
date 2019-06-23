@@ -16,6 +16,12 @@ namespace LordsContract
          */
         public static void SimpleDropItem(byte[] itemId, object strongholdAmountObj, object dropIntervalObj)
         {
+            if(!Runtime.CheckWitness(GeneralContract.GameOwner))
+            {
+                Runtime.Notify(16);
+                throw new System.Exception();
+            }
+
             DropData lastDrop = new DropData();
             lastDrop.Block = 0;
             lastDrop.StrongholdId = 0;
