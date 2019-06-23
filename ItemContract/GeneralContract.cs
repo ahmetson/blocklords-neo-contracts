@@ -279,7 +279,8 @@ namespace LordsContract
                 TransactionOutput[] outputs = TX.GetOutputs();
 
                 BigInteger[] coffers = Helper.GetCoffers();
-                BigInteger[] payouts = coffers;
+                int maxCityAmount = (int)MAX_CITY_AMOUNT;
+                BigInteger[] payouts = new BigInteger[maxCityAmount];
 
                 for (var id = 1; id <= cityAmountInt; id++)
                 {
@@ -292,9 +293,10 @@ namespace LordsContract
                     }
 
                     BigInteger percent = BigInteger.Divide(coffer, 100);
-                    payouts[id] = BigInteger.Multiply(percent, payoutPercents); // Payout amount
+                    BigInteger payoutAmount = BigInteger.Multiply(percent, payoutPercents); // Payout amount
 
-                    coffers[id] = BigInteger.Subtract(coffers[id], payouts[id]);
+                    coffers[id] = BigInteger.Subtract(coffers[id], payoutAmount);
+                    payouts[id] = payoutAmount;
                 }
 
                 Helper.SetCoffers(coffers);
