@@ -79,7 +79,7 @@ namespace LordsContract
         public BigInteger Size;
         public BigInteger ItemsOnMarket;        // Current amount of items on city market
         public BigInteger ItemsCap;
-        public BigInteger CofferPayoutSession;
+        public BigInteger CofferBlock;
         public BigInteger CofferPayoutPercents;
         public BigInteger MarketFee;
     }
@@ -109,7 +109,9 @@ namespace LordsContract
     //[Serializable]
     public class CofferPayment
     {
-        public BigInteger Block;                   // Session End
+        public BigInteger LastPaidCity;
+        public BigInteger Block;                   // Session Start
+        public BigInteger BlockEnd;
     }
 }
 

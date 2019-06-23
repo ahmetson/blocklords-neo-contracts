@@ -148,6 +148,7 @@ namespace LordsContract
         /// Storage key for City coffers
         /// </summary>
         public static readonly string CITY_COFFERS_KEY = "\x42";
+        public static readonly string PAYOUTS_KEY = "\x43";
         /// <summary>
         /// Max amount of cities
         /// </summary>
@@ -216,6 +217,9 @@ namespace LordsContract
             }
             else if (param.Equals("payoutCoffers"))
             {
+                // Prepare all variables.
+                // Get last payout session
+
                 // Check that coffer percent parameter is matching with setting value
                 byte[] cofferPercentsSettingBytes = Storage.Get(Storage.CurrentContext, PERCENTS_COFFER_PAY);
                 byte[] cofferPercentsBytes = (byte[])args[1];
@@ -224,17 +228,6 @@ namespace LordsContract
                 {
                     Runtime.Notify(11);
                     throw new Exception();
-                }
-
-                BigInteger payoutMin = 1;
-                BigInteger payoutMax = 99;
-                if (payoutPercents > 5)
-                {
-                    payoutMin = BigInteger.Subtract(payoutPercents, 5);
-                }
-                if (payoutPercents < 95)
-                {
-                    payoutMax = BigInteger.Add(payoutPercents, 5);
                 }
 
                 // Check that payment interval parameter is matching with setting value
@@ -276,100 +269,37 @@ namespace LordsContract
                 }
                 int cityAmountInt = (int)args[0];
 
-                // We track the checked outputs to prevent of using the same outputs for the lord,
-                // when lord has many cities with same amount of coffers
-                int[] outputIndex = new int[cityAmountInt];
-                int found = 0;
-
                 Transaction TX = (Transaction)ExecutionEngine.ScriptContainer;
                 TransactionOutput[] outputs = TX.GetOutputs();
 
                 BigInteger[] coffers = Helper.GetCoffers();
+                BigInteger[] payouts = coffers;
 
-                BigInteger cityId = 1;
-                for (var id = 1; id <= cityAmountInt; id++, cityId = BigInteger.Add(cityId, 1))
+                for (var id = 1; id <= cityAmountInt; id++)
                 {
                     BigInteger coffer = coffers[id];
-                    // Skip from paying out if number is less than 0.01 GAS
-                    if (coffer <= 1000000)
+                    // Skip from paying out if number is less than 0.1 GAS
+                    if (coffer <= 10000000)
                     {
+                        payouts[id] = 0;
                         continue;
                     }
 
                     BigInteger percent = BigInteger.Divide(coffer, 100);
-                    BigInteger payoutAmount = BigInteger.Multiply(percent, payoutPercents);
+                    payouts[id] = BigInteger.Multiply(percent, payoutPercents); // Payout amount
 
-                    BigInteger payoutMinAmount = BigInteger.Multiply(percent, payoutMin);
-                    BigInteger payoutMaxAmount = BigInteger.Multiply(percent, payoutMax);
-
-                    //    get cityData
-                    byte[] cityIdBytes = cityId.ToByteArray();
-                    string cityKey = CITY_MAP + cityIdBytes;
-                    byte[] cityBytes = Storage.Get(Storage.CurrentContext, cityKey);
-                    if (cityBytes.Length <= 0)
-                    {
-                        Runtime.Notify(1003);
-                        throw new Exception();
-                    }
-
-                    // Get city lord
-                    City city = (City)Neo.SmartContract.Framework.Helper.Deserialize(cityBytes);
-                    if (city.Hero > 0)
-                    {
-                        BigInteger cityLordId = city.Hero;
-                        string heroKey = HERO_MAP + cityLordId.ToByteArray();
-                        byte[] heroBytes = Storage.Get(Storage.CurrentContext, heroKey);
-                        Hero hero = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(heroBytes);
-                        byte[] lord = hero.OWNER;
-
-                        // Check the coffer payout
-                        bool outputValid = false;
-                        for (var i = 0; i < outputs.Length; i++)
-                        {
-                            // Skip output if it's value was used before
-                            bool outputUsed = false;
-                            for (int j = 0; j < found; j++)
-                            {
-                                if (outputIndex[j] == i + 1)
-                                {
-                                    outputUsed = true;
-                                    break;
-                                }
-                            }
-                            if (outputUsed)
-                                continue;
-
-                            // Check output
-                            long outputVal = outputs[i].Value;
-                            if (outputs[i].ScriptHash.Equals(lord))
-                            {
-                                if (outputVal >= payoutMinAmount && outputVal <= payoutMaxAmount)
-                                {
-                                    outputIndex[found] = i + 1;
-                                    found++;
-                                    outputValid = true;
-                                    coffers[id] = BigInteger.Subtract(coffers[id], outputVal);
-                                }
-                                
-
-                            }
-                        }
-                        if (!outputValid)
-                        {
-                            Runtime.Notify(6005, payoutAmount, coffer, cityId, payoutPercents);
-                        }
-                    }
-                    else
-                    {
-                        coffers[id] = BigInteger.Subtract(coffers[id], payoutAmount);
-                    }
+                    coffers[id] = BigInteger.Subtract(coffers[id], payouts[id]);
                 }
 
                 Helper.SetCoffers(coffers);
                 session.Block = Blockchain.GetHeight();
                 lastCofferSession = Neo.SmartContract.Framework.Helper.Serialize(session);
                 Storage.Put(Storage.CurrentContext, COFFER_PAYMENT_SESSION, lastCofferSession);
-                Runtime.Notify(6000);
+
+                byte[] payoutsBytes = Neo.SmartContract.Framework.Helper.Serialize(payouts);
+                Storage.Put(Storage.CurrentContext, PAYOUTS_KEY, payoutsBytes);
+
+                Runtime.Notify(6000, payouts);
             }
             else if (param.Equals("dropItem"))
             {
