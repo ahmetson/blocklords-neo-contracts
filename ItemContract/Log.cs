@@ -135,11 +135,31 @@ namespace LordsContract
 
                         if (log.BattleResult == GeneralContract.ATTACKER_WON)
                         {
-                            // change city owner
+                            // Can not compile
+                            // byte[] oldHeroIdBytes = stronghold.Hero.ToByteArray();
+                            BigInteger oldHeroKeyInt = stronghold.Hero;
+                            byte[] oldHeroIdBytes = oldHeroKeyInt.ToByteArray();
+                            string oldHeroKey = GeneralContract.HERO_MAP + oldHeroIdBytes;
+
+                            byte[] oldHeroBytes = Storage.Get(oldHeroKey);
+                            if (oldHeroIdBytes.Length <= 0)
+                            {
+                                Runtime.Notify(7022);
+                                throw new Exception();
+                            }
+                            else
+                            {
+                                Hero oldHero = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(oldHeroBytes);
+                                oldHero.StrongholdsAmount = BigInteger.Subtract(oldHero.StrongholdsAmount, 1);
+                                oldHeroBytes = Neo.SmartContract.Framework.Helper.Serialize(oldHero);
+                                Storage.Put(oldHeroKey, oldHeroBytes);
+                            }
+
+                            // change stronghold owner
                             stronghold.Hero = attackerNum;
                             stronghold.CreatedBlock = Blockchain.GetHeight();
 
-                            hero.StrongholdsAmount = 1;
+                            hero.StrongholdsAmount = BigInteger.Add(hero.StrongholdsAmount, 1);
 
                             string heroKey = GeneralContract.HERO_MAP + log.Attacker;
                             byte[] heroBytes = Neo.SmartContract.Framework.Helper.Serialize(hero);
