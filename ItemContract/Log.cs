@@ -142,12 +142,12 @@ namespace LordsContract
                             string oldHeroKey = GeneralContract.HERO_MAP + oldHeroIdBytes;
 
                             byte[] oldHeroBytes = Storage.Get(oldHeroKey);
-                            if (oldHeroIdBytes.Length <= 0)
+                            if (oldHeroKeyInt > 0 && oldHeroIdBytes.Length <= 0)
                             {
                                 Runtime.Notify(7022);
                                 throw new Exception();
                             }
-                            else
+                            else if (oldHeroKeyInt > 0)
                             {
                                 Hero oldHero = (Hero)Neo.SmartContract.Framework.Helper.Deserialize(oldHeroBytes);
                                 oldHero.StrongholdsAmount = BigInteger.Subtract(oldHero.StrongholdsAmount, 1);
