@@ -169,17 +169,25 @@ namespace LordsContract
         /// <summary>
         /// Game Owner's script hash: 1. Privatenet included in Neo-local, 2. Testnet 3. mainnet
         /// </summary>
-        //public static readonly byte[] GameOwner = "AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y".ToScriptHash();//"AML8hyTV4vXuomovxdcAH9pRC9ny618YmA".ToScriptHash();
-        //public static readonly byte[] GameOwnerPublicKey = "031a6c6fbbdf02ca351745fa86b9ba5a9452d785ac4f7fc2b7548ca2a46c4fcf4a".HexToBytes();//"AML8hyTV4vXuomovxdcAH9pRC9ny618YmA".ToScriptHash();
+        //public static readonly byte[] GameOwner = "AK2nJJpJr6o664CWJKi1QRXjqeic2zRp8y".ToScriptHash();
+        //public static readonly byte[] GameOwnerPublicKey = "031a6c6fbbdf02ca351745fa86b9ba5a9452d785ac4f7fc2b7548ca2a46c4fcf4a".HexToBytes();
 
-        public static readonly byte[] GameOwner = "ARxEMtapvYPp6ACc5P86WHSZPeVzgoB18r".ToScriptHash();//"AML8hyTV4vXuomovxdcAH9pRC9ny618YmA".ToScriptHash();
-        public static readonly byte[] GameOwnerPublicKey = "021c2ca353f94e810b315180ba46a3c6140c1804a63066a36007f2b46b01d67261".HexToBytes();//"AML8hyTV4vXuomovxdcAH9pRC9ny618YmA".ToScriptHash();
+        //public static readonly byte[] GameOwner = "ARxEMtapvYPp6ACc5P86WHSZPeVzgoB18r".ToScriptHash();
+        //public static readonly byte[] GameOwnerPublicKey = "021c2ca353f94e810b315180ba46a3c6140c1804a63066a36007f2b46b01d67261".HexToBytes();
+
+        public static readonly byte[] GameOwner = "AdmpNwz8pmNdLHMuncLdZ2NT3gxGbS1h5c".ToScriptHash();
+        public static readonly byte[] GameOwnerPublicKey = "02b8cee0cd879944969b1773724d1ea6cc0d2e9da292b6ac05281baaefa2d90722".HexToBytes();
 
         /// <summary>
-        /// Address to manage Coffers
+        /// 
+        /// Address to manage Coffers: testnet, mainnet
         /// </summary>
-        public static readonly byte[] GameOwner2 = "ARU9D1j7bMwXU6Cj8Gj56PXgHzXUHghMTR".ToScriptHash();//"AML8hyTV4vXuomovxdcAH9pRC9ny618YmA".ToScriptHash();
-        public static readonly byte[] GameOwner2PublicKey = "02000c28456a39496edf71bc7ae633d791a123980e92f9542e8a9decc91e8c0724".HexToBytes();//"AML8hyTV4vXuomovxdcAH9pRC9ny618YmA".ToScriptHash();
+        //public static readonly byte[] GameOwner2 = "ARU9D1j7bMwXU6Cj8Gj56PXgHzXUHghMTR".ToScriptHash();
+        //public static readonly byte[] GameOwner2PublicKey = "02000c28456a39496edf71bc7ae633d791a123980e92f9542e8a9decc91e8c0724".HexToBytes();
+
+        public static readonly byte[] GameOwner2 = "AK9mUsJHUcDzjubVF9f7orEA6wx67wyht7".ToScriptHash();
+        public static readonly byte[] GameOwner2PublicKey = "03ab1ebce9dd1dbb394526f96ae2fddc244e4975672e86cc81eb80cbce06b1ec9b".HexToBytes();
+
 
         /// <summary>
         /// City type
