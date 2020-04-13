@@ -379,7 +379,7 @@ namespace LordsContract
                     throw new Exception();
                 }
 
-                Runtime.Log("Game Admin is not running game. Check scripthash");
+                // Failure. Game Admin is not allowed to play the game
                 byte[] scriptHash = (byte[])args[0];
                 if (!Runtime.CheckWitness(scriptHash))
                 {
@@ -387,7 +387,7 @@ namespace LordsContract
                     throw new Exception();
                 }
 
-                Runtime.Log("Scripthash wallet is running game. Check referers");
+                //Runtime.Log("Scripthash wallet is running game. Check referers");
 
                 BigInteger heroId = (BigInteger)args[1];
                 BigInteger refererHeroId = (BigInteger)args[2];
@@ -439,8 +439,7 @@ namespace LordsContract
                         throw new Exception();
                     }
                 }
-                
-                
+              
                 Runtime.Log("Referer is not exist");
 
                 byte[] feeBytes = Storage.Get(Storage.CurrentContext, FEE_HERO_CREATION);
@@ -454,7 +453,6 @@ namespace LordsContract
                     }
                 }
                 Runtime.Log("Hero creation fee is attached");
-
 
                 byte[][] stats = (byte[][])args[4];
 
